@@ -12,6 +12,7 @@ Primary contracts:
 - `docs/BUSINESS_PROCESS.md`
 - `docs/GUARDRAILS_CONTRACT.md`
 - `docs/KNOWLEDGE_BASE.md`
+- `docs/DOCUMENTATION_AUDIT.md`
 - `docs/UI_UX_CONTRACT.md`
 - `docs/QCC_8_STEPS_7_TOOLS.md`
 - `docs/POL.ISMS.001.md`

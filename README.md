@@ -66,6 +66,7 @@ Upgrade proses setelah MVP:
 - [docs/BUSINESS_PROCESS.md](docs/BUSINESS_PROCESS.md): SOP proses bisnis, role, dan alur approval.
 - [docs/GUARDRAILS_CONTRACT.md](docs/GUARDRAILS_CONTRACT.md): aturan keamanan, performa, dan larangan teknis.
 - [docs/KNOWLEDGE_BASE.md](docs/KNOWLEDGE_BASE.md): latar belakang, metrik baseline, dan keputusan arsitektur.
+- [docs/DOCUMENTATION_AUDIT.md](docs/DOCUMENTATION_AUDIT.md): audit konsistensi kontrak dokumentasi.
 - [docs/UI_UX_CONTRACT.md](docs/UI_UX_CONTRACT.md): kontrak gaya Industrial Soft UI untuk mobile dan desktop.
 - [docs/QCC_8_STEPS_7_TOOLS.md](docs/QCC_8_STEPS_7_TOOLS.md): kontrak narasi improvement QCC/Lean Six Sigma.
 - [docs/POL.ISMS.001.md](docs/POL.ISMS.001.md): baseline kontrol keamanan untuk auth, PII, audit, API, dan deployment.
