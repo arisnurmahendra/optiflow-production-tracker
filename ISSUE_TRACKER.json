@@ -356,7 +356,7 @@
     {
       "id": "OPT-010",
       "title": "Build mobile operator reporting form",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",

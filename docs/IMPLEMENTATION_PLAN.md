@@ -114,6 +114,8 @@ Deliverables:
 - `apiAdapter.js` production wrapper untuk semua callable GAS yang dipakai frontend.
 - `mock_gas.js` local development adapter dengan latency dan failure simulation.
 - Form input: line, shift, machine ID, target harian, tandon, OK, reject, dan kategori defect jika reject lebih dari 0.
+- Validasi form operator memakai Zod dan menghasilkan error inline aman sebelum payload dibuat.
+- Submit pada tahap form membuat payload draft/queue lokal; persistensi IndexedDB dan endpoint GAS append-only tetap mengikuti issue lanjutan.
 - Autosave draft lokal sebelum submit.
 - Global State/composables sebagai satu-satunya interface UI untuk membaca/menulis draft.
 - Persistence service IndexedDB yang hanya dipanggil oleh Global State.
@@ -131,6 +133,7 @@ Kriteria selesai:
 - Submit duplikat tidak menggandakan data.
 - Payload tidak valid ditolak dengan error terstruktur.
 - Payload yang melanggar `DATA_SCHEMA.md` ditolak sebelum business logic berjalan.
+- Form mobile dapat membentuk payload dengan `transaction_id`, `device_timestamp`, metadata client, dan field payload sesuai kontrak.
 - Draft tidak hilang saat browser reload sebelum submit.
 - Reject dengan nilai lebih dari 0 meminta kategori defect.
 - Komponen UI tidak memiliki direct access ke IndexedDB.

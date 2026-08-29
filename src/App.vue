@@ -1,25 +1,39 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ApiAdapterError, api } from './services/apiAdapter.js';
+import {
+  createDraftQueueItem,
+  createOperatorReportPayload,
+  defectOptions,
+  formatNumber,
+  initialOperatorReportForm,
+  lineOptions,
+  machineOptions,
+  shiftOptions,
+} from './services/operatorReportForm.js';
 
-const metrics = [
-  { label: 'Target', value: '1,200', tone: 'neutral' },
-  { label: 'OK', value: '1,164', tone: 'success' },
-  { label: 'Reject', value: '36', tone: 'danger' },
-  { label: 'Queue', value: '2', tone: 'warning' },
-];
-
-const fields = [
-  { label: 'Line', value: 'SMT-02' },
-  { label: 'Shift', value: 'Pagi' },
-  { label: 'Machine', value: 'SLD-14' },
-  { label: 'Defect', value: 'Solder tipis' },
-];
-
-const queueItems = [
+const form = ref({ ...initialOperatorReportForm });
+const formErrors = ref({});
+const draftStatus = ref('Draft tersimpan');
+const submitMessage = ref('');
+const stagedQueueItems = ref([
   { id: 'TX-1042', status: 'PENDING_SYNC', time: '08:42' },
   { id: 'TX-1043', status: 'CONFLICT_PENDING', time: '08:51' },
-];
+]);
+
+const totalOutput = computed(() => Number(form.value.perolehan_ok || 0) + Number(form.value.perolehan_reject || 0));
+const productionCapacity = computed(() => Number(form.value.target_harian || 0) + Number(form.value.tandon || 0));
+const shouldShowDefect = computed(() => Number(form.value.perolehan_reject || 0) > 0);
+const isTotalValid = computed(() => totalOutput.value <= productionCapacity.value);
+
+const metrics = computed(() => [
+  { label: 'Target', value: formatNumber(form.value.target_harian), tone: 'neutral' },
+  { label: 'OK', value: formatNumber(form.value.perolehan_ok), tone: 'success' },
+  { label: 'Reject', value: formatNumber(form.value.perolehan_reject), tone: 'danger' },
+  { label: 'Queue', value: formatNumber(stagedQueueItems.value.length), tone: 'warning' },
+]);
+
+const queueItems = computed(() => stagedQueueItems.value);
 
 const reviewRows = [
   { machine: 'SLD-14', operator: 'Andi', ok: 420, reject: 8, status: 'SYNCED' },
@@ -77,6 +91,49 @@ const maintenanceSummary = computed(() => {
   const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
   return `${setCount}/${maintenanceProperties.value.length} key siap`;
 });
+
+function saveDraft() {
+  draftStatus.value = 'Draft tersimpan';
+  submitMessage.value = 'Draft siap dipersist ke IndexedDB pada OPT-011.';
+}
+
+function submitOperatorReport() {
+  const result = createOperatorReportPayload(form.value, {
+    operatorEmail: 'dev.operator@optiflow.local',
+  });
+
+  formErrors.value = result.errors;
+
+  if (!result.valid) {
+    submitMessage.value = 'Periksa field yang ditandai sebelum submit.';
+    return;
+  }
+
+  const queueItem = createDraftQueueItem(result.data);
+  stagedQueueItems.value = [queueItem, ...stagedQueueItems.value].slice(0, 5);
+  draftStatus.value = 'Menunggu sinkronisasi';
+  submitMessage.value = `Payload ${queueItem.id} siap dikirim melalui sync queue.`;
+}
+
+function clearFieldError(field) {
+  if (!formErrors.value[field]) {
+    return;
+  }
+
+  formErrors.value = {
+    ...formErrors.value,
+    [field]: '',
+  };
+}
+
+function normalizeRejectState() {
+  clearFieldError('perolehan_reject');
+
+  if (!shouldShowDefect.value) {
+    form.value.defect_category_id = '';
+    clearFieldError('defect_category_id');
+  }
+}
 
 function openMaintenanceConsole() {
   isMaintenanceOpen.value = true;
@@ -228,42 +285,92 @@ onBeforeUnmount(() => {
             <p class="eyebrow">Operator</p>
             <h2 id="form-title">Laporan cepat</h2>
           </div>
-          <span class="badge">Draft tersimpan</span>
+          <span class="badge">{{ draftStatus }}</span>
         </div>
 
         <div class="field-grid">
-          <label v-for="field in fields" :key="field.label" class="field">
-            <span>{{ field.label }}</span>
-            <select :aria-label="field.label">
-              <option>{{ field.value }}</option>
+          <label class="field">
+            <span>Line</span>
+            <select v-model="form.line_id" aria-label="Line" @change="clearFieldError('line_id')">
+              <option v-for="option in lineOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
+            <small v-if="formErrors.line_id" class="field-error">{{ formErrors.line_id }}</small>
+          </label>
+          <label class="field">
+            <span>Shift</span>
+            <select v-model="form.shift_id" aria-label="Shift" @change="clearFieldError('shift_id')">
+              <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <small v-if="formErrors.shift_id" class="field-error">{{ formErrors.shift_id }}</small>
+          </label>
+          <label class="field">
+            <span>Machine</span>
+            <select v-model="form.machine_id" aria-label="Machine" @change="clearFieldError('machine_id')">
+              <option v-for="option in machineOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <small v-if="formErrors.machine_id" class="field-error">{{ formErrors.machine_id }}</small>
           </label>
         </div>
 
         <div class="number-grid">
           <label class="number-field">
+            <span>Target</span>
+            <input v-model.number="form.target_harian" inputmode="numeric" aria-label="Target" @input="clearFieldError('target_harian')" />
+            <small v-if="formErrors.target_harian" class="field-error">{{ formErrors.target_harian }}</small>
+          </label>
+          <label class="number-field">
             <span>Tandon</span>
-            <input value="80" inputmode="numeric" aria-label="Tandon" />
+            <input v-model.number="form.tandon" inputmode="numeric" aria-label="Tandon" @input="clearFieldError('tandon')" />
+            <small v-if="formErrors.tandon" class="field-error">{{ formErrors.tandon }}</small>
           </label>
           <label class="number-field">
             <span>OK</span>
-            <input value="1164" inputmode="numeric" aria-label="OK" />
+            <input v-model.number="form.perolehan_ok" inputmode="numeric" aria-label="OK" @input="clearFieldError('perolehan_ok')" />
+            <small v-if="formErrors.perolehan_ok" class="field-error">{{ formErrors.perolehan_ok }}</small>
           </label>
           <label class="number-field danger">
             <span>Reject</span>
-            <input value="36" inputmode="numeric" aria-label="Reject" />
+            <input v-model.number="form.perolehan_reject" inputmode="numeric" aria-label="Reject" @input="normalizeRejectState" />
+            <small v-if="formErrors.perolehan_reject" class="field-error">{{ formErrors.perolehan_reject }}</small>
           </label>
         </div>
 
-        <div class="check-row">
+        <div v-if="shouldShowDefect" class="defect-row">
+          <label class="field">
+            <span>Kategori defect</span>
+            <select v-model="form.defect_category_id" aria-label="Kategori defect" @change="clearFieldError('defect_category_id')">
+              <option v-for="option in defectOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <small v-if="formErrors.defect_category_id" class="field-error">{{ formErrors.defect_category_id }}</small>
+          </label>
+          <label class="field">
+            <span>Catatan</span>
+            <input v-model="form.defect_notes" aria-label="Catatan defect" maxlength="140" @input="clearFieldError('defect_notes')" />
+            <small v-if="formErrors.defect_notes" class="field-error">{{ formErrors.defect_notes }}</small>
+          </label>
+        </div>
+
+        <div :class="['check-row', isTotalValid ? 'valid' : 'invalid']">
           <span>Total perolehan</span>
-          <strong>1,200</strong>
-          <small>OK + Reject sesuai target</small>
+          <strong>{{ formatNumber(totalOutput) }}</strong>
+          <small>{{ isTotalValid ? 'OK + Reject masih dalam Target + Tandon' : 'OK + Reject melebihi Target + Tandon' }}</small>
+        </div>
+
+        <div v-if="submitMessage" class="inline-info" role="status">
+          {{ submitMessage }}
         </div>
 
         <div class="action-row">
-          <button class="button secondary" type="button">Simpan Draft</button>
-          <button class="button primary" type="button">Submit</button>
+          <button class="button secondary" type="button" @click="saveDraft">Simpan Draft</button>
+          <button class="button primary" type="button" @click="submitOperatorReport">Submit</button>
         </div>
       </section>
 
@@ -273,7 +380,7 @@ onBeforeUnmount(() => {
             <p class="eyebrow">Sync</p>
             <h2 id="queue-title">Antrean device</h2>
           </div>
-          <button class="icon-button" type="button" aria-label="Retry sync">↻</button>
+          <button class="icon-button" type="button" aria-label="Retry sync">R</button>
         </div>
 
         <ul class="queue-list">

@@ -10,13 +10,14 @@
     "verify:singlefile": "node scripts/verify-singlefile-build.mjs",
     "build:verify": "npm run build && npm run verify:singlefile",
     "test:frontend:api": "node scripts/test-frontend-api-adapter.mjs",
+    "test:frontend:operator-form": "node scripts/test-operator-report-form.mjs",
     "test:gas:sheets": "node scripts/test-gas-sheets.mjs",
     "test:gas:auth": "node scripts/test-gas-auth.mjs",
     "test:gas:permissions": "node scripts/test-gas-permissions.mjs",
     "test:gas:script-properties": "node scripts/test-gas-script-properties.mjs",
     "audit:gas:validation": "node scripts/audit-gas-validation.mjs",
     "test:gas": "npm run audit:gas:validation && npm run test:gas:sheets && npm run test:gas:auth && npm run test:gas:permissions && npm run test:gas:script-properties",
-    "test": "npm run test:frontend:api && npm run test:gas",
+    "test": "npm run test:frontend:api && npm run test:frontend:operator-form && npm run test:gas",
     "prepare:gas": "node scripts/prepare-gas-deploy.mjs",
     "push:gas": "npm run build:verify && npm run prepare:gas && clasp push --force"
   },
@@ -24,6 +25,7 @@
     "@vitejs/plugin-vue": "^6.0.8",
     "vite": "^8.2.2",
     "vite-plugin-singlefile": "^2.3.3",
-    "vue": "^3.5.42"
+    "vue": "^3.5.42",
+    "zod": "^4.5.4"
   }
 }

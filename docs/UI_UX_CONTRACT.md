@@ -48,6 +48,8 @@ Wajib:
 - Kategori defect muncul hanya ketika `perolehan_reject > 0`.
 - Draft autosave tidak mengganggu input.
 - Tombol submit solid dan jelas.
+- Error validasi angka dan kategori defect tampil inline dekat field terkait.
+- Summary total target/OK/reject harus terlihat sebelum submit.
 
 Dilarang:
 - Tabel besar di layar operator.

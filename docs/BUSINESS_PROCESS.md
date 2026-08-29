@@ -46,6 +46,8 @@ Target OPTIFLOW:
 12. Jika backend mendeteksi konflik mesin sama, operator berbeda, dan waktu berdekatan, data ditulis dengan status `CONFLICT_PENDING` dan masuk `QUARANTINE`.
 13. Jika anomali lain muncul, data dicatat ke `RAW_LOGS` dan/atau `QUARANTINE` sesuai rule.
 
+Tahap `OPT-010` hanya menstandardisasi form operator, validasi Zod, pembuatan payload, dan staging submit di UI. Persistensi IndexedDB penuh berada di `OPT-011`, endpoint GAS append-only berada di `OPT-012`, dan retry sync queue berada di `OPT-013`.
+
 ## 4. Alur Offline
 
 1. Operator membuka aplikasi saat masih memiliki koneksi internet untuk memuat `Index.html` dari GAS HTML Service.

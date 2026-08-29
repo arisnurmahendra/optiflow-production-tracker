@@ -240,7 +240,7 @@ h2 {
 }
 
 .number-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 12px;
 }
 
@@ -248,6 +248,7 @@ h2 {
 .number-field {
   display: grid;
   gap: 6px;
+  align-content: start;
 }
 
 .field span,
@@ -291,6 +292,21 @@ input:focus,
   background: #fff7f7;
 }
 
+.defect-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.field-error {
+  min-height: 16px;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .check-row {
   min-height: 58px;
   margin-top: 12px;
@@ -301,6 +317,20 @@ input:focus,
   grid-template-columns: 1fr auto;
   gap: 4px 12px;
   background: #f0fdf4;
+}
+
+.check-row.valid {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.check-row.invalid {
+  border-color: #fca5a5;
+  background: #fff7f7;
+}
+
+.check-row.invalid small {
+  color: #991b1b;
 }
 
 .check-row strong {
@@ -487,6 +517,18 @@ td:nth-child(4) {
   line-height: 1.45;
 }
 
+.inline-info {
+  margin-top: 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 @media (max-width: 860px) {
   .app-shell {
     padding: 12px;
@@ -514,6 +556,7 @@ td:nth-child(4) {
   }
 
   .field-grid,
+  .defect-row,
   .number-grid {
     grid-template-columns: 1fr;
   }
