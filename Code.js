@@ -4,6 +4,7 @@
  */
 
 function doGet() {
+  // Input Validation & Sanitization
   OptiflowValidation.assertDoGetEvent(arguments, 'doGet');
 
   return HtmlService.createHtmlOutputFromFile('Index')
@@ -12,12 +13,14 @@ function doGet() {
 }
 
 function getHealthCheck() {
+  // Input Validation & Sanitization
   OptiflowValidation.assertNoInput(arguments, 'getHealthCheck');
 
   return OptiflowHealth.check();
 }
 
 function bootstrapSheets() {
+  // Input Validation & Sanitization
   var payload = OptiflowValidation.validateOptionalSessionRequest(arguments, arguments[0], 'bootstrapSheets');
   var session = OptiflowAuth.requireSession(payload, {
     resource: 'schema',
@@ -28,6 +31,7 @@ function bootstrapSheets() {
 }
 
 function getSchemaHealthCheck() {
+  // Input Validation & Sanitization
   var payload = OptiflowValidation.validateOptionalSessionRequest(arguments, arguments[0], 'getSchemaHealthCheck');
   var session = OptiflowAuth.requireSession(payload, {
     resource: 'schema',
@@ -38,11 +42,13 @@ function getSchemaHealthCheck() {
 }
 
 function getSessionContext(request) {
+  // Input Validation & Sanitization
   var payload = OptiflowValidation.validateSessionContextRequest(arguments, request);
   return OptiflowAuth.getSessionContext(payload);
 }
 
 function checkPermission(request) {
+  // Input Validation & Sanitization
   var payload = OptiflowValidation.validatePermissionCheckRequest(arguments, request);
   var session = OptiflowAuth.requireSession(payload.session || {});
 

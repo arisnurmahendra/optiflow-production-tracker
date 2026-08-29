@@ -102,6 +102,7 @@ Kriteria selesai:
 - `AUTH_MODE=OFF` mengembalikan daftar role simulasi dan memvalidasi role yang dipilih.
 - `AUTH_MODE=ON` mengabaikan request simulasi role dan memakai `Session.getActiveUser().getEmail()`.
 - Endpoint tanpa permission eksplisit ditolak dan mencatat audit `RBAC_DENIED`.
+- Callable wrapper di `Code.js` lolos audit `npm run audit:gas:validation`.
 
 ## 5. Fase 3 - Operator Reporting MVP
 

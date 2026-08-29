@@ -119,6 +119,14 @@ gas/
 
 `Code.js` hanya berperan sebagai entrypoint untuk `doGet()` dan wrapper fungsi yang dipanggil frontend. Business logic backend ditempatkan di modul `gas/*.gs` dengan namespace object agar aman di global scope Google Apps Script.
 
+Validasi backend:
+
+```powershell
+npm run test:gas
+```
+
+Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, dan test permission matrix.
+
 ## Author
 
 Aris Nur Mahendra  

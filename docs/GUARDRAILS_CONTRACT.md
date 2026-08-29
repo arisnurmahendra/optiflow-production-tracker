@@ -58,6 +58,8 @@
 - Blok `Input Validation & Sanitization` wajib memvalidasi tipe, field allowlist, enum, batas nilai, format tanggal, dan relasi data sesuai `DATA_SCHEMA.md`.
 - Data yang tidak sesuai dengan `DATA_SCHEMA.md` wajib ditolak dengan `throw new Error` atau safe structured error yang setara.
 - Validasi frontend Vue 3 tidak pernah menggantikan validasi backend GAS.
+- Callable wrapper di `Code.js` wajib memiliki komentar blok `Input Validation & Sanitization` dan memanggil `OptiflowValidation` sebelum session lookup, authorization, sheet access, atau business logic.
+- Compliance validasi entrypoint wajib dicek dengan `npm run audit:gas:validation` saat endpoint GAS ditambah atau diubah.
 - Dilarang memakai `deleteRow` untuk master data, user role, audit, dan transaksi.
 - Penghapusan wajib memakai soft-delete dengan `is_deleted=TRUE` dan `deleted_at`.
 - `RAW_LOGS` bersifat append-only.

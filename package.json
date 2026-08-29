@@ -12,7 +12,8 @@
     "test:gas:sheets": "node scripts/test-gas-sheets.mjs",
     "test:gas:auth": "node scripts/test-gas-auth.mjs",
     "test:gas:permissions": "node scripts/test-gas-permissions.mjs",
-    "test:gas": "npm run test:gas:sheets && npm run test:gas:auth && npm run test:gas:permissions",
+    "audit:gas:validation": "node scripts/audit-gas-validation.mjs",
+    "test:gas": "npm run audit:gas:validation && npm run test:gas:sheets && npm run test:gas:auth && npm run test:gas:permissions",
     "prepare:gas": "node scripts/prepare-gas-deploy.mjs",
     "push:gas": "npm run build:verify && npm run prepare:gas && clasp push --force"
   },
