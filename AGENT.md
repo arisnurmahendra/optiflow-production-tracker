@@ -142,6 +142,24 @@ Knowledge base maintenance is mandatory. Each iteration must be cross-checked ag
 
 When work maps to roadmap execution, update `ISSUE_TRACKER.md` before and after implementation. Local status must not be `Closed` until the corresponding GitHub Issue is closed or the user explicitly marks the item as local-only.
 
+### GitHub Issue Closure Protocol
+
+When closing any `OPT-*` item linked to GitHub, follow this exact sequence:
+1. Complete the implementation and verification first.
+2. Update the GitHub Issue body before closing:
+   - Set tracker status to `Closed`.
+   - Change every completed Acceptance Criteria checkbox from `[ ]` to `[x]`.
+   - Replace `TBD` verification fields with the actual commands, checks, and results.
+   - Record implementation notes, changed files, and any remaining risks or explicitly state that none remain.
+3. Add a GitHub Issue closure comment summarizing the work, verification, and commit hash.
+4. Close the GitHub Issue with reason `completed`.
+5. Verify the GitHub Issue state is `CLOSED` and `stateReason` is `COMPLETED`.
+6. Only after the GitHub Issue is confirmed closed, update local trackers:
+   - Set the matching row in `ISSUE_TRACKER.md` to `Closed`.
+   - Add or update a closed issue log entry with date, issue number, verification summary, and commit hash.
+   - Set the matching object in `ISSUE_TRACKER.json` to `Closed` and include `closed_at` plus verification evidence.
+7. Validate `ISSUE_TRACKER.json`, check local tracker references, commit the tracker update, and push when the work is part of GitHub-synced roadmap execution.
+
 ## 10. Definition Of Done
 
 Work is done only when:
@@ -152,5 +170,7 @@ Work is done only when:
 - Errors are safe and machine-readable.
 - Audit requirements are satisfied.
 - Relevant tests or manual verification pass.
+- Linked GitHub Issue Acceptance Criteria are checked, verification is filled, and the issue is closed when roadmap work is complete.
+- `ISSUE_TRACKER.md` and `ISSUE_TRACKER.json` match the final GitHub Issue status.
 - GAS backend changes include or update `test_runner.gs` coverage when behavior risk requires it.
 - No new secret, debug artifact, skipped test, or placeholder replaces required implementation.

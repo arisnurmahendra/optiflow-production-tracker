@@ -109,3 +109,125 @@ Wajib:
 - Jangan menaruh informasi kritis hanya di tooltip.
 - Error harus menjelaskan tindakan berikutnya tanpa menampilkan detail internal.
 
+## 10. Typography And Density
+
+OPTIFLOW adalah aplikasi operasional, bukan landing page. Skala tipografi harus padat, jelas, dan mudah dipindai.
+
+Token awal:
+
+| Token | Ukuran | Penggunaan |
+| :--- | :--- | :--- |
+| `text-xs` | `12px` | Metadata, timestamp, helper text. |
+| `text-sm` | `14px` | Label form, badge, secondary text. |
+| `text-md` | `16px` | Body utama dan input mobile. |
+| `text-lg` | `18px` | Section title dan card metric kecil. |
+| `text-xl` | `22px` | Judul halaman operasional. |
+| `metric` | `28px` | Angka target, OK, reject, output utama. |
+
+Rules:
+- Jangan memakai font yang sulit dibaca di lingkungan produksi.
+- Letter spacing harus `0`.
+- Jangan menskalakan font berdasarkan viewport width.
+- Angka produksi harus tabular jika font mendukung `font-variant-numeric: tabular-nums`.
+- Heading di dashboard tidak boleh berukuran hero.
+
+## 11. Spacing, Shape, And Elevation
+
+Token awal:
+
+| Token | Nilai | Penggunaan |
+| :--- | :--- | :--- |
+| `space-1` | `4px` | Jarak mikro antar ikon/teks. |
+| `space-2` | `8px` | Gap field kecil. |
+| `space-3` | `12px` | Padding badge/input compact. |
+| `space-4` | `16px` | Padding panel mobile. |
+| `space-6` | `24px` | Gap antar section. |
+| `radius-sm` | `4px` | Badge, tag, table cell highlight. |
+| `radius-md` | `8px` | Card, input, button, modal. |
+| `shadow-soft` | `0 8px 24px rgba(15, 23, 42, 0.08)` | Panel penting. |
+| `shadow-pressed` | `inset 2px 2px 5px rgba(15, 23, 42, 0.12), inset -2px -2px 5px rgba(255, 255, 255, 0.75)` | Toggle/segmented active state saja. |
+
+Rules:
+- Radius komponen operasional maksimal `8px`.
+- Shadow tidak boleh menggantikan border.
+- Efek pressed Neumorphism hanya untuk toggle, segmented control, atau status internal yang tidak kritis.
+- Claymorphism boleh dipakai untuk modal/summary ringan, tetapi opacity tidak boleh menurunkan keterbacaan.
+
+## 12. Component Contract
+
+Komponen inti wajib memiliki state `default`, `hover`, `focus`, `disabled`, `loading`, dan `error` bila relevan.
+
+| Komponen | Kontrak |
+| :--- | :--- |
+| Button | Primary solid untuk submit/approve; danger solid untuk reject; secondary outline untuk aksi pendukung. |
+| Input Number | Tinggi mobile minimal 48px, angka besar, validasi inline, tidak menggeser layout saat error muncul. |
+| Select/Search | Mendukung master data line, shift, machine, operator, dan defect category. |
+| Badge Status | Selalu pakai warna, ikon, dan teks. |
+| Metric Tile | Menampilkan label, value, delta/status kecil, dan sumber data. |
+| Data Table | Sticky header, pagination server-side, empty state, loading state, dan row action jelas. |
+| Detail Drawer | Untuk review tanpa meninggalkan tabel desktop. |
+| Confirmation Dialog | Wajib untuk approve/reject/closing/adjustment. |
+| Toast/Inline Alert | Toast untuk informasi non-kritis; inline alert untuk error yang perlu tindakan operator. |
+
+## 13. Responsive Layout Contract
+
+Breakpoint awal:
+
+| Breakpoint | Lebar | Target |
+| :--- | :--- | :--- |
+| `mobile` | `< 768px` | Operator dan Mandor lapangan. |
+| `tablet` | `768px - 1023px` | Mandor/Supervisor ringan. |
+| `desktop` | `>= 1024px` | Supervisor, HRD, SuperAdmin, Management. |
+
+Mobile:
+- Layout satu kolom.
+- Bottom action bar boleh dipakai untuk submit/retry/sync.
+- Status sync harus tetap terlihat tanpa membuka menu.
+- Form utama harus selesai dalam alur input yang pendek.
+
+Desktop:
+- Gunakan sidebar tetap atau top-level tabs sesuai kepadatan fitur.
+- Tabel dan filter boleh berdampingan jika ruang cukup.
+- Detail transaksi dibuka di drawer kanan.
+- Dashboard management harus memprioritaskan metric dan pengecualian operasional, bukan dekorasi.
+
+## 14. Offline And Sync UX
+
+UI wajib merepresentasikan kontrak Offline-Tolerant secara jujur.
+
+- Loading awal tetap membutuhkan koneksi internet ke GAS HTML Service.
+- Setelah aplikasi terbuka, draft dan queue disimpan melalui Global State ke IndexedDB.
+- UI tidak boleh menampilkan klaim "full offline/PWA" karena Service Worker bukan mekanisme wajib di GAS.
+- Status koneksi minimum: `Online`, `Offline - draft aman`, `Syncing`, `Sync failed`, dan `Synced`.
+- Tombol retry tersedia ketika sync gagal.
+- Queue count harus terlihat untuk operator dan Mandor.
+- Data yang belum tersinkron tidak boleh tampil sebagai data final.
+
+## 15. Conflict And HITL UX
+
+Data `CONFLICT_PENDING` harus terasa sebagai pengecualian serius, bukan sekadar badge kecil.
+
+Wajib:
+- Konflik tampil di prioritas atas inbox Mandor.
+- Bandingkan transaksi berdampingan: machine, operator, timestamp device, OK, reject, defect, dan sumber device.
+- Tampilkan alasan conflict, misalnya `MACHINE_OPERATOR_TIME_COLLISION`.
+- Dashboard Management mengecualikan konflik dari KPI dan menampilkan warning agregat.
+- Aksi konflik harus diaudit: `Approve`, `Reject`, `Reject Both`, atau `Request Correction`.
+
+Dilarang:
+- Auto-approve konflik.
+- Menyembunyikan konflik di tabel umum tanpa prioritas visual.
+- Menggunakan warna saja untuk menandai data konflik.
+
+## 16. Implementation Checklist
+
+Sebelum UI dianggap siap:
+- Token warna, spacing, radius, dan shadow dipakai konsisten.
+- Mobile operator lulus target sentuh minimal 44px.
+- Status sync/offline terlihat di layar utama.
+- Form reject hanya menampilkan kategori defect ketika reject lebih dari 0.
+- Critical actions memakai confirmation dialog.
+- Data `CONFLICT_PENDING` diprioritaskan dan dikecualikan dari dashboard final.
+- Desktop table memakai pagination/filter yang sesuai kontrak backend.
+- Semua error user-facing aman, ringkas, dan tidak membocorkan stack trace.
+- Screenshot/manual verification dilakukan untuk mobile dan desktop pada issue implementasi frontend terkait.
