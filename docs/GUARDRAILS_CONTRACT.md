@@ -42,6 +42,9 @@
 - Komponen Vue tidak boleh memanggil `google.script.run` langsung.
 - Semua panggilan backend wajib melewati `apiAdapter.js`.
 - Wrapper production di `apiAdapter.js` wajib membungkus `google.script.run.withSuccessHandler().withFailureHandler()` menjadi Promise atau kontrak async yang setara.
+- `apiAdapter.js` wajib memakai callable allowlist, timeout, normalisasi safe structured response, dan error object aman tanpa stack trace.
+- Local development wajib memakai `mock_gas.js` yang meniru response GAS, termasuk latency, failure injection, dan response shape `{ ok, data, meta, error }`.
+- `mock_gas.js` hanya boleh dipakai pada mode development/local; production build tetap memanggil Apps Script melalui `google.script.run`.
 - Komponen UI tidak boleh membaca atau menulis langsung ke IndexedDB.
 - Komponen UI hanya boleh berinteraksi dengan Global State/composables.
 - IndexedDB hanya boleh diakses melalui persistence service yang dipanggil oleh Global State.

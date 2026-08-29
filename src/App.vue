@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { ApiAdapterError, api } from './services/apiAdapter.js';
 
 const metrics = [
   { label: 'Target', value: '1,200', tone: 'neutral' },
@@ -66,8 +67,11 @@ const maintenanceProperties = ref([
 ]);
 
 const isMaintenanceOpen = ref(false);
+const isMaintenanceLoading = ref(false);
+const maintenanceError = ref('');
 const tapCount = ref(0);
 let keyBuffer = '';
+const maintenanceSession = { simulated_role: 'SuperAdmin' };
 
 const maintenanceSummary = computed(() => {
   const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
@@ -76,10 +80,84 @@ const maintenanceSummary = computed(() => {
 
 function openMaintenanceConsole() {
   isMaintenanceOpen.value = true;
+  refreshMaintenanceProperties();
 }
 
 function closeMaintenanceConsole() {
   isMaintenanceOpen.value = false;
+  maintenanceError.value = '';
+}
+
+async function refreshMaintenanceProperties() {
+  isMaintenanceLoading.value = true;
+  maintenanceError.value = '';
+
+  try {
+    const response = await api.getScriptPropertiesStatus({ session: maintenanceSession });
+    maintenanceProperties.value = response.data.properties || [];
+  } catch (error) {
+    maintenanceError.value = getSafeErrorMessage(error);
+  } finally {
+    isMaintenanceLoading.value = false;
+  }
+}
+
+async function updateMaintenanceProperty(property) {
+  const nextValue = window.prompt(`Nilai baru untuk ${property.key}`, property.value_preview || '');
+
+  if (nextValue === null) {
+    return;
+  }
+
+  await runMaintenanceAction(() => api.setScriptProperty({
+    session: maintenanceSession,
+    key: property.key,
+    value: nextValue,
+  }));
+}
+
+async function deleteMaintenanceProperty(property) {
+  if (!window.confirm(`Hapus value ${property.key}?`)) {
+    return;
+  }
+
+  await runMaintenanceAction(() => api.deleteScriptProperty({
+    session: maintenanceSession,
+    key: property.key,
+  }));
+}
+
+async function rotateMaintenanceProperty(property) {
+  if (!window.confirm(`Rotate secret ${property.key}? Nilai lama tidak akan ditampilkan.`)) {
+    return;
+  }
+
+  await runMaintenanceAction(() => api.rotateSecretProperty({
+    session: maintenanceSession,
+    key: property.key,
+  }));
+}
+
+async function runMaintenanceAction(action) {
+  isMaintenanceLoading.value = true;
+  maintenanceError.value = '';
+
+  try {
+    await action();
+    await refreshMaintenanceProperties();
+  } catch (error) {
+    maintenanceError.value = getSafeErrorMessage(error);
+  } finally {
+    isMaintenanceLoading.value = false;
+  }
+}
+
+function getSafeErrorMessage(error) {
+  if (error instanceof ApiAdapterError) {
+    return `${error.code}: ${error.message}`;
+  }
+
+  return 'Aksi gagal. Periksa koneksi atau permission SuperAdmin.';
 }
 
 function handleBrandTap() {
@@ -275,6 +353,11 @@ onBeforeUnmount(() => {
         <div class="maintenance-status">
           <span class="status success">{{ maintenanceSummary }}</span>
           <span class="status warning">Secret status-only</span>
+          <span v-if="isMaintenanceLoading" class="status warning">Loading</span>
+        </div>
+
+        <div v-if="maintenanceError" class="inline-error" role="alert">
+          {{ maintenanceError }}
         </div>
 
         <div class="table-wrap">
@@ -300,13 +383,28 @@ onBeforeUnmount(() => {
                 <td>{{ property.value_preview || 'Hidden' }}</td>
                 <td>
                   <div class="maintenance-actions">
-                    <button class="button secondary compact-button" type="button" :disabled="!property.updatable">
+                    <button
+                      class="button secondary compact-button"
+                      type="button"
+                      :disabled="isMaintenanceLoading || !property.updatable"
+                      @click="updateMaintenanceProperty(property)"
+                    >
                       Update
                     </button>
-                    <button class="button secondary compact-button" type="button" :disabled="!property.deletable">
+                    <button
+                      class="button secondary compact-button"
+                      type="button"
+                      :disabled="isMaintenanceLoading || !property.deletable"
+                      @click="deleteMaintenanceProperty(property)"
+                    >
                       Delete
                     </button>
-                    <button class="button primary compact-button" type="button" :disabled="!property.rotatable">
+                    <button
+                      class="button primary compact-button"
+                      type="button"
+                      :disabled="isMaintenanceLoading || !property.rotatable"
+                      @click="rotateMaintenanceProperty(property)"
+                    >
                       Rotate
                     </button>
                   </div>
@@ -317,7 +415,7 @@ onBeforeUnmount(() => {
         </div>
 
         <p class="maintenance-note">
-          Endpoint GAS wajib memvalidasi allowlist, RBAC, dan audit sebelum aksi ini aktif penuh lewat apiAdapter.
+          Semua aksi melewati apiAdapter, callable allowlist, validasi backend, RBAC, dan audit.
         </p>
       </div>
     </section>

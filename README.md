@@ -129,6 +129,10 @@ npm run test:gas
 
 Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, dan test permission matrix.
 
+## Frontend API Adapter
+
+Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation.
+
 ## Author
 
 Aris Nur Mahendra  

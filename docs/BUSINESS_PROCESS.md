@@ -83,6 +83,14 @@ Fase sync:
 4. Jika GAS mengembalikan success tervalidasi, Global State menghapus item dari queue IndexedDB dan menandai status `SYNCED`.
 5. Jika GAS mengembalikan conflict/error, item tetap berada di IndexedDB dengan status `CONFLICT` atau `FAILED`.
 
+Kontrak adapter API:
+1. Komponen Vue memanggil composable/service, bukan `google.script.run` langsung.
+2. `apiAdapter.js` menjadi satu-satunya wrapper production untuk callable GAS.
+3. Adapter mengubah `google.script.run.withSuccessHandler().withFailureHandler()` menjadi Promise dengan timeout.
+4. Adapter hanya boleh memanggil nama fungsi GAS yang ada di callable allowlist.
+5. Local development memakai `mock_gas.js` dengan bentuk response yang sama seperti GAS agar UI bisa diuji tanpa deploy.
+6. Mock wajib bisa mensimulasikan latency dan failure agar state loading/error/retry tidak hanya diuji secara optimistis.
+
 ## 6. Alur Quarantine
 
 Data masuk quarantine jika memenuhi indikasi:

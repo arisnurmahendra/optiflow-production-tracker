@@ -111,6 +111,8 @@ Tujuan:
 
 Deliverables:
 - UI mobile operator mengikuti Industrial Soft UI dengan tombol aksi solid dan target sentuh minimal 44px.
+- `apiAdapter.js` production wrapper untuk semua callable GAS yang dipakai frontend.
+- `mock_gas.js` local development adapter dengan latency dan failure simulation.
 - Form input: line, shift, machine ID, target harian, tandon, OK, reject, dan kategori defect jika reject lebih dari 0.
 - Autosave draft lokal sebelum submit.
 - Global State/composables sebagai satu-satunya interface UI untuk membaca/menulis draft.
@@ -122,6 +124,9 @@ Deliverables:
 - Append ke `RAW_LOGS`.
 
 Kriteria selesai:
+- Tidak ada komponen Vue yang memanggil `google.script.run` langsung.
+- Adapter menolak callable yang tidak di-allowlist.
+- Local mock mengembalikan response shape sama seperti GAS dan bisa mensimulasikan failure.
 - Submit valid tersimpan satu kali.
 - Submit duplikat tidak menggandakan data.
 - Payload tidak valid ditolak dengan error terstruktur.

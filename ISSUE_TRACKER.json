@@ -330,7 +330,7 @@
     {
       "id": "OPT-009",
       "title": "Build production apiAdapter.js and local mock_gas.js",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",
