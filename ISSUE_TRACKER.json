@@ -251,7 +251,7 @@
     {
       "id": "OPT-006",
       "title": "Implement AUTH_MODE session context and RBAC",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:security",
@@ -260,7 +260,19 @@
         "sync:github"
       ],
       "milestone": "M2 - Backend Foundation",
-      "github_issue": 6
+      "github_issue": 6,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "npm run test:gas passed",
+        "npm run test:gas:auth passed",
+        "npm run build:verify passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "npm run prepare:gas and clasp status passed with auth/audit modules included",
+        "JSON validation passed",
+        "Mojibake check passed",
+        "Implementation pushed in commit ef70a4f",
+        "GitHub issue #6 closed as completed"
+      ]
     },
     {
       "id": "OPT-007",

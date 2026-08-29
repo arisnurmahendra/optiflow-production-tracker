@@ -64,7 +64,7 @@ Status:
 | `OPT-003` | Bootstrap Vue 3 + Vite single-file build | Closed | P0 | `type:feature`, `area:frontend`, `area:deployment`, `priority:p0`, `sync:github` | `M1 - Project Bootstrap` | #3 |
 | `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Closed | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | #4 |
 | `OPT-005` | Implement GAS sheet bootstrap and schema health check | Closed | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #5 |
-| `OPT-006` | Implement AUTH_MODE session context and RBAC | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #6 |
+| `OPT-006` | Implement AUTH_MODE session context and RBAC | Closed | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #6 |
 | `OPT-007` | Implement ROLE_PERMISSIONS enforcement | Backlog | P0 | `type:security`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #7 |
 | `OPT-008` | Implement Input Validation & Sanitization blocks for GAS endpoints | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #8 |
 | `OPT-009` | Build production `apiAdapter.js` and local `mock_gas.js` | Backlog | P1 | `type:feature`, `area:frontend`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #9 |
@@ -95,6 +95,7 @@ Status:
 | `OPT-003` | #3 | 2026-08-30 | `npm audit --audit-level=moderate` passed; `npm run build:verify` passed; only `dist/Index.html` produced; bootstrap pushed in commit `152a6e0`. |
 | `OPT-004` | #4 | 2026-08-30 | `npm run prepare:gas` passed; `clasp status` showed only `deploy/appsscript.json`, `deploy/Code.js`, and `deploy/Index.html`; deploy flow pushed in commit `29c0485`. |
 | `OPT-005` | #5 | 2026-08-30 | `npm run test:gas:sheets` passed; sheet bootstrap and schema health implemented; modular GAS files pushed in commit `c2cf74c`. |
+| `OPT-006` | #6 | 2026-08-30 | `npm run test:gas:auth` passed; `AUTH_MODE` session context, dev role simulation, production role lookup, baseline RBAC, and audit events pushed in commit `ef70a4f`. |
 
 ## 6. Issue Template
 
