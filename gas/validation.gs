@@ -88,6 +88,104 @@ var OptiflowValidation = (function () {
     };
   }
 
+  function validateScriptPropertiesStatusRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getScriptPropertiesStatus', ['session'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+    };
+  }
+
+  function validateScriptPropertyUpdateRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'setScriptProperty', ['session', 'key', 'value'], false);
+    var key = validateScriptPropertyKey(payload.key);
+    var contract = OPTIFLOW_SCRIPT_PROPERTY_CONTRACT[key];
+
+    if (!contract.updatable) {
+      throw new Error('Input Validation & Sanitization: script property is not updatable through this endpoint.');
+    }
+
+    if (typeof payload.value !== 'string') {
+      throw new Error('Input Validation & Sanitization: script property value must be a string.');
+    }
+
+    var value = payload.value.trim();
+
+    if (key === 'AUTH_MODE' && contract.allowed_values.indexOf(value.toUpperCase()) === -1) {
+      throw new Error('Input Validation & Sanitization: AUTH_MODE must be ON or OFF.');
+    }
+
+    if (key === 'SPREADSHEET_ID' && !new RegExp(contract.pattern).test(value)) {
+      throw new Error('Input Validation & Sanitization: SPREADSHEET_ID format is invalid.');
+    }
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      key: key,
+      value: key === 'AUTH_MODE' ? value.toUpperCase() : value,
+    };
+  }
+
+  function validateScriptPropertyDeleteRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'deleteScriptProperty', ['session', 'key'], false);
+    var key = validateScriptPropertyKey(payload.key);
+
+    if (!OPTIFLOW_SCRIPT_PROPERTY_CONTRACT[key].deletable) {
+      throw new Error('Input Validation & Sanitization: script property is not deletable through this endpoint.');
+    }
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      key: key,
+    };
+  }
+
+  function validateSecretRotationRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'rotateSecretProperty', ['session', 'key'], false);
+    var key = validateScriptPropertyKey(payload.key);
+
+    if (!OPTIFLOW_SCRIPT_PROPERTY_CONTRACT[key].rotatable) {
+      throw new Error('Input Validation & Sanitization: script property is not rotatable through this endpoint.');
+    }
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      key: key,
+    };
+  }
+
+  function validateRequestObject(args, request, functionName, allowedKeys, allowMissing) {
+    if ((!args || args.length === 0 || request === undefined || request === null) && allowMissing) {
+      return {};
+    }
+
+    if (!args || args.length !== 1 || typeof request !== 'object' || request === null || Array.isArray(request)) {
+      throw new Error('Input Validation & Sanitization: ' + functionName + ' expects one object payload.');
+    }
+
+    Object.keys(request).forEach(function (key) {
+      if (allowedKeys.indexOf(key) === -1) {
+        throw new Error('Input Validation & Sanitization: unsupported field ' + key + '.');
+      }
+    });
+
+    return request;
+  }
+
+  function validateScriptPropertyKey(key) {
+    if (typeof key !== 'string') {
+      throw new Error('Input Validation & Sanitization: script property key must be a string.');
+    }
+
+    var normalizedKey = key.trim().toUpperCase();
+
+    if (!OPTIFLOW_SCRIPT_PROPERTY_CONTRACT[normalizedKey]) {
+      throw new Error('Input Validation & Sanitization: script property key is not allowlisted.');
+    }
+
+    return normalizedKey;
+  }
+
   function assertKnownPermission(resource, action) {
     if (typeof resource !== 'string' || typeof action !== 'string') {
       throw new Error('Input Validation & Sanitization: resource and action must be strings.');
@@ -108,6 +206,10 @@ var OptiflowValidation = (function () {
     assertDoGetEvent: assertDoGetEvent,
     validateOptionalSessionRequest: validateOptionalSessionRequest,
     validatePermissionCheckRequest: validatePermissionCheckRequest,
+    validateScriptPropertiesStatusRequest: validateScriptPropertiesStatusRequest,
+    validateScriptPropertyDeleteRequest: validateScriptPropertyDeleteRequest,
+    validateScriptPropertyUpdateRequest: validateScriptPropertyUpdateRequest,
     validateSessionContextRequest: validateSessionContextRequest,
+    validateSecretRotationRequest: validateSecretRotationRequest,
   });
 })();

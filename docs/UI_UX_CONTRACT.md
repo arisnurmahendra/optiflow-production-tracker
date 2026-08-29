@@ -86,7 +86,24 @@ Wajib:
 - Tampilkan badge jika masih ada quarantine pending atau closing belum selesai.
 - Widget utama: target vs actual, OK, reject, defect rate, closing status, Pareto defect, dan trend harian.
 
-## 8. Status Treatment
+## 8. Hidden SuperAdmin Maintenance Console
+
+Console maintenance untuk Script Properties harus terasa seperti tool administratif, bukan fitur operasional umum.
+
+Wajib:
+- Tersembunyi dari navigasi normal dan hanya tampil lewat hidden trigger yang disepakati.
+- Menampilkan status allowlisted key, sensitivitas, masked preview untuk config, dan status-only untuk secret.
+- Memakai confirmation dialog untuk update, delete, dan rotate.
+- Menampilkan error aman tanpa stack trace atau nilai property.
+- Menyediakan status refresh setelah aksi berhasil.
+- Mobile tetap bisa membuka console untuk emergency, tetapi tabel boleh horizontal scroll karena ini bukan workflow harian operator.
+
+Dilarang:
+- Menampilkan `ENCRYPTION_SALT`, token, credential, atau secret mentah.
+- Menjadikan hidden trigger sebagai kontrol keamanan utama; keamanan tetap berada di RBAC backend.
+- Memakai gaya visual mencolok yang membuat console terlihat seperti menu utama operator.
+
+## 9. Status Treatment
 
 | Status | Tampilan wajib |
 | :--- | :--- |
@@ -100,7 +117,7 @@ Wajib:
 | `REJECTED` | Danger, teks `Ditolak`. |
 | `CLOSED` | Netral tegas, teks `Closing selesai`. |
 
-## 9. Accessibility And Ergonomics
+## 10. Accessibility And Ergonomics
 
 - Target sentuh mobile minimal 44px.
 - Teks harus tetap terbaca di layar redup.
@@ -109,7 +126,7 @@ Wajib:
 - Jangan menaruh informasi kritis hanya di tooltip.
 - Error harus menjelaskan tindakan berikutnya tanpa menampilkan detail internal.
 
-## 10. Typography And Density
+## 11. Typography And Density
 
 OPTIFLOW adalah aplikasi operasional, bukan landing page. Skala tipografi harus padat, jelas, dan mudah dipindai.
 
@@ -131,7 +148,7 @@ Rules:
 - Angka produksi harus tabular jika font mendukung `font-variant-numeric: tabular-nums`.
 - Heading di dashboard tidak boleh berukuran hero.
 
-## 11. Spacing, Shape, And Elevation
+## 12. Spacing, Shape, And Elevation
 
 Token awal:
 
@@ -153,7 +170,7 @@ Rules:
 - Efek pressed Neumorphism hanya untuk toggle, segmented control, atau status internal yang tidak kritis.
 - Claymorphism boleh dipakai untuk modal/summary ringan, tetapi opacity tidak boleh menurunkan keterbacaan.
 
-## 12. Component Contract
+## 13. Component Contract
 
 Komponen inti wajib memiliki state `default`, `hover`, `focus`, `disabled`, `loading`, dan `error` bila relevan.
 
@@ -169,7 +186,7 @@ Komponen inti wajib memiliki state `default`, `hover`, `focus`, `disabled`, `loa
 | Confirmation Dialog | Wajib untuk approve/reject/closing/adjustment. |
 | Toast/Inline Alert | Toast untuk informasi non-kritis; inline alert untuk error yang perlu tindakan operator. |
 
-## 13. Responsive Layout Contract
+## 14. Responsive Layout Contract
 
 Breakpoint awal:
 
@@ -191,7 +208,7 @@ Desktop:
 - Detail transaksi dibuka di drawer kanan.
 - Dashboard management harus memprioritaskan metric dan pengecualian operasional, bukan dekorasi.
 
-## 14. Offline And Sync UX
+## 15. Offline And Sync UX
 
 UI wajib merepresentasikan kontrak Offline-Tolerant secara jujur.
 
@@ -203,7 +220,7 @@ UI wajib merepresentasikan kontrak Offline-Tolerant secara jujur.
 - Queue count harus terlihat untuk operator dan Mandor.
 - Data yang belum tersinkron tidak boleh tampil sebagai data final.
 
-## 15. Conflict And HITL UX
+## 16. Conflict And HITL UX
 
 Data `CONFLICT_PENDING` harus terasa sebagai pengecualian serius, bukan sekadar badge kecil.
 
@@ -219,7 +236,7 @@ Dilarang:
 - Menyembunyikan konflik di tabel umum tanpa prioritas visual.
 - Menggunakan warna saja untuk menandai data konflik.
 
-## 16. Implementation Checklist
+## 17. Implementation Checklist
 
 Sebelum UI dianggap siap:
 - Token warna, spacing, radius, dan shadow dipakai konsisten.

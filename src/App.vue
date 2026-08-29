@@ -1,4 +1,6 @@
 <script setup>
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+
 const metrics = [
   { label: 'Target', value: '1,200', tone: 'neutral' },
   { label: 'OK', value: '1,164', tone: 'success' },
@@ -23,13 +25,100 @@ const reviewRows = [
   { machine: 'SLD-14', operator: 'Rina', ok: 416, reject: 12, status: 'CONFLICT_PENDING' },
   { machine: 'SLD-18', operator: 'Budi', ok: 328, reject: 5, status: 'PENDING_SYNC' },
 ];
+
+const maintenanceProperties = ref([
+  {
+    key: 'AUTH_MODE',
+    sensitivity: 'CONFIG',
+    status: 'SET',
+    value_preview: 'OFF',
+    updatable: true,
+    deletable: false,
+    rotatable: false,
+  },
+  {
+    key: 'SPREADSHEET_ID',
+    sensitivity: 'CONFIG',
+    status: 'SET',
+    value_preview: '1abc...2345',
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+  },
+  {
+    key: 'ENCRYPTION_SALT',
+    sensitivity: 'SECRET',
+    status: 'SET',
+    value_preview: '',
+    updatable: false,
+    deletable: false,
+    rotatable: true,
+  },
+]);
+
+const isMaintenanceOpen = ref(false);
+const tapCount = ref(0);
+let keyBuffer = '';
+
+const maintenanceSummary = computed(() => {
+  const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
+  return `${setCount}/${maintenanceProperties.value.length} key siap`;
+});
+
+function openMaintenanceConsole() {
+  isMaintenanceOpen.value = true;
+}
+
+function closeMaintenanceConsole() {
+  isMaintenanceOpen.value = false;
+}
+
+function handleBrandTap() {
+  tapCount.value += 1;
+
+  if (tapCount.value >= 5) {
+    openMaintenanceConsole();
+    tapCount.value = 0;
+  }
+
+  window.setTimeout(() => {
+    tapCount.value = 0;
+  }, 1400);
+}
+
+function handleKeydown(event) {
+  if (event.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) {
+    return;
+  }
+
+  keyBuffer = `${keyBuffer}${event.key}`.toUpperCase().replace(/[^A-Z]/g, '').slice(-14);
+
+  if (keyBuffer.endsWith('OPTIFLOWADMIN')) {
+    openMaintenanceConsole();
+    keyBuffer = '';
+  }
+
+  if (event.key === 'Escape') {
+    closeMaintenanceConsole();
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
   <main class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">OPTIFLOW</p>
+        <button class="brand-trigger" type="button" aria-label="OPTIFLOW maintenance trigger" @click="handleBrandTap">
+          OPTIFLOW
+        </button>
         <h1>Input produksi harian</h1>
       </div>
       <div class="sync-pill" aria-label="Status sinkronisasi">
@@ -154,5 +243,74 @@ const reviewRows = [
         </div>
       </section>
     </div>
+
+    <section
+      v-if="isMaintenanceOpen"
+      class="maintenance-console"
+      aria-labelledby="maintenance-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="maintenance-scrim" @click="closeMaintenanceConsole"></div>
+      <div class="maintenance-panel">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">SuperAdmin</p>
+            <h2 id="maintenance-title">Maintenance console</h2>
+          </div>
+          <button class="icon-button" type="button" aria-label="Tutup maintenance console" @click="closeMaintenanceConsole">
+            X
+          </button>
+        </div>
+
+        <div class="maintenance-status">
+          <span class="status success">{{ maintenanceSummary }}</span>
+          <span class="status warning">Secret status-only</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Preview</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="property in maintenanceProperties" :key="property.key">
+                <td>{{ property.key }}</td>
+                <td>{{ property.sensitivity }}</td>
+                <td>
+                  <span :class="['status', property.status === 'SET' ? 'success' : 'warning']">
+                    {{ property.status }}
+                  </span>
+                </td>
+                <td>{{ property.value_preview || 'Hidden' }}</td>
+                <td>
+                  <div class="maintenance-actions">
+                    <button class="button secondary compact-button" type="button" :disabled="!property.updatable">
+                      Update
+                    </button>
+                    <button class="button secondary compact-button" type="button" :disabled="!property.deletable">
+                      Delete
+                    </button>
+                    <button class="button primary compact-button" type="button" :disabled="!property.rotatable">
+                      Rotate
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="maintenance-note">
+          Endpoint GAS wajib memvalidasi allowlist, RBAC, dan audit sebelum aksi ini aktif penuh lewat apiAdapter.
+        </p>
+      </div>
+    </section>
   </main>
 </template>

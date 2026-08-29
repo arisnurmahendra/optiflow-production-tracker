@@ -58,3 +58,27 @@ function checkPermission(request) {
     action: payload.action,
   });
 }
+
+function getScriptPropertiesStatus(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateScriptPropertiesStatusRequest(arguments, request);
+  return OptiflowScriptProperties.getStatus(payload.session || {});
+}
+
+function setScriptProperty(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateScriptPropertyUpdateRequest(arguments, request);
+  return OptiflowScriptProperties.setProperty(payload);
+}
+
+function deleteScriptProperty(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateScriptPropertyDeleteRequest(arguments, request);
+  return OptiflowScriptProperties.deleteProperty(payload);
+}
+
+function rotateSecretProperty(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateSecretRotationRequest(arguments, request);
+  return OptiflowScriptProperties.rotateSecret(payload);
+}

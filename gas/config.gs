@@ -40,7 +40,33 @@ var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   adjustment: Object.freeze(['create', 'read', 'approve', 'reject']),
   dashboard: Object.freeze(['read']),
   user_role: Object.freeze(['create', 'read', 'update', 'soft_delete']),
-  script_property: Object.freeze(['read_status', 'update', 'rotate_secret']),
+  script_property: Object.freeze(['read_status', 'update', 'delete', 'rotate_secret']),
+});
+
+var OPTIFLOW_SCRIPT_PROPERTY_CONTRACT = Object.freeze({
+  AUTH_MODE: Object.freeze({
+    sensitivity: 'CONFIG',
+    readable: true,
+    updatable: true,
+    deletable: false,
+    rotatable: false,
+    allowed_values: Object.freeze(['ON', 'OFF']),
+  }),
+  SPREADSHEET_ID: Object.freeze({
+    sensitivity: 'CONFIG',
+    readable: true,
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+    pattern: '^[A-Za-z0-9_-]{20,}$',
+  }),
+  ENCRYPTION_SALT: Object.freeze({
+    sensitivity: 'SECRET',
+    readable: false,
+    updatable: false,
+    deletable: false,
+    rotatable: true,
+  }),
 });
 
 var OPTIFLOW_SHEET_SCHEMAS = Object.freeze({

@@ -51,6 +51,7 @@ Before code changes, read the relevant docs:
 - Data storage uses Google Sheets multi-sheet architecture.
 - Frontend calls backend only through `apiAdapter.js`.
 - Local development uses `mock_gas.js` with latency and failure simulation.
+- Hidden maintenance console actions must still call GAS endpoints through `apiAdapter.js`; the hidden trigger is not a security boundary.
 - `Code.js` must stay thin as the public entrypoint for `doGet()` and externally callable wrappers.
 - Scalable backend logic belongs in modular `.gs` files under `gas/`.
 - GAS modules share global scope; use namespace objects such as `OptiflowHealth`, `OptiflowResponse`, and future `OptiflowValidation` instead of unscoped helper function names.
@@ -69,6 +70,8 @@ Rules:
 - Never expose Script Properties to Vue.
 - Never store role lists in Script Properties.
 - Never log secrets, tokens, credentials, OTP, PIN, MFA data, or raw PII.
+- Manage Script Properties only through allowlisted SuperAdmin maintenance endpoints.
+- Secret properties such as `ENCRYPTION_SALT` must be status-only in frontend responses; direct read/update/delete is forbidden.
 
 ## 5. Data Contract
 

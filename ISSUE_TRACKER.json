@@ -593,6 +593,22 @@
       ],
       "milestone": "M7 - QCC Report & Rollout",
       "github_issue": 26
+    },
+    {
+      "id": "OPT-027",
+      "title": "Build SuperAdmin hidden maintenance console for safe Script Properties management",
+      "status": "Review",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "type:security",
+        "area:backend",
+        "area:frontend",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M6 - Security, Testing & Deployment",
+      "github_issue": 27
     }
   ]
 }

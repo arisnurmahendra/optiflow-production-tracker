@@ -248,7 +248,89 @@ Response success:
 
 Response session context tidak boleh memuat `nama_lengkap_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, `ENCRYPTION_SALT`, atau isi `SCRIPT_PROPERTIES`.
 
-## 15. Standar Waktu
+## 15. Kontrak JSON Script Properties Maintenance
+
+Script Properties hanya boleh dikelola lewat endpoint maintenance SuperAdmin yang memakai allowlist. Frontend tidak boleh menerima dump mentah `PropertiesService.getScriptProperties()`.
+
+Allowlist:
+
+| Key | Sensitivitas | Read | Update | Delete | Rotate | Aturan |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `AUTH_MODE` | `CONFIG` | Masked/full enum | Ya | Tidak | Tidak | Nilai hanya `ON` atau `OFF`. |
+| `SPREADSHEET_ID` | `CONFIG` | Masked preview | Ya | Ya | Tidak | Format Google ID alfanumerik, `_`, atau `-`, minimal 20 karakter. |
+| `ENCRYPTION_SALT` | `SECRET` | Status-only | Tidak | Tidak | Ya | Tidak pernah dikirim mentah ke frontend, log, atau audit metadata. |
+
+Request baca status:
+
+```json
+{
+  "session": {
+    "simulated_role": "SuperAdmin"
+  }
+}
+```
+
+Response baca status:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "properties": [
+      {
+        "key": "ENCRYPTION_SALT",
+        "sensitivity": "SECRET",
+        "status": "SET",
+        "readable": false,
+        "updatable": false,
+        "deletable": false,
+        "rotatable": true,
+        "value_preview": ""
+      }
+    ]
+  },
+  "meta": {},
+  "error": null
+}
+```
+
+Request update config:
+
+```json
+{
+  "session": {
+    "simulated_role": "SuperAdmin"
+  },
+  "key": "AUTH_MODE",
+  "value": "OFF"
+}
+```
+
+Request delete config:
+
+```json
+{
+  "session": {
+    "simulated_role": "SuperAdmin"
+  },
+  "key": "SPREADSHEET_ID"
+}
+```
+
+Request rotate secret:
+
+```json
+{
+  "session": {
+    "simulated_role": "SuperAdmin"
+  },
+  "key": "ENCRYPTION_SALT"
+}
+```
+
+Semua endpoint maintenance wajib menolak key yang tidak ada di allowlist, action yang tidak sesuai kontrak key, role tanpa permission `script_property:*`, dan payload yang membawa field tambahan.
+
+## 16. Standar Waktu
 
 - Semua timestamp transaksional disimpan sebagai ISO 8601 UTC.
 - `device_timestamp` wajib merepresentasikan waktu aktual ketika operator menekan submit di perangkat.
@@ -256,7 +338,7 @@ Response session context tidak boleh memuat `nama_lengkap_encrypted`, `nomor_tel
 - Rekap harian memakai anchor timezone pabrik `Asia/Jakarta`.
 - Frontend boleh merender waktu sesuai timezone perangkat, tetapi tidak boleh mengubah nilai mentah di database.
 
-## 16. Kontrak Event Sourcing Dan Conflict Flagging
+## 17. Kontrak Event Sourcing Dan Conflict Flagging
 
 - Sinkronisasi dari IndexedDB ke GAS wajib menambah baris baru di `RAW_LOGS` melalui insert/append row.
 - Sinkronisasi offline tidak boleh menimpa cell atau baris lama di Google Sheets.

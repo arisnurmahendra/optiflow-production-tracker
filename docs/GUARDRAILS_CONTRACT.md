@@ -10,6 +10,9 @@
 - Enkripsi/dekripsi PII hanya boleh terjadi di backend.
 - Data PII yang dikirim ke UI harus dimasking kecuali role pengguna adalah `HRD` atau `SuperAdmin`.
 - Audit log tidak boleh menyimpan password, secret, token, nomor telepon mentah, atau PII mentah.
+- Script Properties hanya boleh disentuh melalui endpoint maintenance allowlisted untuk key yang disahkan di `DATA_SCHEMA.md`.
+- Endpoint maintenance Script Properties tidak boleh mengirim nilai secret mentah ke frontend; secret hanya boleh dikembalikan sebagai status `SET` atau `NOT_SET`.
+- Mutasi Script Properties wajib diaudit dengan metadata yang tidak berisi nilai property.
 
 ## 2. Auth Dan RBAC
 
@@ -25,6 +28,7 @@
 - Role saja tidak cukup untuk authorization; backend wajib mengecek `ROLE_PERMISSIONS` berdasarkan exact match `role + resource + action`.
 - Tidak ada implicit allow untuk `SuperAdmin`; permission tetap harus eksplisit agar dapat diaudit.
 - Missing permission wajib fail closed dan dicatat ke `AUDIT_LOGS` sebagai `RBAC_DENIED`.
+- Aksi hidden maintenance console wajib memakai permission exact match `script_property:read_status`, `script_property:update`, `script_property:delete`, atau `script_property:rotate_secret`.
 - MFA, password policy, dan account lockout dikelola oleh Google Workspace untuk model auth saat ini; jika custom password auth ditambahkan, kontrol password pada `POL.ISMS.001.md` menjadi wajib di aplikasi.
 
 ## 3. Frontend Dan API
@@ -50,6 +54,7 @@
 - Seluruh proses kompilasi frontend wajib menggunakan Vite dengan `vite-plugin-singlefile`.
 - Dilarang keras menghasilkan file `.js` atau `.css` terpisah di direktori `/dist`.
 - Seluruh komponen Vue 3, styling, dan aset base64 wajib ter-bundle 100% ke dalam satu file tunggal `Index.html` agar dapat dieksekusi oleh engine Google Apps Script HTML Service.
+- Hidden maintenance console boleh ada untuk `SuperAdmin`, tetapi harus tersembunyi dari navigasi normal, tidak boleh menampilkan secret, dan semua aksi wajib melewati `apiAdapter.js` menuju endpoint GAS tervalidasi.
 
 ## 4. Data Integrity
 

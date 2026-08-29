@@ -194,7 +194,31 @@ Session context yang dikirim ke frontend tidak boleh memuat PII mentah atau secr
 
 Setiap session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata yang aman.
 
-## 13. Kontrak ROLE_PERMISSIONS
+## 13. Alur Hidden Maintenance Console SuperAdmin
+
+Hidden maintenance console hanya dipakai untuk troubleshooting konfigurasi production/development oleh `SuperAdmin`.
+
+Aturan akses:
+1. UI console disembunyikan dari navigasi normal dan hanya muncul lewat hidden trigger yang disepakati.
+2. Console tetap wajib memanggil backend; UI tidak boleh menyimpan, membaca, atau menebak nilai Script Properties.
+3. Backend memvalidasi session dan permission `script_property` sebelum membaca status, update, delete, atau rotate.
+4. `SuperAdmin` tetap membutuhkan permission eksplisit di `ROLE_PERMISSIONS`; tidak ada bypass role.
+5. Secret seperti `ENCRYPTION_SALT` hanya tampil sebagai status `SET` atau `NOT_SET`, bukan nilai mentah.
+6. Update `AUTH_MODE` harus terbatas ke `ON` atau `OFF`.
+7. Delete hanya boleh untuk key konfigurasi yang aman dihapus berdasarkan `DATA_SCHEMA.md`; `AUTH_MODE` dan secret tidak boleh dihapus.
+8. Rotate secret hanya boleh untuk key yang rotatable dan harus mengembalikan status-only.
+9. Semua aksi maintenance wajib dicatat ke `AUDIT_LOGS` dengan metadata tanpa secret.
+
+Alur operasional:
+1. SuperAdmin membuka hidden console.
+2. Frontend meminta status allowlisted Script Properties melalui `apiAdapter.js`.
+3. Backend mengirim status aman dan masked preview untuk config non-secret.
+4. SuperAdmin memilih update, delete, atau rotate.
+5. Frontend menampilkan confirmation dialog untuk aksi destruktif atau sensitif.
+6. Backend menjalankan validasi, RBAC, mutation, audit, lalu mengembalikan response terstruktur.
+7. Frontend refresh status setelah success dan menampilkan error aman jika gagal.
+
+## 14. Kontrak ROLE_PERMISSIONS
 
 `ROLE_PERMISSIONS` adalah sumber kebenaran untuk authorization action-level. Role saja tidak cukup untuk menjalankan endpoint yang mengubah atau membaca data operasional.
 
@@ -219,9 +243,9 @@ Baseline resource/action:
 | `adjustment` | `create`, `read`, `approve`, `reject` |
 | `dashboard` | `read` |
 | `user_role` | `create`, `read`, `update`, `soft_delete` |
-| `script_property` | `read_status`, `update`, `rotate_secret` |
+| `script_property` | `read_status`, `update`, `delete`, `rotate_secret` |
 
-## 14. Standardisasi QCC
+## 15. Standardisasi QCC
 
 Hasil implementasi yang terbukti efektif harus dikunci melalui:
 - SOP atau Instruksi Kerja pelaporan produksi digital.

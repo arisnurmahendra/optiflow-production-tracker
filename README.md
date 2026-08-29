@@ -119,6 +119,8 @@ gas/
 
 `Code.js` hanya berperan sebagai entrypoint untuk `doGet()` dan wrapper fungsi yang dipanggil frontend. Business logic backend ditempatkan di modul `gas/*.gs` dengan namespace object agar aman di global scope Google Apps Script.
 
+Script Properties maintenance tersedia sebagai hidden SuperAdmin console dan endpoint GAS allowlisted. Secret seperti `ENCRYPTION_SALT` hanya dikembalikan sebagai status, bukan nilai mentah.
+
 Validasi backend:
 
 ```powershell

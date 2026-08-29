@@ -85,6 +85,7 @@ Status:
 | `OPT-024` | Prepare production deployment checklist | Backlog | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #24 |
 | `OPT-025` | Execute 1 line / 1 shift pilot rollout | Backlog | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
 | `OPT-026` | Produce QCC Step 1-8 report package | Backlog | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
+| `OPT-027` | Build SuperAdmin hidden maintenance console for safe Script Properties management | Review | P1 | `type:feature`, `type:security`, `area:backend`, `area:frontend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #27 |
 
 ## 5. Closed Issue Log
 
