@@ -20,6 +20,8 @@ OPTIFLOW menggunakan beberapa sheet yang dipisahkan berdasarkan fungsi agar tran
 | `ADJUSTMENT_LOGS` | Koreksi setelah closing atau koreksi administratif | Append-only dan wajib approval. |
 | `AUDIT_LOGS` | Audit trail auth, approval, perubahan konfigurasi, dan error penting | Wajib melakukan masking data sensitif. |
 
+Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header dari kontrak ini hanya ketika sheet masih kosong. Health check schema wajib melaporkan sheet hilang, kolom hilang, urutan kolom tidak sesuai, kolom ekstra, dan formula pada `RAW_LOGS`.
+
 ## 2. Schema `USER_ROLES`
 
 | Kolom | Tipe | Keterangan |

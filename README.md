@@ -100,6 +100,22 @@ deploy/Index.html
 
 Gunakan `.clasp.example.json` sebagai template aman untuk setup lokal. File `.clasp.json` asli tetap di-ignore karena memuat `scriptId`.
 
+## Struktur Backend GAS
+
+Backend dibuat modular agar mudah diskalakan:
+
+```txt
+Code.js
+gas/
+├─ config.gs
+├─ health.gs
+├─ response.gs
+├─ sheets.gs
+└─ validation.gs
+```
+
+`Code.js` hanya berperan sebagai entrypoint untuk `doGet()` dan wrapper fungsi yang dipanggil frontend. Business logic backend ditempatkan di modul `gas/*.gs` dengan namespace object agar aman di global scope Google Apps Script.
+
 ## Author
 
 Aris Nur Mahendra  

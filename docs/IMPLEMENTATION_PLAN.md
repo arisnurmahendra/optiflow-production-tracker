@@ -24,7 +24,7 @@ Tujuan:
 
 Deliverables:
 - Struktur folder `src/` untuk Vue 3.
-- Struktur folder `gas/` atau file `.gs` yang konsisten untuk backend.
+- Struktur folder `gas/` untuk backend modular, dengan `Code.js` sebagai entrypoint tipis.
 - `package.json`, Vite config, dan `vite-plugin-singlefile`.
 - Konfigurasi Vite memastikan Vue 3, styling, dan aset base64 ter-bundle ke satu `Index.html`.
 - `.claspignore` berisi ignore rule untuk node modules, source lokal, test artifact, dan dokumen yang tidak perlu di-deploy.
@@ -32,6 +32,10 @@ Deliverables:
 - Script `prepare:gas` membuat ulang folder `deploy/` dari `appsscript.json`, `Code.js`, root `.gs`/`gas/**/*.gs`, dan `dist/Index.html` sebagai `deploy/Index.html`.
 - Kontrak deployment memisahkan environment development dan production melalui Clasp deployment/versioning.
 - `ISSUE_TRACKER.md` berisi issue ID, labels, milestone, priority, status, dan GitHub issue number placeholder.
+- Modul GAS awal minimal:
+  - `gas/config.gs` untuk konstanta aplikasi dan sheet wajib.
+  - `gas/response.gs` untuk safe structured response.
+  - `gas/health.gs` untuk health check bootstrap.
 
 Kriteria selesai:
 - Build frontend menghasilkan satu `Index.html`.
@@ -41,6 +45,7 @@ Kriteria selesai:
 - `clasp status` hanya menampilkan file dari `deploy/` yang siap dikirim ke GAS.
 - `.claspignore` mencegah `node_modules`, source Vue mentah, test artifact, env lokal, dan file non-deploy ikut terkirim ke Apps Script.
 - Setiap item roadmap utama memiliki issue lokal dengan label dan milestone.
+- `Code.js` tidak berisi business logic besar; logic backend masuk ke namespace module di `gas/*.gs`.
 
 ## 3. Fase 1 - Database Contract Dan Bootstrap Sheet
 
@@ -62,10 +67,13 @@ Deliverables:
   - `AUDIT_LOGS`
 - Header sheet mengikuti `DATA_SCHEMA.md`.
 - Fungsi health check schema.
+- Modul lanjutan dipisah sesuai concern: validation, auth/RBAC, sheet repository, audit, production logs, quarantine, recap, dan `test_runner.gs`.
+- `SPREADSHEET_ID` dibaca dari Script Properties untuk Apps Script standalone; container-bound script boleh memakai active spreadsheet.
 
 Kriteria selesai:
 - Backend dapat mendeteksi sheet hilang atau kolom tidak cocok.
 - Tidak ada formula di `RAW_LOGS`.
+- Backend dapat membuat sheet wajib dan header awal tanpa menghapus data yang sudah ada.
 
 ## 4. Fase 2 - Auth, RBAC, Dan Session Bootstrap
 

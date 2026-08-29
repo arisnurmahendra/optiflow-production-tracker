@@ -51,12 +51,17 @@ Before code changes, read the relevant docs:
 - Data storage uses Google Sheets multi-sheet architecture.
 - Frontend calls backend only through `apiAdapter.js`.
 - Local development uses `mock_gas.js` with latency and failure simulation.
+- `Code.js` must stay thin as the public entrypoint for `doGet()` and externally callable wrappers.
+- Scalable backend logic belongs in modular `.gs` files under `gas/`.
+- GAS modules share global scope; use namespace objects such as `OptiflowHealth`, `OptiflowResponse`, and future `OptiflowValidation` instead of unscoped helper function names.
+- Keep module boundaries clear: config/constants, response helpers, validation, auth/RBAC, sheet access, audit, production logs, quarantine, recap, and test runner.
 
 ## 4. Required Server Configuration
 
 Server configuration is stored in `PropertiesService.getScriptProperties()`.
 
 Required properties:
+- `SPREADSHEET_ID`: required when the Apps Script project is standalone; optional when the script is container-bound to the target Google Sheet.
 - `AUTH_MODE`: `ON` for production Google account validation, `OFF` for local role simulation.
 - `ENCRYPTION_SALT`: server-only secret for encryption or blind indexing operations.
 
