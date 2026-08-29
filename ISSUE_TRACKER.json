@@ -330,7 +330,7 @@
     {
       "id": "OPT-009",
       "title": "Build production apiAdapter.js and local mock_gas.js",
-      "status": "Review",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -339,7 +339,19 @@
         "sync:github"
       ],
       "milestone": "M3 - Operator Mobile MVP",
-      "github_issue": 9
+      "github_issue": 9,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas; clasp status passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "No component-level direct google.script.run usage found outside adapter/mock",
+        "JSON validation passed",
+        "Mojibake scan passed",
+        "Implementation pushed in commit 3394039",
+        "GitHub issue #9 closed as completed"
+      ]
     },
     {
       "id": "OPT-010",
