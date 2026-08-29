@@ -37,7 +37,9 @@ Desktop.ini
 
 # Google Apps Script local auth/cache
 .clasprc.json
+.clasp.json
 .clasprc
+.claspignore
 
 # Temporary files
 *.tmp

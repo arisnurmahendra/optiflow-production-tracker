@@ -59,32 +59,32 @@ Status:
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `OPT-001` | Finalize documentation contract audit | Ready | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | TBD |
-| `OPT-002` | Create UI/UX design system contract | Ready | P1 | `type:docs`, `area:ui-ux`, `priority:p1`, `sync:github` | `M0 - Contracts & Planning` | TBD |
-| `OPT-003` | Bootstrap Vue 3 + Vite single-file build | Backlog | P0 | `type:feature`, `area:frontend`, `area:deployment`, `priority:p0`, `sync:github` | `M1 - Project Bootstrap` | TBD |
-| `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Backlog | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | TBD |
-| `OPT-005` | Implement GAS sheet bootstrap and schema health check | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | TBD |
-| `OPT-006` | Implement AUTH_MODE session context and RBAC | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | TBD |
-| `OPT-007` | Implement ROLE_PERMISSIONS enforcement | Backlog | P0 | `type:security`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | TBD |
-| `OPT-008` | Implement Input Validation & Sanitization blocks for GAS endpoints | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | TBD |
-| `OPT-009` | Build production `apiAdapter.js` and local `mock_gas.js` | Backlog | P1 | `type:feature`, `area:frontend`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | TBD |
-| `OPT-010` | Build mobile operator reporting form | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | TBD |
-| `OPT-011` | Implement Global State and IndexedDB persistence service | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | TBD |
-| `OPT-012` | Implement append-only RAW_LOGS submit endpoint | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M3 - Operator Mobile MVP` | TBD |
-| `OPT-013` | Implement Offline-Tolerant sync queue | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | TBD |
-| `OPT-014` | Implement CONFLICT_PENDING detection and quarantine routing | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M4 - Offline Sync & Conflict Control` | TBD |
-| `OPT-015` | Build Mandor approval inbox and conflict comparison UI | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | TBD |
-| `OPT-016` | Implement defect categories and Pareto-ready reject capture | Backlog | P2 | `type:feature`, `area:data`, `area:frontend`, `priority:p2`, `sync:github` | `M4 - Offline Sync & Conflict Control` | TBD |
-| `OPT-017` | Implement daily closing workflow | Backlog | P1 | `type:feature`, `area:backend`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
-| `OPT-018` | Implement adjustment logs after closing | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
-| `OPT-019` | Implement MASTER_RECAP batch aggregation | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
-| `OPT-020` | Build desktop supervisor control center | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
-| `OPT-021` | Build management read-only dashboard | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
-| `OPT-022` | Implement GAS `test_runner.gs` | Backlog | P1 | `type:test`, `area:backend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
-| `OPT-023` | Run security hardening against POL.ISMS.001 | Backlog | P0 | `type:security`, `area:backend`, `area:frontend`, `priority:p0`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
-| `OPT-024` | Prepare production deployment checklist | Backlog | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
-| `OPT-025` | Execute 1 line / 1 shift pilot rollout | Backlog | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | TBD |
-| `OPT-026` | Produce QCC Step 1-8 report package | Backlog | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | TBD |
+| `OPT-001` | Finalize documentation contract audit | Ready | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | #1 |
+| `OPT-002` | Create UI/UX design system contract | Ready | P1 | `type:docs`, `area:ui-ux`, `priority:p1`, `sync:github` | `M0 - Contracts & Planning` | #2 |
+| `OPT-003` | Bootstrap Vue 3 + Vite single-file build | Backlog | P0 | `type:feature`, `area:frontend`, `area:deployment`, `priority:p0`, `sync:github` | `M1 - Project Bootstrap` | #3 |
+| `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Backlog | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | #4 |
+| `OPT-005` | Implement GAS sheet bootstrap and schema health check | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #5 |
+| `OPT-006` | Implement AUTH_MODE session context and RBAC | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #6 |
+| `OPT-007` | Implement ROLE_PERMISSIONS enforcement | Backlog | P0 | `type:security`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #7 |
+| `OPT-008` | Implement Input Validation & Sanitization blocks for GAS endpoints | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #8 |
+| `OPT-009` | Build production `apiAdapter.js` and local `mock_gas.js` | Backlog | P1 | `type:feature`, `area:frontend`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #9 |
+| `OPT-010` | Build mobile operator reporting form | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #10 |
+| `OPT-011` | Implement Global State and IndexedDB persistence service | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #11 |
+| `OPT-012` | Implement append-only RAW_LOGS submit endpoint | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M3 - Operator Mobile MVP` | #12 |
+| `OPT-013` | Implement Offline-Tolerant sync queue | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #13 |
+| `OPT-014` | Implement CONFLICT_PENDING detection and quarantine routing | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #14 |
+| `OPT-015` | Build Mandor approval inbox and conflict comparison UI | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #15 |
+| `OPT-016` | Implement defect categories and Pareto-ready reject capture | Backlog | P2 | `type:feature`, `area:data`, `area:frontend`, `priority:p2`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #16 |
+| `OPT-017` | Implement daily closing workflow | Backlog | P1 | `type:feature`, `area:backend`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #17 |
+| `OPT-018` | Implement adjustment logs after closing | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #18 |
+| `OPT-019` | Implement MASTER_RECAP batch aggregation | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #19 |
+| `OPT-020` | Build desktop supervisor control center | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #20 |
+| `OPT-021` | Build management read-only dashboard | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #21 |
+| `OPT-022` | Implement GAS `test_runner.gs` | Backlog | P1 | `type:test`, `area:backend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #22 |
+| `OPT-023` | Run security hardening against POL.ISMS.001 | Backlog | P0 | `type:security`, `area:backend`, `area:frontend`, `priority:p0`, `sync:github` | `M6 - Security, Testing & Deployment` | #23 |
+| `OPT-024` | Prepare production deployment checklist | Backlog | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #24 |
+| `OPT-025` | Execute 1 line / 1 shift pilot rollout | Backlog | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
+| `OPT-026` | Produce QCC Step 1-8 report package | Backlog | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
 
 ## 5. Issue Template
 

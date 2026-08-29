@@ -7,61 +7,508 @@
     "pre_code_rule": "Update DATA_SCHEMA.md and BUSINESS_PROCESS.md before code when schema, workflow, parameter, or variable contracts change."
   },
   "labels": [
-    { "name": "type:docs", "color": "0075CA", "description": "Documentation or contract changes." },
-    { "name": "type:feature", "color": "0E8A16", "description": "New feature." },
-    { "name": "type:bug", "color": "D73A4A", "description": "Bug or regression." },
-    { "name": "type:security", "color": "B60205", "description": "Security, RBAC, PII, audit, or POL.ISMS.001." },
-    { "name": "type:test", "color": "5319E7", "description": "Test runner, smoke test, or verification." },
-    { "name": "area:frontend", "color": "1D76DB", "description": "Vue, Vite, UI, state, or IndexedDB." },
-    { "name": "area:backend", "color": "0052CC", "description": "Google Apps Script, API, or validation." },
-    { "name": "area:data", "color": "006B75", "description": "Sheets schema, recap, or event sourcing." },
-    { "name": "area:process", "color": "FBCA04", "description": "SOP, workflow, QCC, or pilot rollout." },
-    { "name": "area:deployment", "color": "C5DEF5", "description": "Clasp or Apps Script deployment." },
-    { "name": "area:ui-ux", "color": "D4C5F9", "description": "Visual design, ergonomics, or accessibility." },
-    { "name": "priority:p0", "color": "B60205", "description": "Blocking or high risk." },
-    { "name": "priority:p1", "color": "D93F0B", "description": "Required for MVP." },
-    { "name": "priority:p2", "color": "FBCA04", "description": "Important after base MVP." },
-    { "name": "priority:p3", "color": "C2E0C6", "description": "Future backlog." },
-    { "name": "status:blocked", "color": "000000", "description": "Waiting for decision or dependency." },
-    { "name": "sync:github", "color": "7057FF", "description": "Needs GitHub Issue sync." }
+    {
+      "name": "type:docs",
+      "color": "0075CA",
+      "description": "Documentation or contract changes."
+    },
+    {
+      "name": "type:feature",
+      "color": "0E8A16",
+      "description": "New feature."
+    },
+    {
+      "name": "type:bug",
+      "color": "D73A4A",
+      "description": "Bug or regression."
+    },
+    {
+      "name": "type:security",
+      "color": "B60205",
+      "description": "Security, RBAC, PII, audit, or POL.ISMS.001."
+    },
+    {
+      "name": "type:test",
+      "color": "5319E7",
+      "description": "Test runner, smoke test, or verification."
+    },
+    {
+      "name": "area:frontend",
+      "color": "1D76DB",
+      "description": "Vue, Vite, UI, state, or IndexedDB."
+    },
+    {
+      "name": "area:backend",
+      "color": "0052CC",
+      "description": "Google Apps Script, API, or validation."
+    },
+    {
+      "name": "area:data",
+      "color": "006B75",
+      "description": "Sheets schema, recap, or event sourcing."
+    },
+    {
+      "name": "area:process",
+      "color": "FBCA04",
+      "description": "SOP, workflow, QCC, or pilot rollout."
+    },
+    {
+      "name": "area:deployment",
+      "color": "C5DEF5",
+      "description": "Clasp or Apps Script deployment."
+    },
+    {
+      "name": "area:ui-ux",
+      "color": "D4C5F9",
+      "description": "Visual design, ergonomics, or accessibility."
+    },
+    {
+      "name": "priority:p0",
+      "color": "B60205",
+      "description": "Blocking or high risk."
+    },
+    {
+      "name": "priority:p1",
+      "color": "D93F0B",
+      "description": "Required for MVP."
+    },
+    {
+      "name": "priority:p2",
+      "color": "FBCA04",
+      "description": "Important after base MVP."
+    },
+    {
+      "name": "priority:p3",
+      "color": "C2E0C6",
+      "description": "Future backlog."
+    },
+    {
+      "name": "status:blocked",
+      "color": "000000",
+      "description": "Waiting for decision or dependency."
+    },
+    {
+      "name": "sync:github",
+      "color": "7057FF",
+      "description": "Needs GitHub Issue sync."
+    }
   ],
   "milestones": [
-    { "title": "M0 - Contracts & Planning", "description": "All documentation contracts are aligned before coding." },
-    { "title": "M1 - Project Bootstrap", "description": "Vue, Vite, GAS, Clasp, and single-file build are ready." },
-    { "title": "M2 - Backend Foundation", "description": "Sheet schema, auth, RBAC, validation, and audit basics are ready." },
-    { "title": "M3 - Operator Mobile MVP", "description": "Operator can submit production data from mobile." },
-    { "title": "M4 - Offline Sync & Conflict Control", "description": "IndexedDB queue, event sourcing, CONFLICT_PENDING, and HITL approval are ready." },
-    { "title": "M5 - Supervisor Control & Recap", "description": "Quarantine, closing, adjustment, recap, and dashboards are ready." },
-    { "title": "M6 - Security, Testing & Deployment", "description": "POL.ISMS.001 hardening, test runner, smoke test, and deployment are ready." },
-    { "title": "M7 - QCC Report & Rollout", "description": "Pilot rollout, SOP, and QCC Step 1-8 report package are ready." }
+    {
+      "title": "M0 - Contracts & Planning",
+      "description": "All documentation contracts are aligned before coding."
+    },
+    {
+      "title": "M1 - Project Bootstrap",
+      "description": "Vue, Vite, GAS, Clasp, and single-file build are ready."
+    },
+    {
+      "title": "M2 - Backend Foundation",
+      "description": "Sheet schema, auth, RBAC, validation, and audit basics are ready."
+    },
+    {
+      "title": "M3 - Operator Mobile MVP",
+      "description": "Operator can submit production data from mobile."
+    },
+    {
+      "title": "M4 - Offline Sync & Conflict Control",
+      "description": "IndexedDB queue, event sourcing, CONFLICT_PENDING, and HITL approval are ready."
+    },
+    {
+      "title": "M5 - Supervisor Control & Recap",
+      "description": "Quarantine, closing, adjustment, recap, and dashboards are ready."
+    },
+    {
+      "title": "M6 - Security, Testing & Deployment",
+      "description": "POL.ISMS.001 hardening, test runner, smoke test, and deployment are ready."
+    },
+    {
+      "title": "M7 - QCC Report & Rollout",
+      "description": "Pilot rollout, SOP, and QCC Step 1-8 report package are ready."
+    }
   ],
   "issues": [
-    { "id": "OPT-001", "title": "Finalize documentation contract audit", "status": "Ready", "priority": "P0", "labels": ["type:docs", "area:process", "priority:p0", "sync:github"], "milestone": "M0 - Contracts & Planning", "github_issue": null },
-    { "id": "OPT-002", "title": "Create UI/UX design system contract", "status": "Ready", "priority": "P1", "labels": ["type:docs", "area:ui-ux", "priority:p1", "sync:github"], "milestone": "M0 - Contracts & Planning", "github_issue": null },
-    { "id": "OPT-003", "title": "Bootstrap Vue 3 + Vite single-file build", "status": "Backlog", "priority": "P0", "labels": ["type:feature", "area:frontend", "area:deployment", "priority:p0", "sync:github"], "milestone": "M1 - Project Bootstrap", "github_issue": null },
-    { "id": "OPT-004", "title": "Harden .claspignore and Clasp deployment flow", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:deployment", "priority:p1", "sync:github"], "milestone": "M1 - Project Bootstrap", "github_issue": null },
-    { "id": "OPT-005", "title": "Implement GAS sheet bootstrap and schema health check", "status": "Backlog", "priority": "P0", "labels": ["type:feature", "area:backend", "area:data", "priority:p0", "sync:github"], "milestone": "M2 - Backend Foundation", "github_issue": null },
-    { "id": "OPT-006", "title": "Implement AUTH_MODE session context and RBAC", "status": "Backlog", "priority": "P0", "labels": ["type:security", "area:backend", "priority:p0", "sync:github"], "milestone": "M2 - Backend Foundation", "github_issue": null },
-    { "id": "OPT-007", "title": "Implement ROLE_PERMISSIONS enforcement", "status": "Backlog", "priority": "P0", "labels": ["type:security", "area:backend", "area:data", "priority:p0", "sync:github"], "milestone": "M2 - Backend Foundation", "github_issue": null },
-    { "id": "OPT-008", "title": "Implement Input Validation & Sanitization blocks for GAS endpoints", "status": "Backlog", "priority": "P0", "labels": ["type:security", "area:backend", "priority:p0", "sync:github"], "milestone": "M2 - Backend Foundation", "github_issue": null },
-    { "id": "OPT-009", "title": "Build production apiAdapter.js and local mock_gas.js", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:frontend", "priority:p1", "sync:github"], "milestone": "M3 - Operator Mobile MVP", "github_issue": null },
-    { "id": "OPT-010", "title": "Build mobile operator reporting form", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:frontend", "area:ui-ux", "priority:p1", "sync:github"], "milestone": "M3 - Operator Mobile MVP", "github_issue": null },
-    { "id": "OPT-011", "title": "Implement Global State and IndexedDB persistence service", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:frontend", "area:data", "priority:p1", "sync:github"], "milestone": "M3 - Operator Mobile MVP", "github_issue": null },
-    { "id": "OPT-012", "title": "Implement append-only RAW_LOGS submit endpoint", "status": "Backlog", "priority": "P0", "labels": ["type:feature", "area:backend", "area:data", "priority:p0", "sync:github"], "milestone": "M3 - Operator Mobile MVP", "github_issue": null },
-    { "id": "OPT-013", "title": "Implement Offline-Tolerant sync queue", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:frontend", "area:data", "priority:p1", "sync:github"], "milestone": "M4 - Offline Sync & Conflict Control", "github_issue": null },
-    { "id": "OPT-014", "title": "Implement CONFLICT_PENDING detection and quarantine routing", "status": "Backlog", "priority": "P0", "labels": ["type:feature", "area:backend", "area:data", "priority:p0", "sync:github"], "milestone": "M4 - Offline Sync & Conflict Control", "github_issue": null },
-    { "id": "OPT-015", "title": "Build Mandor approval inbox and conflict comparison UI", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:frontend", "area:ui-ux", "area:process", "priority:p1", "sync:github"], "milestone": "M4 - Offline Sync & Conflict Control", "github_issue": null },
-    { "id": "OPT-016", "title": "Implement defect categories and Pareto-ready reject capture", "status": "Backlog", "priority": "P2", "labels": ["type:feature", "area:data", "area:frontend", "priority:p2", "sync:github"], "milestone": "M4 - Offline Sync & Conflict Control", "github_issue": null },
-    { "id": "OPT-017", "title": "Implement daily closing workflow", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:backend", "area:process", "priority:p1", "sync:github"], "milestone": "M5 - Supervisor Control & Recap", "github_issue": null },
-    { "id": "OPT-018", "title": "Implement adjustment logs after closing", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:backend", "area:data", "area:process", "priority:p1", "sync:github"], "milestone": "M5 - Supervisor Control & Recap", "github_issue": null },
-    { "id": "OPT-019", "title": "Implement MASTER_RECAP batch aggregation", "status": "Backlog", "priority": "P1", "labels": ["type:feature", "area:backend", "area:data", "priority:p1", "sync:github"], "milestone": "M5 - Supervisor Control & Recap", "github_issue": null },
-    { "id": "OPT-020", "title": "Build desktop supervisor control center", "status": "Backlog", "priority": "P2", "labels": ["type:feature", "area:frontend", "area:ui-ux", "priority:p2", "sync:github"], "milestone": "M5 - Supervisor Control & Recap", "github_issue": null },
-    { "id": "OPT-021", "title": "Build management read-only dashboard", "status": "Backlog", "priority": "P2", "labels": ["type:feature", "area:frontend", "area:ui-ux", "priority:p2", "sync:github"], "milestone": "M5 - Supervisor Control & Recap", "github_issue": null },
-    { "id": "OPT-022", "title": "Implement GAS test_runner.gs", "status": "Backlog", "priority": "P1", "labels": ["type:test", "area:backend", "priority:p1", "sync:github"], "milestone": "M6 - Security, Testing & Deployment", "github_issue": null },
-    { "id": "OPT-023", "title": "Run security hardening against POL.ISMS.001", "status": "Backlog", "priority": "P0", "labels": ["type:security", "area:backend", "area:frontend", "priority:p0", "sync:github"], "milestone": "M6 - Security, Testing & Deployment", "github_issue": null },
-    { "id": "OPT-024", "title": "Prepare production deployment checklist", "status": "Backlog", "priority": "P1", "labels": ["type:docs", "area:deployment", "priority:p1", "sync:github"], "milestone": "M6 - Security, Testing & Deployment", "github_issue": null },
-    { "id": "OPT-025", "title": "Execute 1 line / 1 shift pilot rollout", "status": "Backlog", "priority": "P2", "labels": ["type:feature", "area:process", "priority:p2", "sync:github"], "milestone": "M7 - QCC Report & Rollout", "github_issue": null },
-    { "id": "OPT-026", "title": "Produce QCC Step 1-8 report package", "status": "Backlog", "priority": "P2", "labels": ["type:docs", "area:process", "priority:p2", "sync:github"], "milestone": "M7 - QCC Report & Rollout", "github_issue": null }
+    {
+      "id": "OPT-001",
+      "title": "Finalize documentation contract audit",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M0 - Contracts & Planning",
+      "github_issue": 1
+    },
+    {
+      "id": "OPT-002",
+      "title": "Create UI/UX design system contract",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:docs",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M0 - Contracts & Planning",
+      "github_issue": 2
+    },
+    {
+      "id": "OPT-003",
+      "title": "Bootstrap Vue 3 + Vite single-file build",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:deployment",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M1 - Project Bootstrap",
+      "github_issue": 3
+    },
+    {
+      "id": "OPT-004",
+      "title": "Harden .claspignore and Clasp deployment flow",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:deployment",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M1 - Project Bootstrap",
+      "github_issue": 4
+    },
+    {
+      "id": "OPT-005",
+      "title": "Implement GAS sheet bootstrap and schema health check",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M2 - Backend Foundation",
+      "github_issue": 5
+    },
+    {
+      "id": "OPT-006",
+      "title": "Implement AUTH_MODE session context and RBAC",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:security",
+        "area:backend",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M2 - Backend Foundation",
+      "github_issue": 6
+    },
+    {
+      "id": "OPT-007",
+      "title": "Implement ROLE_PERMISSIONS enforcement",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:security",
+        "area:backend",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M2 - Backend Foundation",
+      "github_issue": 7
+    },
+    {
+      "id": "OPT-008",
+      "title": "Implement Input Validation & Sanitization blocks for GAS endpoints",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:security",
+        "area:backend",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M2 - Backend Foundation",
+      "github_issue": 8
+    },
+    {
+      "id": "OPT-009",
+      "title": "Build production apiAdapter.js and local mock_gas.js",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M3 - Operator Mobile MVP",
+      "github_issue": 9
+    },
+    {
+      "id": "OPT-010",
+      "title": "Build mobile operator reporting form",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M3 - Operator Mobile MVP",
+      "github_issue": 10
+    },
+    {
+      "id": "OPT-011",
+      "title": "Implement Global State and IndexedDB persistence service",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M3 - Operator Mobile MVP",
+      "github_issue": 11
+    },
+    {
+      "id": "OPT-012",
+      "title": "Implement append-only RAW_LOGS submit endpoint",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M3 - Operator Mobile MVP",
+      "github_issue": 12
+    },
+    {
+      "id": "OPT-013",
+      "title": "Implement Offline-Tolerant sync queue",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M4 - Offline Sync & Conflict Control",
+      "github_issue": 13
+    },
+    {
+      "id": "OPT-014",
+      "title": "Implement CONFLICT_PENDING detection and quarantine routing",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M4 - Offline Sync & Conflict Control",
+      "github_issue": 14
+    },
+    {
+      "id": "OPT-015",
+      "title": "Build Mandor approval inbox and conflict comparison UI",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M4 - Offline Sync & Conflict Control",
+      "github_issue": 15
+    },
+    {
+      "id": "OPT-016",
+      "title": "Implement defect categories and Pareto-ready reject capture",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:data",
+        "area:frontend",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M4 - Offline Sync & Conflict Control",
+      "github_issue": 16
+    },
+    {
+      "id": "OPT-017",
+      "title": "Implement daily closing workflow",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": 17
+    },
+    {
+      "id": "OPT-018",
+      "title": "Implement adjustment logs after closing",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": 18
+    },
+    {
+      "id": "OPT-019",
+      "title": "Implement MASTER_RECAP batch aggregation",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:data",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": 19
+    },
+    {
+      "id": "OPT-020",
+      "title": "Build desktop supervisor control center",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": 20
+    },
+    {
+      "id": "OPT-021",
+      "title": "Build management read-only dashboard",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": 21
+    },
+    {
+      "id": "OPT-022",
+      "title": "Implement GAS test_runner.gs",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:test",
+        "area:backend",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M6 - Security, Testing & Deployment",
+      "github_issue": 22
+    },
+    {
+      "id": "OPT-023",
+      "title": "Run security hardening against POL.ISMS.001",
+      "status": "Backlog",
+      "priority": "P0",
+      "labels": [
+        "type:security",
+        "area:backend",
+        "area:frontend",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M6 - Security, Testing & Deployment",
+      "github_issue": 23
+    },
+    {
+      "id": "OPT-024",
+      "title": "Prepare production deployment checklist",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:docs",
+        "area:deployment",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M6 - Security, Testing & Deployment",
+      "github_issue": 24
+    },
+    {
+      "id": "OPT-025",
+      "title": "Execute 1 line / 1 shift pilot rollout",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:process",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M7 - QCC Report & Rollout",
+      "github_issue": 25
+    },
+    {
+      "id": "OPT-026",
+      "title": "Produce QCC Step 1-8 report package",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M7 - QCC Report & Rollout",
+      "github_issue": 26
+    }
   ]
 }
-
