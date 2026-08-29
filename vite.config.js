@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [vue(), viteSingleFile()],
@@ -11,7 +12,7 @@ export default defineConfig({
     cssCodeSplit: false, // Jangan pisahkan CSS
     brotliSize: false,
     rollupOptions: {
-      inlineDynamicImports: true,
+      input: fileURLToPath(new URL('./Index.html', import.meta.url)),
       output: {
         manualChunks: undefined, // Matikan chunking, satukan semuanya
       },

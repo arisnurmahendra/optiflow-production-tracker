@@ -76,7 +76,7 @@ Upgrade proses setelah MVP:
 
 ## Status Saat Ini
 
-Repo masih berada pada tahap perencanaan dan kontrak implementasi. File Apps Script awal sudah ada, tetapi struktur Vue/Vite, adapter API, schema validator, dan test runner belum dibangun penuh.
+Repo sudah memiliki kontrak implementasi, file Apps Script awal, dan bootstrap Vue 3 + Vite single-file build. Adapter API, schema validator, persistence IndexedDB, backend business logic, dan test runner masih dikerjakan melalui issue lanjutan.
 
 Langkah berikutnya adalah mengikuti fase pada [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), dimulai dari bootstrap struktur proyek dan setup kontrak sheet.
 
