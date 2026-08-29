@@ -175,7 +175,7 @@
     {
       "id": "OPT-003",
       "title": "Bootstrap Vue 3 + Vite single-file build",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -185,7 +185,18 @@
         "sync:github"
       ],
       "milestone": "M1 - Project Bootstrap",
-      "github_issue": 3
+      "github_issue": 3,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "npm install passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "npm run build:verify passed",
+        "Only dist/Index.html produced with no separate JS/CSS files",
+        "JSON validation passed",
+        "Mojibake check passed",
+        "Bootstrap pushed in commit 152a6e0",
+        "GitHub issue #3 closed as completed"
+      ]
     },
     {
       "id": "OPT-004",
