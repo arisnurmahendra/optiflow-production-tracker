@@ -85,7 +85,7 @@ Status:
 | `OPT-024` | Prepare production deployment checklist | Backlog | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #24 |
 | `OPT-025` | Execute 1 line / 1 shift pilot rollout | Backlog | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
 | `OPT-026` | Produce QCC Step 1-8 report package | Backlog | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
-| `OPT-027` | Build SuperAdmin hidden maintenance console for safe Script Properties management | Review | P1 | `type:feature`, `type:security`, `area:backend`, `area:frontend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #27 |
+| `OPT-027` | Build SuperAdmin hidden maintenance console for safe Script Properties management | Closed | P1 | `type:feature`, `type:security`, `area:backend`, `area:frontend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #27 |
 
 ## 5. Closed Issue Log
 
@@ -99,6 +99,7 @@ Status:
 | `OPT-006` | #6 | 2026-08-30 | `npm run test:gas:auth` passed; `AUTH_MODE` session context, dev role simulation, production role lookup, baseline RBAC, and audit events pushed in commit `ef70a4f`. |
 | `OPT-007` | #7 | 2026-08-30 | `npm run test:gas:permissions` passed; exact-match `ROLE_PERMISSIONS` enforcement and RBAC audit events pushed in commit `7297335`. |
 | `OPT-008` | #8 | 2026-08-30 | `npm run audit:gas:validation` passed; callable wrapper validation blocks and audit script pushed in commit `531fb77`. |
+| `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
 
 ## 6. Issue Template
 
