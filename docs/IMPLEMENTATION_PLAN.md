@@ -87,6 +87,8 @@ Deliverables:
 - Mode `AUTH_MODE=ON` untuk produksi.
 - Mode `AUTH_MODE=OFF` untuk role switcher development.
 - Masking PII berdasarkan role.
+- Baseline RBAC helper untuk memastikan endpoint hanya berjalan setelah session tervalidasi.
+- Audit dasar untuk session success/failure ke `AUDIT_LOGS`.
 
 Kriteria selesai:
 - User tidak terdaftar ditolak saat auth aktif.
@@ -94,6 +96,8 @@ Kriteria selesai:
 - Operator tidak menerima PII mentah.
 - HRD dan SuperAdmin dapat membaca field PII sesuai kebutuhan role.
 - Fungsi GAS yang menerima input eksternal memiliki blok awal `Input Validation & Sanitization`.
+- `AUTH_MODE=OFF` mengembalikan daftar role simulasi dan memvalidasi role yang dipilih.
+- `AUTH_MODE=ON` mengabaikan request simulasi role dan memakai `Session.getActiveUser().getEmail()`.
 
 ## 5. Fase 3 - Operator Reporting MVP
 

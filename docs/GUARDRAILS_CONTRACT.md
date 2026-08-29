@@ -17,6 +17,10 @@
 - `SCRIPT_PROPERTIES` tidak boleh dipakai untuk menyimpan daftar email atau role.
 - Saat `AUTH_MODE=ON`, user tidak terdaftar atau tidak aktif harus ditolak.
 - Saat `AUTH_MODE=OFF`, role switcher hanya boleh dipakai untuk development/testing.
+- Saat `AUTH_MODE` kosong atau tidak dikenal, backend wajib fail closed dan menolak session.
+- Request `simulated_role` dari frontend hanya boleh diproses ketika `AUTH_MODE=OFF`.
+- Session context tidak boleh mengirim PII terenkripsi, PII mentah, blind index, atau nilai Script Properties ke frontend.
+- Session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata aman.
 - Semua endpoint backend wajib mengecek permission sesuai role.
 - MFA, password policy, dan account lockout dikelola oleh Google Workspace untuk model auth saat ini; jika custom password auth ditambahkan, kontrol password pada `POL.ISMS.001.md` menjadi wajib di aplikasi.
 

@@ -18,6 +18,19 @@ var OPTIFLOW_REQUIRED_SHEETS = Object.freeze([
   'AUDIT_LOGS',
 ]);
 
+var OPTIFLOW_ROLES = Object.freeze([
+  'Operator',
+  'Mandor',
+  'Management',
+  'HRD',
+  'SuperAdmin',
+]);
+
+var OPTIFLOW_AUTH_MODES = Object.freeze({
+  ON: 'ON',
+  OFF: 'OFF',
+});
+
 var OPTIFLOW_SHEET_SCHEMAS = Object.freeze({
   USER_ROLES: Object.freeze([
     'user_id',

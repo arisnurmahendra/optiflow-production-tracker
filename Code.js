@@ -26,3 +26,8 @@ function getSchemaHealthCheck() {
   OptiflowValidation.assertNoInput(arguments, 'getSchemaHealthCheck');
   return OptiflowSheets.healthCheck();
 }
+
+function getSessionContext(request) {
+  var payload = OptiflowValidation.validateSessionContextRequest(arguments, request);
+  return OptiflowAuth.getSessionContext(payload);
+}

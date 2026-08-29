@@ -164,7 +164,37 @@ Prinsip Human-in-the-Loop:
 - Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.
 
-## 12. Standardisasi QCC
+## 12. Kontrak Session Context Dan Auth Mode
+
+Backend mengirim session context melalui `getSessionContext(request)`.
+
+Mode `AUTH_MODE=ON`:
+- Backend memakai `Session.getActiveUser().getEmail()`.
+- Email wajib ditemukan di `USER_ROLES`.
+- `status_aktif` wajib `TRUE`.
+- `is_deleted` wajib bukan `TRUE`.
+- Request simulasi role dari frontend wajib diabaikan.
+- User tidak terdaftar atau nonaktif wajib ditolak dengan safe structured error.
+
+Mode `AUTH_MODE=OFF`:
+- Dipakai hanya untuk development/testing.
+- Backend tidak memakai email aktif sebagai sumber kebenaran role.
+- Jika frontend belum memilih role simulasi, response mengembalikan `requires_role_selection=TRUE` dan daftar role yang boleh disimulasikan.
+- Jika frontend mengirim `simulated_role`, backend wajib memvalidasi role terhadap allowlist.
+- Role simulasi tidak boleh ditulis ke `USER_ROLES`.
+
+Session context yang dikirim ke frontend tidak boleh memuat PII mentah atau secret. Minimal field yang boleh dikirim:
+- `auth_mode`
+- `email` yang dimasking jika perlu
+- `role`
+- `user_id`
+- `is_simulated`
+- `requires_role_selection`
+- `allowed_simulated_roles` hanya ketika `AUTH_MODE=OFF`
+
+Setiap session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata yang aman.
+
+## 13. Standardisasi QCC
 
 Hasil implementasi yang terbukti efektif harus dikunci melalui:
 - SOP atau Instruksi Kerja pelaporan produksi digital.

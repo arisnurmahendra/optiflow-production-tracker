@@ -107,6 +107,8 @@ Backend dibuat modular agar mudah diskalakan:
 ```txt
 Code.js
 gas/
+├─ audit.gs
+├─ auth.gs
 ├─ config.gs
 ├─ health.gs
 ├─ response.gs

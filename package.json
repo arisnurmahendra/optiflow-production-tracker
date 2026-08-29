@@ -10,6 +10,8 @@
     "verify:singlefile": "node scripts/verify-singlefile-build.mjs",
     "build:verify": "npm run build && npm run verify:singlefile",
     "test:gas:sheets": "node scripts/test-gas-sheets.mjs",
+    "test:gas:auth": "node scripts/test-gas-auth.mjs",
+    "test:gas": "npm run test:gas:sheets && npm run test:gas:auth",
     "prepare:gas": "node scripts/prepare-gas-deploy.mjs",
     "push:gas": "npm run build:verify && npm run prepare:gas && clasp push --force"
   },

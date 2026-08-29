@@ -209,7 +209,44 @@ Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header da
 }
 ```
 
-## 14. Standar Waktu
+## 14. Kontrak JSON Session Context
+
+Request dev mode boleh kosong atau berisi role simulasi:
+
+```json
+{
+  "simulated_role": "Mandor"
+}
+```
+
+Response success:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "auth_mode": "OFF",
+    "email": "dev.simulated@optiflow.local",
+    "role": "Mandor",
+    "user_id": "DEV-Mandor",
+    "is_simulated": true,
+    "requires_role_selection": false,
+    "allowed_simulated_roles": [
+      "Operator",
+      "Mandor",
+      "Management",
+      "HRD",
+      "SuperAdmin"
+    ]
+  },
+  "meta": {},
+  "error": null
+}
+```
+
+Response session context tidak boleh memuat `nama_lengkap_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, `ENCRYPTION_SALT`, atau isi `SCRIPT_PROPERTIES`.
+
+## 15. Standar Waktu
 
 - Semua timestamp transaksional disimpan sebagai ISO 8601 UTC.
 - `device_timestamp` wajib merepresentasikan waktu aktual ketika operator menekan submit di perangkat.
@@ -217,7 +254,7 @@ Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header da
 - Rekap harian memakai anchor timezone pabrik `Asia/Jakarta`.
 - Frontend boleh merender waktu sesuai timezone perangkat, tetapi tidak boleh mengubah nilai mentah di database.
 
-## 15. Kontrak Event Sourcing Dan Conflict Flagging
+## 16. Kontrak Event Sourcing Dan Conflict Flagging
 
 - Sinkronisasi dari IndexedDB ke GAS wajib menambah baris baru di `RAW_LOGS` melalui insert/append row.
 - Sinkronisasi offline tidak boleh menimpa cell atau baris lama di Google Sheets.

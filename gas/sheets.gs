@@ -49,6 +49,41 @@ var OptiflowSheets = (function () {
     return OptiflowResponse.success(buildHealthReport(getSpreadsheet()));
   }
 
+  function getRows(sheetName) {
+    var sheet = getSpreadsheet().getSheetByName(sheetName);
+
+    if (!sheet || sheet.getLastRow() < 2) {
+      return [];
+    }
+
+    var headers = readHeader(sheet);
+    var rowCount = sheet.getLastRow() - 1;
+    var values = sheet.getRange(2, 1, rowCount, headers.length).getValues();
+
+    return values.map(function (row) {
+      return headers.reduce(function (record, header, index) {
+        record[header] = row[index];
+        return record;
+      }, {});
+    });
+  }
+
+  function appendRecord(sheetName, record) {
+    var spreadsheet = getSpreadsheet();
+    var sheet = spreadsheet.getSheetByName(sheetName);
+
+    if (!sheet) {
+      throw new Error('Missing required sheet ' + sheetName + '. Run bootstrapSheets first.');
+    }
+
+    var headers = OPTIFLOW_SHEET_SCHEMAS[sheetName];
+    var row = headers.map(function (header) {
+      return record[header] === undefined ? '' : record[header];
+    });
+
+    sheet.appendRow(row);
+  }
+
   function writeHeader(sheet, headers) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
@@ -165,6 +200,8 @@ var OptiflowSheets = (function () {
 
   return Object.freeze({
     bootstrap: bootstrap,
+    appendRecord: appendRecord,
+    getRows: getRows,
     healthCheck: healthCheck,
   });
 })();
