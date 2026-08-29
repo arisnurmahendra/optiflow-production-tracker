@@ -1,65 +1,85 @@
-# ⚡ OPTIFLOW 
-> **Operational Process Tracking & Integrated Floor-Workflow**
+# OPTIFLOW
+> Operational Process Tracking & Integrated Floor-Workflow
 
-OPTIFLOW adalah aplikasi pelaporan produksi harian berbasis web yang dirancang untuk mengeliminasi pencatatan manual berbasis kertas (*paperless*) dan *double-entry* pada lini produksi manufaktur. 
+OPTIFLOW adalah aplikasi pelaporan produksi harian berbasis web untuk menghilangkan pencatatan kertas, laporan WhatsApp yang tercecer, dan pekerjaan rekap manual di lini produksi manufaktur.
 
-Dikembangkan menggunakan **Google Apps Script (GAS)** dan **Internal HTML Service**, OPTIFLOW memberikan solusi otomatisasi operasional dan *Business Intelligence Dashboard* secara *real-time* tanpa memerlukan investasi biaya infrastruktur *server* tambahan.
+Sistem ini dirancang dengan pendekatan zero-cost infrastructure menggunakan Google Apps Script, Google Sheets, dan frontend Vue 3 yang dibundel menjadi satu `Index.html` untuk Google Apps Script HTML Service.
 
----
+## Masalah Yang Diselesaikan
 
-## 🎯 Masalah & Solusi (Problem & Solution)
+Pada proses berjalan, 100+ operator melaporkan hasil kerja harian seperti Tandon, Target, OK, dan Reject melalui chat atau kertas. Mandor harus menyalin ulang data tersebut ke buku statistik, memakan waktu sekitar 120 menit per hari dan membuka risiko salah input pada volume produksi 140.000+ unit per hari.
 
-### Problem Statement
-Pada proses bisnis konvensional, 100+ operator melaporkan hasil kerja harian (Tandon, OK, Reject) melalui chat WA dan kertas fisik (±100 lembar kertas/hari). Mandor harus menyalin ulang data tersebut ke buku statistik manual, yang memakan waktu ±120 menit/hari serta berisiko tinggi terjadi *human error* pada penginputan 140.000+ unit barang per hari.
+OPTIFLOW menargetkan:
+- Rekap harian turun dari 120 menit menjadi sekitar 5 menit.
+- Pengurangan kertas sekitar 54.000 lembar per tahun.
+- Validasi Poka-Yoke agar `perolehan_ok + perolehan_reject` konsisten dengan total perolehan.
+- Dashboard real-time untuk mandor, supervisor, dan manajemen.
 
-### Solution Impact
-- **Efisiensi Waktu:** Memangkas waktu rekapitulasi data dari 120 menit menjadi 5 menit/hari (Efisiensi 95.8%).
-- **Paperless & Eco-Friendly:** Mengeliminasi ±54.000 lembar kertas/tahun (Mereduksi ±270 kg CO2e/tahun).
-- **Data Integrity (Poka-Yoke):** Validasi otomatis di mana `Perolehan` wajib sama dengan `OK + Reject`.
-- **Real-Time BI:** Manajemen dapat memantau performa produksi dan tren defect secara langsung.
+## Stack Utama
 
----
+- Backend: Google Apps Script V8.
+- Frontend: Vue 3 Composition API.
+- Build: Vite dengan `vite-plugin-singlefile`, menghasilkan satu `Index.html` tanpa file `.js` atau `.css` terpisah di `/dist`.
+- Database: Google Sheets multi-sheet.
+- Offline mode: IndexedDB queue di sisi client.
+- Validasi client: Zod.
+- Integrasi BI: Looker Studio atau dashboard internal HTML.
 
-## 🛠️ Tech Stack & Architecture
+Catatan offline: OPTIFLOW bersifat Offline-Tolerant, bukan Offline-First penuh. Aplikasi membutuhkan koneksi untuk loading awal dari Google Apps Script HTML Service, lalu IndexedDB menjaga draft, cache referensi, dan queue sinkronisasi jika koneksi operator terputus saat input.
 
-- **Backend / Core Engine:** Google Apps Script (JavaScript ES6)
-- **Frontend UI:** HTML5, CSS3 (Bootstrap / Tailwind), JavaScript (Asynchronous GAS API)
-- **Database:** Google Sheets (Centralized Data Storage)
-- **Analytics & BI:** Looker Studio / Internal HTML Web Dashboard
+## Ruang Lingkup MVP
 
----
+MVP difokuskan pada alur produksi inti:
+1. Operator mengirim laporan harian dari UI mobile-friendly.
+2. Backend memvalidasi payload, memastikan idempotency, lalu menulis ke `RAW_LOGS`.
+3. Data anomali atau konflik masuk ke `QUARANTINE`.
+4. Mandor/Supervisor melakukan verifikasi.
+5. Proses batch membentuk `MASTER_RECAP`.
+6. Manajemen membaca dashboard tanpa akses edit.
 
-## ✨ Fitur Utama (Key Features)
+Upgrade proses setelah MVP:
+- Pelaporan berbasis line dan shift.
+- Draft autosave dan status sync per transaksi.
+- Kategori defect untuk Pareto reject.
+- Correction workflow sebelum approval final.
+- Daily closing per line/shift.
+- Adjustment log untuk koreksi setelah closing.
+- Dashboard operasional dan dashboard improvement yang dipisahkan.
+- Pilot rollout 1 line dan 1 shift sebelum skala penuh.
 
-1. **Multi-User & Role-Based Access Control:**
-   - **Operator:** Form pelaporan ringkas & *mobile-friendly* (Input: Tandon, Target, OK, Reject).
-   - **Supervisor/Mandor:** Fitur verifikasi, validasi, dan *approval* data harian.
-   - **Management:** Akses *Read-Only* ke *Business Intelligence Dashboard*.
-2. **Poka-Yoke Validation (System Guard):** Mencegah kesalahan input angka yang tidak sinkron secara *real-time*.
-3. **Automated Summary & Analytics:** Rekapitulasi otomatis per operator, per lini kerja, dan per kategori produk.
+## Prinsip Arsitektur
 
----
+- Documentation-Driven Development: kontrak markdown diperbarui sebelum kode.
+- Defense in Depth: validasi terjadi di client dan server.
+- Append-only event sourcing: transaksi masuk tidak diubah langsung.
+- Soft-delete: tidak ada hard-delete untuk data master dan transaksi.
+- PII isolation: enkripsi/dekripsi PII hanya di backend GAS.
+- Blind indexing: pencarian PII memakai hash bayangan, bukan loop dekripsi.
+- Server-side pagination: frontend tidak menarik seluruh dataset mentah.
+- Conflict flagging: data offline yang berpotensi bentrok masuk `CONFLICT_PENDING` dan diselesaikan Mandor sebelum masuk dashboard manajemen.
 
-## 🚀 Metodologi Pengembangan (8 Steps QCC & 7 Tools)
+## Dokumen Kontrak
 
-Aplikasi ini dikembangkan berdasarkan metodologi perbaikan mutu **8 Langkah QCC & Lean Six Sigma**:
-1. Menentukan Tema & Analisis Situasi (SIPOC Diagram)
-2. Menetapkan Target (SMART Principle)
-3. Analisis Akar Masalah (Fishbone Diagram / 4M1E)
-4. Rencana Perbaikan (5W + 1H Matrix)
-5. Implementasi Sistem (Poka-Yoke & Digitalization)
-6. Evaluasi Hasil (Perbandingan Metrics Before vs After)
-7. Standardisasi (SOP & System Auto-lock)
-8. Rencana Selanjutnya (Predictive Maintenance & Horizontal Expansion)
+- [AGENT.md](AGENT.md): aturan kerja agen dan batasan implementasi.
+- [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md): roadmap teknis dan urutan eksekusi.
+- [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md): kontrak Google Sheets dan payload JSON.
+- [docs/BUSINESS_PROCESS.md](docs/BUSINESS_PROCESS.md): SOP proses bisnis, role, dan alur approval.
+- [docs/GUARDRAILS_CONTRACT.md](docs/GUARDRAILS_CONTRACT.md): aturan keamanan, performa, dan larangan teknis.
+- [docs/KNOWLEDGE_BASE.md](docs/KNOWLEDGE_BASE.md): latar belakang, metrik baseline, dan keputusan arsitektur.
+- [docs/UI_UX_CONTRACT.md](docs/UI_UX_CONTRACT.md): kontrak gaya Industrial Soft UI untuk mobile dan desktop.
+- [docs/QCC_8_STEPS_7_TOOLS.md](docs/QCC_8_STEPS_7_TOOLS.md): kontrak narasi improvement QCC/Lean Six Sigma.
+- [docs/POL.ISMS.001.md](docs/POL.ISMS.001.md): baseline kontrol keamanan untuk auth, PII, audit, API, dan deployment.
+- [docs/SYSTEM_PROMPT.md](docs/SYSTEM_PROMPT.md): instruksi perilaku agen untuk pengembangan lanjutan.
+- [ISSUE_TRACKER.md](ISSUE_TRACKER.md): backlog sinkronisasi GitHub Issues, labels, dan milestones.
+- [ISSUE_TRACKER.json](ISSUE_TRACKER.json): versi machine-readable untuk otomasi sinkronisasi issue.
 
----
+## Status Saat Ini
 
-## 👤 Author & Contributor
+Repo masih berada pada tahap perencanaan dan kontrak implementasi. File Apps Script awal sudah ada, tetapi struktur Vue/Vite, adapter API, schema validator, dan test runner belum dibangun penuh.
 
-**Aris Nur Mahendra**  
-*Digital Transformation Specialist & Workflow Hacker*  
-- LinkedIn: [Link LinkedIn Anda]
-- Portfolio / Contact: [Email / Website Anda]
+Langkah berikutnya adalah mengikuti fase pada [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), dimulai dari bootstrap struktur proyek dan setup kontrak sheet.
 
----
-*Project ini dibuat sebagai solusi perbaikan proses bisnis (Process Improvement) pada lini perakitan manufaktur.*
+## Author
+
+Aris Nur Mahendra  
+Digital Transformation Specialist & Workflow Hacker

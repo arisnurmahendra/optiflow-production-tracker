@@ -1,0 +1,56 @@
+# Clasp deploy allowlist:
+# Keep local project files out of Google Apps Script. Only deploy runtime files.
+
+# Ignore everything by default
+**
+
+# Apps Script runtime files
+!appsscript.json
+!Code.js
+!*.gs
+!gas/
+!gas/**/*.gs
+
+# Frontend HTML Service bundle
+!Index.html
+!*.html
+
+# Never push dependencies, source, docs, or local metadata
+node_modules/**
+src/**
+docs/**
+dist/**
+build/**
+.vite/**
+.git/**
+.github/**
+.vscode/**
+.idea/**
+
+# Never push repo-only files
+README.md
+AGENT.md
+ISSUE_TRACKER.md
+ISSUE_TRACKER.json
+LICENSE
+vite.config.*
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Never push local env/secrets/logs
+.env
+.env.*
+.clasprc
+.clasprc.json
+*.log
+*.local
+*.tmp
+*.temp
+*.bak
+
+# Never push Clasp project pointer to Apps Script
+.clasp.json
+.claspignore
+.gitignore

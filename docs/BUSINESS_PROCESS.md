@@ -1,0 +1,173 @@
+# BUSINESS_PROCESS.md - OPTIFLOW Operational SOP & Business Logic Contract
+
+> Core objective: membuat alur pelaporan produksi harian yang cepat, tervalidasi, dan siap diaudit.
+
+## 1. Baseline Operasional
+
+Kontrak improvement QCC untuk narasi laporan, presentasi, dan standardisasi mengikuti `QCC_8_STEPS_7_TOOLS.md`.
+
+Kondisi awal:
+- 100+ operator aktif per hari.
+- Target sekitar 1400 unit per operator per hari.
+- Laporan dilakukan melalui WhatsApp dan kertas.
+- Mandor melakukan rekap manual sekitar 120 menit per hari.
+- Risiko utama: salah salin, data hilang, keterlambatan rekap, dan sulit melihat tren reject.
+
+Target OPTIFLOW:
+- Rekap harian sekitar 5 menit.
+- Paperless untuk laporan produksi.
+- Data siap dashboard secara near real-time.
+- Anomali ditangani melalui approval, bukan koreksi manual diam-diam.
+- Sistem bersifat Offline-Tolerant: aplikasi butuh internet untuk loading awal, tetapi data input tetap aman jika koneksi putus setelah aplikasi terbuka.
+
+## 2. Role Dan Hak Akses
+
+| Role | Hak akses utama |
+| :--- | :--- |
+| `Operator` | Submit laporan produksi miliknya sendiri dan melihat status sync. |
+| `Mandor` | Melihat antrian konflik, approve/reject/request correction, closing harian, membaca rekap lini. |
+| `Management` | Membaca dashboard dan rekap tanpa edit. |
+| `HRD` | Mengelola data PII pekerja sesuai kebutuhan administrasi. |
+| `SuperAdmin` | Mengelola konfigurasi, role, dan troubleshooting tingkat lanjut. |
+
+## 3. Alur Submit Produksi
+
+1. Operator membuka aplikasi.
+2. Backend mengirim session context sesuai `AUTH_MODE`.
+3. Operator memilih line, shift, machine ID, target harian, tandon, OK, dan reject.
+4. Frontend menjalankan validasi Zod.
+5. Jika reject lebih dari 0, operator wajib memilih kategori defect.
+6. Frontend menyimpan draft otomatis di IndexedDB sebelum submit.
+7. Frontend membuat `transaction_id` UUID dan `device_timestamp` UTC.
+8. Submit dikirim melalui `apiAdapter.js`.
+9. Backend melakukan validasi server.
+10. Jika valid dan tidak anomali, data ditulis ke `RAW_LOGS` dengan status `ACCEPTED`.
+11. Jika duplikat, backend mengembalikan status idempotent tanpa menulis ulang.
+12. Jika backend mendeteksi konflik mesin sama, operator berbeda, dan waktu berdekatan, data ditulis dengan status `CONFLICT_PENDING` dan masuk `QUARANTINE`.
+13. Jika anomali lain muncul, data dicatat ke `RAW_LOGS` dan/atau `QUARANTINE` sesuai rule.
+
+## 4. Alur Offline
+
+1. Operator membuka aplikasi saat masih memiliki koneksi internet untuk memuat `Index.html` dari GAS HTML Service.
+2. Setelah aplikasi terbuka, data referensi seperti pekerja, line, shift, tandon, dan target dapat dibaca dari cache IndexedDB.
+3. Jika koneksi gagal saat input atau submit, payload disimpan di IndexedDB.
+4. UI menampilkan status pending.
+5. Sync worker mencoba ulang saat koneksi membaik.
+6. Payload offline memakai `sync_type=OFFLINE_QUEUE`.
+7. Backend tetap memakai `transaction_id` yang sama untuk mencegah duplikasi.
+
+Catatan arsitektur:
+- OPTIFLOW tidak memakai klaim Offline-First penuh karena GAS HTML Service berjalan di sandbox iframe `script.googleusercontent.com`.
+- Service Worker/PWA tidak menjadi mekanisme utama karena tidak didukung secara native di GAS.
+- IndexedDB dipakai untuk toleransi koneksi dan pengurangan panggilan `google.script.run`, bukan untuk menggantikan backend sebagai sumber kebenaran.
+
+## 5. Alur Reaktivitas Presisi
+
+Komponen UI tidak boleh membaca atau menulis langsung ke IndexedDB. UI hanya berkomunikasi dengan Global State/composables. Global State menjadi penghubung tunggal antara UI, IndexedDB, dan API GAS.
+
+Fase read:
+1. Saat browser dimuat, Global State membaca snapshot draft dan queue terakhir dari IndexedDB secara asinkron.
+2. Setelah data masuk ke variabel reactive, UI merender nilai target, OK, reject, status sync, dan draft secara instan.
+3. Jika IndexedDB gagal dibaca, UI tetap terbuka dengan state kosong dan menampilkan error aman.
+
+Fase write:
+1. Saat operator mengetik, variabel Global State langsung berubah agar UI tetap responsif.
+2. Global State menjalankan persist async di background untuk menyimpan draft terbaru ke IndexedDB.
+3. Persist background tidak boleh memblokir input operator.
+4. Jika persist gagal, Global State menandai status draft sebagai `FAILED` dan memberi opsi retry.
+
+Fase sync:
+1. Saat device online, Global State membungkus data menjadi JSON payload sesuai `DATA_SCHEMA.md`.
+2. Payload dikirim ke GAS melalui `apiAdapter.js`.
+3. Status item berubah dari `PENDING_SYNC` menjadi `SYNCING`.
+4. Jika GAS mengembalikan success tervalidasi, Global State menghapus item dari queue IndexedDB dan menandai status `SYNCED`.
+5. Jika GAS mengembalikan conflict/error, item tetap berada di IndexedDB dengan status `CONFLICT` atau `FAILED`.
+
+## 6. Alur Quarantine
+
+Data masuk quarantine jika memenuhi indikasi:
+- Nilai numerik negatif.
+- Field wajib kosong.
+- Total produksi tidak masuk akal.
+- Duplikasi mencurigakan.
+- Mesin solder sama, operator berbeda, dan selisih `device_timestamp` berdekatan dalam conflict time window.
+- Timestamp perangkat terlalu jauh dari waktu server.
+- Submit masuk ke line/shift/tanggal yang sudah closing.
+- Reject lebih dari 0 tanpa kategori defect.
+- Rule validasi bisnis baru yang disetujui dalam dokumen kontrak.
+
+Mandor/Supervisor dapat:
+- Approve: data dianggap sah untuk rekap.
+- Reject: data ditolak dan tidak masuk rekap.
+- Request correction: operator diminta memperbaiki input.
+- Reject both: untuk konflik dua transaksi, Mandor dapat membatalkan kedua data jika keduanya tidak valid.
+
+Semua keputusan wajib dicatat ke `AUDIT_LOGS`.
+
+Status koreksi:
+1. `PENDING`: data menunggu review umum.
+2. `CONFLICT_PENDING`: data konflik menunggu resolusi visual Mandor.
+3. `CORRECTION_REQUESTED`: Mandor meminta operator memperbaiki input.
+4. `RESUBMITTED`: operator mengirim ulang koreksi.
+5. `APPROVED` atau `REJECTED`: keputusan final untuk recap.
+
+Prinsip Human-in-the-Loop:
+- Data OK dan Reject dari IndexedDB operator tidak boleh langsung menimpa rekap utama.
+- Sinkronisasi otomatis menempatkan data pada status yang sesuai hasil validasi.
+- Data `CONFLICT_PENDING` diisolasi dan dilarang masuk kalkulasi dashboard manajemen.
+- Data konflik memicu notifikasi peringatan di antarmuka Vue 3 milik Mandor.
+- Mandor memegang otorisasi untuk memilih data yang di-approve atau membatalkan data konflik melalui reject.
+- Data konflik, anomali, atau data yang terkena rule review hanya masuk rekap setelah Mandor/Supervisor menekan approve.
+- Proses approve menjadi bagian dari standardisasi QCC Step 7.
+
+## 7. Daily Closing Dan Adjustment
+
+1. Mandor memeriksa submit harian, sync pending, dan quarantine.
+2. Jika data line/shift sudah lengkap, Mandor menjalankan closing.
+3. Status closing disimpan di `DAILY_CLOSING`.
+4. Setelah closing, transaksi baru untuk tanggal/line/shift tersebut ditolak atau diarahkan ke adjustment sesuai permission.
+5. Koreksi setelah closing dicatat di `ADJUSTMENT_LOGS`.
+6. Adjustment hanya mempengaruhi rekap setelah disetujui dan diaudit.
+
+## 8. Alur Rekap
+
+1. Time-driven trigger GAS berjalan berkala.
+2. Backend membaca transaksi valid dari `RAW_LOGS`, keputusan final dari `QUARANTINE`, dan adjustment approved dari `ADJUSTMENT_LOGS`.
+3. Rekap dihitung berdasarkan tanggal pabrik `Asia/Jakarta`.
+4. Rekap dipisahkan per line, shift, operator, machine, dan kategori defect.
+5. Hasil ditulis ke `MASTER_RECAP`.
+6. Dashboard membaca `MASTER_RECAP`, bukan seluruh data mentah.
+
+## 9. Dashboard Dan Monitoring
+
+- Dashboard operasional menampilkan target, OK, reject, defect rate, pending sync, quarantine pending, dan status closing.
+- Dashboard improvement menampilkan Pareto defect, before-after QCC, paper saving, time saving, dan Target vs Actual.
+- Snapshot operator dipakai untuk melihat status submit dan pencapaian harian, bukan sebagai satu-satunya dasar penilaian kinerja personal.
+
+## 10. Pilot Rollout
+
+- Rollout dimulai dari 1 line, 1 shift, dan 1 Mandor.
+- Periode pilot disarankan 1-2 minggu.
+- Metrik pilot: waktu submit, waktu review quarantine, waktu recap, duplicate rate, sync failure rate, dan jumlah correction request.
+- Hasil pilot menjadi dasar update SOP sebelum rollout ke 100+ operator.
+
+## 11. Aturan Integritas Bisnis
+
+- `target_harian`, `tandon`, `perolehan_ok`, dan `perolehan_reject` harus integer non-negatif.
+- `transaction_id` wajib unik.
+- Koreksi data tidak boleh menghapus transaksi asal.
+- Setiap perubahan keputusan harus punya audit trail.
+- Role menentukan data dan aksi yang boleh diakses.
+- Data setelah closing tidak boleh diubah langsung.
+- Reject wajib punya kategori defect jika `perolehan_reject > 0`.
+- Kombinasi `operator_email + factory_date + line_id + shift_id + machine_id` dipakai sebagai sinyal duplicate detection tambahan.
+- Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
+- Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.
+
+## 12. Standardisasi QCC
+
+Hasil implementasi yang terbukti efektif harus dikunci melalui:
+- SOP atau Instruksi Kerja pelaporan produksi digital.
+- Visual management untuk operator dan mandor.
+- Poka-Yoke IT seperti validasi angka, idempotency, role control, dan audit trail.
+- Review berkala menggunakan data `MASTER_RECAP`.
