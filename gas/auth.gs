@@ -20,7 +20,7 @@ var OptiflowAuth = (function () {
     throw new Error('Invalid AUTH_MODE configuration.');
   }
 
-  function requireSession(request, allowedRoles) {
+  function requireSession(request, requiredPermission) {
     var response = getSessionContext(request || {});
     var session = response.data;
 
@@ -28,8 +28,8 @@ var OptiflowAuth = (function () {
       throw new Error('Role selection is required before continuing.');
     }
 
-    if (allowedRoles && allowedRoles.length) {
-      requireRole(session, allowedRoles);
+    if (requiredPermission) {
+      requirePermission(session, requiredPermission.resource, requiredPermission.action);
     }
 
     return session;
@@ -150,7 +150,12 @@ var OptiflowAuth = (function () {
 
   return Object.freeze({
     getSessionContext: getSessionContext,
+    requirePermission: requirePermission,
     requireRole: requireRole,
     requireSession: requireSession,
   });
+
+  function requirePermission(session, resource, action) {
+    return OptiflowPermissions.requirePermission(session, resource, action);
+  }
 })();

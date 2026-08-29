@@ -18,16 +18,37 @@ function getHealthCheck() {
 }
 
 function bootstrapSheets() {
-  OptiflowValidation.assertNoInput(arguments, 'bootstrapSheets');
+  var payload = OptiflowValidation.validateOptionalSessionRequest(arguments, arguments[0], 'bootstrapSheets');
+  var session = OptiflowAuth.requireSession(payload, {
+    resource: 'schema',
+    action: 'bootstrap',
+  });
+
   return OptiflowSheets.bootstrap();
 }
 
 function getSchemaHealthCheck() {
-  OptiflowValidation.assertNoInput(arguments, 'getSchemaHealthCheck');
+  var payload = OptiflowValidation.validateOptionalSessionRequest(arguments, arguments[0], 'getSchemaHealthCheck');
+  var session = OptiflowAuth.requireSession(payload, {
+    resource: 'schema',
+    action: 'read_health',
+  });
+
   return OptiflowSheets.healthCheck();
 }
 
 function getSessionContext(request) {
   var payload = OptiflowValidation.validateSessionContextRequest(arguments, request);
   return OptiflowAuth.getSessionContext(payload);
+}
+
+function checkPermission(request) {
+  var payload = OptiflowValidation.validatePermissionCheckRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {});
+
+  return OptiflowResponse.success({
+    allowed: OptiflowPermissions.hasPermission(session, payload.resource, payload.action),
+    resource: payload.resource,
+    action: payload.action,
+  });
 }

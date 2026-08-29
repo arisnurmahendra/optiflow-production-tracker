@@ -36,6 +36,7 @@ Deliverables:
   - `gas/config.gs` untuk konstanta aplikasi dan sheet wajib.
   - `gas/response.gs` untuk safe structured response.
   - `gas/health.gs` untuk health check bootstrap.
+  - `gas/permissions.gs` untuk enforcement `ROLE_PERMISSIONS`.
 
 Kriteria selesai:
 - Build frontend menghasilkan satu `Index.html`.
@@ -89,6 +90,8 @@ Deliverables:
 - Masking PII berdasarkan role.
 - Baseline RBAC helper untuk memastikan endpoint hanya berjalan setelah session tervalidasi.
 - Audit dasar untuk session success/failure ke `AUDIT_LOGS`.
+- Enforcement `ROLE_PERMISSIONS` berbasis exact match `role + resource + action`.
+- Endpoint bootstrap/schema health hanya boleh berjalan jika permission eksplisit tersedia.
 
 Kriteria selesai:
 - User tidak terdaftar ditolak saat auth aktif.
@@ -98,6 +101,7 @@ Kriteria selesai:
 - Fungsi GAS yang menerima input eksternal memiliki blok awal `Input Validation & Sanitization`.
 - `AUTH_MODE=OFF` mengembalikan daftar role simulasi dan memvalidasi role yang dipilih.
 - `AUTH_MODE=ON` mengabaikan request simulasi role dan memakai `Session.getActiveUser().getEmail()`.
+- Endpoint tanpa permission eksplisit ditolak dan mencatat audit `RBAC_DENIED`.
 
 ## 5. Fase 3 - Operator Reporting MVP
 

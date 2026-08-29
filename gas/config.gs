@@ -31,6 +31,18 @@ var OPTIFLOW_AUTH_MODES = Object.freeze({
   OFF: 'OFF',
 });
 
+var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
+  schema: Object.freeze(['bootstrap', 'read_health']),
+  session: Object.freeze(['read']),
+  production_report: Object.freeze(['create', 'read']),
+  quarantine: Object.freeze(['read', 'approve', 'reject', 'request_correction']),
+  daily_closing: Object.freeze(['create', 'read', 'reopen']),
+  adjustment: Object.freeze(['create', 'read', 'approve', 'reject']),
+  dashboard: Object.freeze(['read']),
+  user_role: Object.freeze(['create', 'read', 'update', 'soft_delete']),
+  script_property: Object.freeze(['read_status', 'update', 'rotate_secret']),
+});
+
 var OPTIFLOW_SHEET_SCHEMAS = Object.freeze({
   USER_ROLES: Object.freeze([
     'user_id',

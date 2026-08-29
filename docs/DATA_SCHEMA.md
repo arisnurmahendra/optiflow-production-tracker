@@ -50,6 +50,8 @@ Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header da
 | `is_allowed` | Boolean | `TRUE` jika role diizinkan melakukan aksi. |
 | `updated_at` | String | ISO 8601 UTC saat permission diperbarui. |
 
+Authorization wajib memakai exact match `role + resource + action`. Missing permission, `is_allowed=FALSE`, role tidak dikenal, resource tidak dikenal, atau action tidak dikenal wajib ditolak. `SuperAdmin` tetap harus memiliki permission eksplisit di matrix.
+
 ## 4. Schema `RAW_LOGS`
 
 | Kolom | Tipe | Keterangan |

@@ -194,7 +194,34 @@ Session context yang dikirim ke frontend tidak boleh memuat PII mentah atau secr
 
 Setiap session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata yang aman.
 
-## 13. Standardisasi QCC
+## 13. Kontrak ROLE_PERMISSIONS
+
+`ROLE_PERMISSIONS` adalah sumber kebenaran untuk authorization action-level. Role saja tidak cukup untuk menjalankan endpoint yang mengubah atau membaca data operasional.
+
+Aturan:
+- Setiap endpoint backend wajib memanggil permission enforcement sebelum business logic berjalan.
+- Permission dihitung dari kombinasi `role + resource + action`.
+- Jika tidak ada baris `ROLE_PERMISSIONS` dengan `is_allowed=TRUE`, akses wajib ditolak.
+- `SuperAdmin` tidak mendapat bypass otomatis; tetap membutuhkan permission eksplisit agar matrix tetap bisa diaudit.
+- Request dengan resource/action tidak dikenal wajib ditolak.
+- Denial wajib dicatat ke `AUDIT_LOGS` sebagai `RBAC_DENIED`.
+- Allow yang berhasil untuk action sensitif boleh dicatat sebagai `RBAC_ALLOWED` jika diperlukan audit.
+
+Baseline resource/action:
+
+| Resource | Actions |
+| :--- | :--- |
+| `schema` | `bootstrap`, `read_health` |
+| `session` | `read` |
+| `production_report` | `create`, `read` |
+| `quarantine` | `read`, `approve`, `reject`, `request_correction` |
+| `daily_closing` | `create`, `read`, `reopen` |
+| `adjustment` | `create`, `read`, `approve`, `reject` |
+| `dashboard` | `read` |
+| `user_role` | `create`, `read`, `update`, `soft_delete` |
+| `script_property` | `read_status`, `update`, `rotate_secret` |
+
+## 14. Standardisasi QCC
 
 Hasil implementasi yang terbukti efektif harus dikunci melalui:
 - SOP atau Instruksi Kerja pelaporan produksi digital.

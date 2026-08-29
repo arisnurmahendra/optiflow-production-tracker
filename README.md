@@ -111,6 +111,7 @@ gas/
 ├─ auth.gs
 ├─ config.gs
 ├─ health.gs
+├─ permissions.gs
 ├─ response.gs
 ├─ sheets.gs
 └─ validation.gs

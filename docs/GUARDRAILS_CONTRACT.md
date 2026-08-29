@@ -22,6 +22,9 @@
 - Session context tidak boleh mengirim PII terenkripsi, PII mentah, blind index, atau nilai Script Properties ke frontend.
 - Session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata aman.
 - Semua endpoint backend wajib mengecek permission sesuai role.
+- Role saja tidak cukup untuk authorization; backend wajib mengecek `ROLE_PERMISSIONS` berdasarkan exact match `role + resource + action`.
+- Tidak ada implicit allow untuk `SuperAdmin`; permission tetap harus eksplisit agar dapat diaudit.
+- Missing permission wajib fail closed dan dicatat ke `AUDIT_LOGS` sebagai `RBAC_DENIED`.
 - MFA, password policy, dan account lockout dikelola oleh Google Workspace untuk model auth saat ini; jika custom password auth ditambahkan, kontrol password pada `POL.ISMS.001.md` menjadi wajib di aplikasi.
 
 ## 3. Frontend Dan API
