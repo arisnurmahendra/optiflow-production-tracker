@@ -1,0 +1,16 @@
+{
+  "scriptId": "PASTE_APPS_SCRIPT_ID_HERE",
+  "rootDir": "deploy",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "jsonExtensions": [
+    ".json"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
+}

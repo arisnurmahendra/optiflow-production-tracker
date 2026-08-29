@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 .vite/
+deploy/
 
 # Local environment and secrets
 .env
@@ -50,4 +51,3 @@ Desktop.ini
 # Legacy object files
 *.o
 *.ali
-

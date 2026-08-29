@@ -1,5 +1,7 @@
 # Clasp deploy allowlist:
 # Keep local project files out of Google Apps Script. Only deploy runtime files.
+# The active .clasp.json must use "rootDir": "deploy".
+# Generate deploy/ with `npm run prepare:gas` before running `clasp push --force`.
 
 # Ignore everything by default
 **
@@ -11,7 +13,7 @@
 !gas/
 !gas/**/*.gs
 
-# Frontend HTML Service bundle
+# Frontend HTML Service bundle generated from dist/Index.html
 !Index.html
 !*.html
 

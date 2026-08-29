@@ -142,6 +142,21 @@ Knowledge base maintenance is mandatory. Each iteration must be cross-checked ag
 
 When work maps to roadmap execution, update `ISSUE_TRACKER.md` before and after implementation. Local status must not be `Closed` until the corresponding GitHub Issue is closed or the user explicitly marks the item as local-only.
 
+### Clasp Push Protocol
+
+When the user instructs `clasp push` or asks to upload to Google Apps Script, never run raw `clasp push --force` from the source tree. The project uses `.clasp.json` with `"rootDir": "deploy"`, so the deploy directory must be generated first.
+
+Required sequence:
+1. Run `npm run build:verify` to produce and validate the single-file Vite bundle.
+2. Run `npm run prepare:gas` to regenerate `deploy/` from runtime files only:
+   - `appsscript.json`
+   - `Code.js`
+   - `dist/Index.html` copied as `deploy/Index.html`
+   - root `.gs` files and `gas/**/*.gs` when present.
+3. Run `clasp push --force` only after `deploy/` has been regenerated.
+4. Do not upload source files, docs, package files, `.gitignore`, `.claspignore`, `.clasp.json`, `src/`, `dist/`, `node_modules/`, or local secrets to Google Apps Script.
+5. Prefer `npm run push:gas` for the full safe sequence.
+
 ### GitHub Issue Closure Protocol
 
 When closing any `OPT-*` item linked to GitHub, follow this exact sequence:

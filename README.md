@@ -80,6 +80,26 @@ Repo sudah memiliki kontrak implementasi, file Apps Script awal, dan bootstrap V
 
 Langkah berikutnya adalah mengikuti fase pada [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), dimulai dari bootstrap struktur proyek dan setup kontrak sheet.
 
+## Deployment Ke Google Apps Script
+
+Clasp memakai `.clasp.json` lokal dengan `"rootDir": "deploy"`. Folder `deploy/` adalah artifact lokal dan tidak di-commit ke Git.
+
+Alur push yang aman:
+
+```powershell
+npm run push:gas
+```
+
+Perintah tersebut menjalankan build single-file, membuat ulang `deploy/`, lalu menjalankan `clasp push --force`. Isi `deploy/` hanya boleh berisi runtime Apps Script:
+
+```txt
+deploy/appsscript.json
+deploy/Code.js
+deploy/Index.html
+```
+
+Gunakan `.clasp.example.json` sebagai template aman untuk setup lokal. File `.clasp.json` asli tetap di-ignore karena memuat `scriptId`.
+
 ## Author
 
 Aris Nur Mahendra  

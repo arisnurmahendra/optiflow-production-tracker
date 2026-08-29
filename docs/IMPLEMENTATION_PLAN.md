@@ -28,6 +28,8 @@ Deliverables:
 - `package.json`, Vite config, dan `vite-plugin-singlefile`.
 - Konfigurasi Vite memastikan Vue 3, styling, dan aset base64 ter-bundle ke satu `Index.html`.
 - `.claspignore` berisi ignore rule untuk node modules, source lokal, test artifact, dan dokumen yang tidak perlu di-deploy.
+- `.clasp.json` lokal memakai `"rootDir": "deploy"` agar `clasp push --force` hanya membaca artifact runtime hasil build.
+- Script `prepare:gas` membuat ulang folder `deploy/` dari `appsscript.json`, `Code.js`, root `.gs`/`gas/**/*.gs`, dan `dist/Index.html` sebagai `deploy/Index.html`.
 - Kontrak deployment memisahkan environment development dan production melalui Clasp deployment/versioning.
 - `ISSUE_TRACKER.md` berisi issue ID, labels, milestone, priority, status, dan GitHub issue number placeholder.
 
@@ -36,6 +38,7 @@ Kriteria selesai:
 - Direktori `/dist` tidak menghasilkan file `.js` atau `.css` terpisah.
 - `Index.html` dapat dipakai oleh Google Apps Script HTML Service tanpa asset eksternal.
 - Clasp push tidak membawa file development yang tidak relevan.
+- `clasp status` hanya menampilkan file dari `deploy/` yang siap dikirim ke GAS.
 - `.claspignore` mencegah `node_modules`, source Vue mentah, test artifact, env lokal, dan file non-deploy ikut terkirim ke Apps Script.
 - Setiap item roadmap utama memiliki issue lokal dengan label dan milestone.
 

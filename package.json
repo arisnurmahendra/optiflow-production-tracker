@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "verify:singlefile": "node scripts/verify-singlefile-build.mjs",
-    "build:verify": "npm run build && npm run verify:singlefile"
+    "build:verify": "npm run build && npm run verify:singlefile",
+    "prepare:gas": "node scripts/prepare-gas-deploy.mjs",
+    "push:gas": "npm run build:verify && npm run prepare:gas && clasp push --force"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
