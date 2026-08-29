@@ -225,7 +225,7 @@
     {
       "id": "OPT-005",
       "title": "Implement GAS sheet bootstrap and schema health check",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -235,7 +235,18 @@
         "sync:github"
       ],
       "milestone": "M2 - Backend Foundation",
-      "github_issue": 5
+      "github_issue": 5,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "npm run test:gas:sheets passed",
+        "npm run build:verify passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "npm run prepare:gas and clasp status passed with modular GAS files included",
+        "JSON validation passed",
+        "Mojibake check passed",
+        "Implementation pushed in commit c2cf74c",
+        "GitHub issue #5 closed as completed"
+      ]
     },
     {
       "id": "OPT-006",
