@@ -304,7 +304,7 @@
     {
       "id": "OPT-008",
       "title": "Implement Input Validation & Sanitization blocks for GAS endpoints",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:security",
@@ -313,7 +313,19 @@
         "sync:github"
       ],
       "milestone": "M2 - Backend Foundation",
-      "github_issue": 8
+      "github_issue": 8,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "npm run audit:gas:validation passed",
+        "npm run test:gas passed",
+        "npm run build:verify passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "npm run prepare:gas and clasp status passed",
+        "JSON validation passed",
+        "Mojibake check passed",
+        "Implementation pushed in commit 531fb77",
+        "GitHub issue #8 closed as completed"
+      ]
     },
     {
       "id": "OPT-009",

@@ -66,7 +66,7 @@ Status:
 | `OPT-005` | Implement GAS sheet bootstrap and schema health check | Closed | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #5 |
 | `OPT-006` | Implement AUTH_MODE session context and RBAC | Closed | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #6 |
 | `OPT-007` | Implement ROLE_PERMISSIONS enforcement | Closed | P0 | `type:security`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #7 |
-| `OPT-008` | Implement Input Validation & Sanitization blocks for GAS endpoints | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #8 |
+| `OPT-008` | Implement Input Validation & Sanitization blocks for GAS endpoints | Closed | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #8 |
 | `OPT-009` | Build production `apiAdapter.js` and local `mock_gas.js` | Backlog | P1 | `type:feature`, `area:frontend`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #9 |
 | `OPT-010` | Build mobile operator reporting form | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #10 |
 | `OPT-011` | Implement Global State and IndexedDB persistence service | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #11 |
@@ -97,6 +97,7 @@ Status:
 | `OPT-005` | #5 | 2026-08-30 | `npm run test:gas:sheets` passed; sheet bootstrap and schema health implemented; modular GAS files pushed in commit `c2cf74c`. |
 | `OPT-006` | #6 | 2026-08-30 | `npm run test:gas:auth` passed; `AUTH_MODE` session context, dev role simulation, production role lookup, baseline RBAC, and audit events pushed in commit `ef70a4f`. |
 | `OPT-007` | #7 | 2026-08-30 | `npm run test:gas:permissions` passed; exact-match `ROLE_PERMISSIONS` enforcement and RBAC audit events pushed in commit `7297335`. |
+| `OPT-008` | #8 | 2026-08-30 | `npm run audit:gas:validation` passed; callable wrapper validation blocks and audit script pushed in commit `531fb77`. |
 
 ## 6. Issue Template
 
