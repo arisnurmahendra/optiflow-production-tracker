@@ -205,9 +205,10 @@ Aturan akses:
 4. `SuperAdmin` tetap membutuhkan permission eksplisit di `ROLE_PERMISSIONS`; tidak ada bypass role.
 5. Secret seperti `ENCRYPTION_SALT` hanya tampil sebagai status `SET` atau `NOT_SET`, bukan nilai mentah.
 6. Update `AUTH_MODE` harus terbatas ke `ON` atau `OFF`.
-7. Delete hanya boleh untuk key konfigurasi yang aman dihapus berdasarkan `DATA_SCHEMA.md`; `AUTH_MODE` dan secret tidak boleh dihapus.
-8. Rotate secret hanya boleh untuk key yang rotatable dan harus mengembalikan status-only.
-9. Semua aksi maintenance wajib dicatat ke `AUDIT_LOGS` dengan metadata tanpa secret.
+7. Update `APP_ACTIVE_UNTIL` harus memakai format `YYYY-MM-DD`; tanggal berlaku inclusive berdasarkan timezone `Asia/Jakarta`.
+8. Delete hanya boleh untuk key konfigurasi yang aman dihapus berdasarkan `DATA_SCHEMA.md`; `AUTH_MODE` dan secret tidak boleh dihapus.
+9. Rotate secret hanya boleh untuk key yang rotatable dan harus mengembalikan status-only.
+10. Semua aksi maintenance wajib dicatat ke `AUDIT_LOGS` dengan metadata tanpa secret.
 
 Alur operasional:
 1. SuperAdmin membuka hidden console.
@@ -217,6 +218,13 @@ Alur operasional:
 5. Frontend menampilkan confirmation dialog untuk aksi destruktif atau sensitif.
 6. Backend menjalankan validasi, RBAC, mutation, audit, lalu mengembalikan response terstruktur.
 7. Frontend refresh status setelah success dan menampilkan error aman jika gagal.
+
+Alur expiry aplikasi:
+1. Saat web app dibuka, `doGet()` membaca `APP_ACTIVE_UNTIL`.
+2. Jika properti kosong, aplikasi dianggap aktif tanpa tanggal akhir.
+3. Jika tanggal hari ini di `Asia/Jakarta` masih sama atau sebelum `APP_ACTIVE_UNTIL`, `Index.html` dirender normal.
+4. Jika tanggal sudah lewat atau format property tidak valid, `doGet()` menampilkan halaman `Akses ditolak`.
+5. Halaman penolakan tidak boleh memuat data produksi, session context, Script Properties mentah, atau secret.
 
 ## 14. Kontrak ROLE_PERMISSIONS
 

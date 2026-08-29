@@ -46,6 +46,15 @@ const maintenanceProperties = ref([
     rotatable: false,
   },
   {
+    key: 'APP_ACTIVE_UNTIL',
+    sensitivity: 'CONFIG',
+    status: 'SET',
+    value_preview: '2099-12-31',
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+  },
+  {
     key: 'ENCRYPTION_SALT',
     sensitivity: 'SECRET',
     status: 'SET',

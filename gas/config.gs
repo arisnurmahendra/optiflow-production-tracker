@@ -52,6 +52,14 @@ var OPTIFLOW_SCRIPT_PROPERTY_CONTRACT = Object.freeze({
     rotatable: false,
     allowed_values: Object.freeze(['ON', 'OFF']),
   }),
+  APP_ACTIVE_UNTIL: Object.freeze({
+    sensitivity: 'CONFIG',
+    readable: true,
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+    pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+  }),
   SPREADSHEET_ID: Object.freeze({
     sensitivity: 'CONFIG',
     readable: true,

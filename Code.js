@@ -7,6 +7,14 @@ function doGet() {
   // Input Validation & Sanitization
   OptiflowValidation.assertDoGetEvent(arguments, 'doGet');
 
+  var accessStatus = OptiflowAccessGate.isApplicationActive();
+
+  if (!accessStatus.active) {
+    return HtmlService.createHtmlOutput(OptiflowAccessGate.buildAccessDeniedHtml(accessStatus))
+      .setTitle(OPTIFLOW_APP.name + ' - Akses Ditolak')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle(OPTIFLOW_APP.name)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

@@ -13,6 +13,7 @@
 - Script Properties hanya boleh disentuh melalui endpoint maintenance allowlisted untuk key yang disahkan di `DATA_SCHEMA.md`.
 - Endpoint maintenance Script Properties tidak boleh mengirim nilai secret mentah ke frontend; secret hanya boleh dikembalikan sebagai status `SET` atau `NOT_SET`.
 - Mutasi Script Properties wajib diaudit dengan metadata yang tidak berisi nilai property.
+- `APP_ACTIVE_UNTIL` wajib divalidasi sebagai `YYYY-MM-DD`; jika expired atau invalid, `doGet()` harus menolak render aplikasi utama dan mengembalikan halaman akses ditolak.
 
 ## 2. Auth Dan RBAC
 

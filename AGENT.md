@@ -64,6 +64,7 @@ Server configuration is stored in `PropertiesService.getScriptProperties()`.
 Required properties:
 - `SPREADSHEET_ID`: required when the Apps Script project is standalone; optional when the script is container-bound to the target Google Sheet.
 - `AUTH_MODE`: `ON` for production Google account validation, `OFF` for local role simulation.
+- `APP_ACTIVE_UNTIL`: optional `YYYY-MM-DD` expiry gate in `Asia/Jakarta`; if expired or invalid, `doGet()` must render the access denied page instead of the app.
 - `ENCRYPTION_SALT`: server-only secret for encryption or blind indexing operations.
 
 Rules:

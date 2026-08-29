@@ -234,6 +234,7 @@ Deliverables:
 - Dokumentasi deploy via Clasp.
 - Checklist Script Properties.
 - Hidden maintenance console SuperAdmin untuk status/update/delete/rotate Script Properties berbasis allowlist.
+- Expiry gate berbasis `APP_ACTIVE_UNTIL` yang menampilkan halaman akses ditolak saat aplikasi sudah melewati masa aktif.
 - Production API wrapper memakai `google.script.run.withSuccessHandler().withFailureHandler()`.
 
 Kriteria selesai:
@@ -244,6 +245,7 @@ Kriteria selesai:
 - Tidak ada file `.js` atau `.css` terpisah di `/dist` setelah build produksi.
 - RBAC, audit masking, dan safe error response memenuhi baseline POL.ISMS.001.
 - Script Properties maintenance menolak key non-allowlist, tidak membocorkan secret, dan mencatat audit.
+- `doGet()` memblokir akses ketika `APP_ACTIVE_UNTIL` expired atau invalid tanpa merender aplikasi utama.
 - Test runner GAS menghasilkan log Pass/Fail untuk CRUD, validation, idempotency, RBAC, quarantine, closing, adjustment, dan recap.
 
 ## 11. Fase 9 - Pilot Rollout Dan Process Stabilization

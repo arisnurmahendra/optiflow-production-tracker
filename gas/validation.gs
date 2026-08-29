@@ -119,6 +119,10 @@ var OptiflowValidation = (function () {
       throw new Error('Input Validation & Sanitization: SPREADSHEET_ID format is invalid.');
     }
 
+    if (key === 'APP_ACTIVE_UNTIL' && !new RegExp(contract.pattern).test(value)) {
+      throw new Error('Input Validation & Sanitization: APP_ACTIVE_UNTIL must use YYYY-MM-DD format.');
+    }
+
     return {
       session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
       key: key,

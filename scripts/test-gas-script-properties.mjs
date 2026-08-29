@@ -92,6 +92,7 @@ class MockSpreadsheet {
 
 const properties = {
   AUTH_MODE: 'OFF',
+  APP_ACTIVE_UNTIL: '2099-12-31',
   SPREADSHEET_ID: '1abcDEFghiJKLmnopQRSTuvWXyz_12345',
   ENCRYPTION_SALT: 'super-secret-salt',
 };
@@ -110,6 +111,9 @@ const context = {
     getUuid() {
       uuidCounter += 1;
       return `mock-uuid-${uuidCounter}`;
+    },
+    formatDate() {
+      return '2026-08-30';
     },
   },
   PropertiesService: {
@@ -144,6 +148,41 @@ const context = {
       return spreadsheet;
     },
   },
+  HtmlService: {
+    createHtmlOutput(content) {
+      return {
+        content,
+        title: '',
+        mode: '',
+        setTitle(title) {
+          this.title = title;
+          return this;
+        },
+        setXFrameOptionsMode(mode) {
+          this.mode = mode;
+          return this;
+        },
+      };
+    },
+    createHtmlOutputFromFile(file) {
+      return {
+        file,
+        title: '',
+        mode: '',
+        setTitle(title) {
+          this.title = title;
+          return this;
+        },
+        setXFrameOptionsMode(mode) {
+          this.mode = mode;
+          return this;
+        },
+      };
+    },
+    XFrameOptionsMode: {
+      ALLOWALL: 'ALLOWALL',
+    },
+  },
 };
 
 const files = [
@@ -154,6 +193,7 @@ const files = [
   'gas/audit.gs',
   'gas/permissions.gs',
   'gas/auth.gs',
+  'gas/accessGate.gs',
   'gas/scriptProperties.gs',
   'Code.js',
 ];
@@ -199,6 +239,11 @@ if (!authModeStatus || authModeStatus.value_preview !== 'OFF') {
   throw new Error('Expected AUTH_MODE to be readable as a non-secret config value.');
 }
 
+const activeUntilStatus = status.data.properties.find((property) => property.key === 'APP_ACTIVE_UNTIL');
+if (!activeUntilStatus || activeUntilStatus.value_preview !== '2099-12-31') {
+  throw new Error('Expected APP_ACTIVE_UNTIL to be readable as a non-secret expiry date.');
+}
+
 vm.runInNewContext(
   "setScriptProperty({ session: superAdminSession, key: 'AUTH_MODE', value: 'ON' })",
   { ...context, superAdminSession },
@@ -234,6 +279,27 @@ if (!rejected) {
   throw new Error('Expected invalid AUTH_MODE enum to be rejected.');
 }
 
+vm.runInNewContext(
+  "setScriptProperty({ session: superAdminSession, key: 'APP_ACTIVE_UNTIL', value: '2026-12-31' })",
+  { ...context, superAdminSession },
+);
+if (properties.APP_ACTIVE_UNTIL !== '2026-12-31') {
+  throw new Error('Expected APP_ACTIVE_UNTIL update to be accepted.');
+}
+
+rejected = false;
+try {
+  vm.runInNewContext(
+    "setScriptProperty({ session: superAdminSession, key: 'APP_ACTIVE_UNTIL', value: '31-12-2026' })",
+    { ...context, superAdminSession },
+  );
+} catch {
+  rejected = true;
+}
+if (!rejected) {
+  throw new Error('Expected invalid APP_ACTIVE_UNTIL format to be rejected.');
+}
+
 const rotation = vm.runInNewContext(
   "rotateSecretProperty({ session: superAdminSession, key: 'ENCRYPTION_SALT' })",
   { ...context, superAdminSession },
@@ -241,6 +307,35 @@ const rotation = vm.runInNewContext(
 if (rotation.data.property.value_preview !== '' || !properties.ENCRYPTION_SALT.includes('mock-uuid')) {
   throw new Error('Expected secret rotation to return status only and write a new secret.');
 }
+
+let gate = vm.runInNewContext('OptiflowAccessGate.isApplicationActive()', context);
+if (!gate.active) {
+  throw new Error('Expected future APP_ACTIVE_UNTIL to keep the application active.');
+}
+
+let htmlOutput = vm.runInNewContext('doGet()', context);
+if (htmlOutput.file !== 'Index') {
+  throw new Error('Expected active APP_ACTIVE_UNTIL to render Index.html.');
+}
+
+properties.APP_ACTIVE_UNTIL = '2026-08-29';
+gate = vm.runInNewContext('OptiflowAccessGate.isApplicationActive()', context);
+if (gate.active || gate.reason !== 'APPLICATION_EXPIRED') {
+  throw new Error('Expected expired APP_ACTIVE_UNTIL to deny application access.');
+}
+
+htmlOutput = vm.runInNewContext('doGet()', context);
+if (!htmlOutput.content.includes('Akses ditolak') || htmlOutput.content.includes('super-secret-salt')) {
+  throw new Error('Expected denied page to be safe and not expose secrets.');
+}
+
+properties.APP_ACTIVE_UNTIL = 'not-a-date';
+gate = vm.runInNewContext('OptiflowAccessGate.isApplicationActive()', context);
+if (gate.active || gate.reason !== 'INVALID_EXPIRY_CONFIGURATION') {
+  throw new Error('Expected invalid APP_ACTIVE_UNTIL format to deny application access.');
+}
+
+properties.APP_ACTIVE_UNTIL = '2026-12-31';
 
 vm.runInNewContext(
   "deleteScriptProperty({ session: superAdminSession, key: 'SPREADSHEET_ID' })",

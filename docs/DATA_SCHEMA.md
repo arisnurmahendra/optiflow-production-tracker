@@ -257,6 +257,7 @@ Allowlist:
 | Key | Sensitivitas | Read | Update | Delete | Rotate | Aturan |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `AUTH_MODE` | `CONFIG` | Masked/full enum | Ya | Tidak | Tidak | Nilai hanya `ON` atau `OFF`. |
+| `APP_ACTIVE_UNTIL` | `CONFIG` | Full date | Ya | Ya | Tidak | Format `YYYY-MM-DD`, inclusive sampai akhir tanggal berdasarkan `Asia/Jakarta`; kosong berarti tidak ada expiry. |
 | `SPREADSHEET_ID` | `CONFIG` | Masked preview | Ya | Ya | Tidak | Format Google ID alfanumerik, `_`, atau `-`, minimal 20 karakter. |
 | `ENCRYPTION_SALT` | `SECRET` | Status-only | Tidak | Tidak | Ya | Tidak pernah dikirim mentah ke frontend, log, atau audit metadata. |
 
@@ -301,8 +302,8 @@ Request update config:
   "session": {
     "simulated_role": "SuperAdmin"
   },
-  "key": "AUTH_MODE",
-  "value": "OFF"
+  "key": "APP_ACTIVE_UNTIL",
+  "value": "2026-12-31"
 }
 ```
 
@@ -329,6 +330,8 @@ Request rotate secret:
 ```
 
 Semua endpoint maintenance wajib menolak key yang tidak ada di allowlist, action yang tidak sesuai kontrak key, role tanpa permission `script_property:*`, dan payload yang membawa field tambahan.
+
+`doGet()` wajib membaca `APP_ACTIVE_UNTIL` sebelum merender aplikasi. Jika tanggal hari ini di timezone `Asia/Jakarta` lebih besar dari nilai tersebut, atau format nilai tidak valid, backend wajib mengembalikan halaman penolakan akses tanpa merender `Index.html`.
 
 ## 16. Standar Waktu
 
