@@ -153,7 +153,7 @@
     {
       "id": "OPT-002",
       "title": "Create UI/UX design system contract",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:docs",
@@ -162,7 +162,15 @@
         "sync:github"
       ],
       "milestone": "M0 - Contracts & Planning",
-      "github_issue": 2
+      "github_issue": 2,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "JSON validation passed",
+        "Mojibake check passed",
+        "UI/UX contract keyword coverage passed",
+        "docs/UI_UX_CONTRACT.md finalized and pushed in commit 0c1837b",
+        "GitHub issue #2 closed as completed"
+      ]
     },
     {
       "id": "OPT-003",

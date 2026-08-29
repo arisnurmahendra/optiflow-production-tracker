@@ -60,7 +60,7 @@ Status:
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `OPT-001` | Finalize documentation contract audit | Closed | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | #1 |
-| `OPT-002` | Create UI/UX design system contract | Ready | P1 | `type:docs`, `area:ui-ux`, `priority:p1`, `sync:github` | `M0 - Contracts & Planning` | #2 |
+| `OPT-002` | Create UI/UX design system contract | Closed | P1 | `type:docs`, `area:ui-ux`, `priority:p1`, `sync:github` | `M0 - Contracts & Planning` | #2 |
 | `OPT-003` | Bootstrap Vue 3 + Vite single-file build | Backlog | P0 | `type:feature`, `area:frontend`, `area:deployment`, `priority:p0`, `sync:github` | `M1 - Project Bootstrap` | #3 |
 | `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Backlog | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | #4 |
 | `OPT-005` | Implement GAS sheet bootstrap and schema health check | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #5 |
@@ -91,6 +91,7 @@ Status:
 | ID | GitHub Issue | Closed At | Verification |
 | :--- | :--- | :--- | :--- |
 | `OPT-001` | #1 | 2026-08-30 | JSON validation passed; mojibake check passed; contract keyword coverage passed; `docs/DOCUMENTATION_AUDIT.md` added and pushed in commit `a1c9bc4`. |
+| `OPT-002` | #2 | 2026-08-30 | JSON validation passed; mojibake check passed; UI/UX contract keyword coverage passed; `docs/UI_UX_CONTRACT.md` finalized and pushed in commit `0c1837b`. |
 
 ## 6. Issue Template
 
