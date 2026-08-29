@@ -62,7 +62,7 @@ Status:
 | `OPT-001` | Finalize documentation contract audit | Closed | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | #1 |
 | `OPT-002` | Create UI/UX design system contract | Closed | P1 | `type:docs`, `area:ui-ux`, `priority:p1`, `sync:github` | `M0 - Contracts & Planning` | #2 |
 | `OPT-003` | Bootstrap Vue 3 + Vite single-file build | Closed | P0 | `type:feature`, `area:frontend`, `area:deployment`, `priority:p0`, `sync:github` | `M1 - Project Bootstrap` | #3 |
-| `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Backlog | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | #4 |
+| `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Closed | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | #4 |
 | `OPT-005` | Implement GAS sheet bootstrap and schema health check | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #5 |
 | `OPT-006` | Implement AUTH_MODE session context and RBAC | Backlog | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #6 |
 | `OPT-007` | Implement ROLE_PERMISSIONS enforcement | Backlog | P0 | `type:security`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #7 |
@@ -93,6 +93,7 @@ Status:
 | `OPT-001` | #1 | 2026-08-30 | JSON validation passed; mojibake check passed; contract keyword coverage passed; `docs/DOCUMENTATION_AUDIT.md` added and pushed in commit `a1c9bc4`. |
 | `OPT-002` | #2 | 2026-08-30 | JSON validation passed; mojibake check passed; UI/UX contract keyword coverage passed; `docs/UI_UX_CONTRACT.md` finalized and pushed in commit `0c1837b`. |
 | `OPT-003` | #3 | 2026-08-30 | `npm audit --audit-level=moderate` passed; `npm run build:verify` passed; only `dist/Index.html` produced; bootstrap pushed in commit `152a6e0`. |
+| `OPT-004` | #4 | 2026-08-30 | `npm run prepare:gas` passed; `clasp status` showed only `deploy/appsscript.json`, `deploy/Code.js`, and `deploy/Index.html`; deploy flow pushed in commit `29c0485`. |
 
 ## 6. Issue Template
 

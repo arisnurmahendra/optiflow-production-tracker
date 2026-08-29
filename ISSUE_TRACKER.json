@@ -201,7 +201,7 @@
     {
       "id": "OPT-004",
       "title": "Harden .claspignore and Clasp deployment flow",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -210,7 +210,17 @@
         "sync:github"
       ],
       "milestone": "M1 - Project Bootstrap",
-      "github_issue": 4
+      "github_issue": 4,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "npm run build:verify passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "npm run prepare:gas passed",
+        "clasp status showed only deploy/appsscript.json, deploy/Code.js, and deploy/Index.html",
+        "JSON validation passed",
+        "Deploy flow pushed in commit 29c0485",
+        "GitHub issue #4 closed as completed"
+      ]
     },
     {
       "id": "OPT-005",
