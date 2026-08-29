@@ -131,7 +131,7 @@
     {
       "id": "OPT-001",
       "title": "Finalize documentation contract audit",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:docs",
@@ -140,7 +140,15 @@
         "sync:github"
       ],
       "milestone": "M0 - Contracts & Planning",
-      "github_issue": 1
+      "github_issue": 1,
+      "closed_at": "2026-08-30",
+      "verification": [
+        "JSON validation passed",
+        "Mojibake check passed",
+        "Contract keyword coverage passed",
+        "docs/DOCUMENTATION_AUDIT.md added and pushed in commit a1c9bc4",
+        "GitHub issue #1 closed as completed"
+      ]
     },
     {
       "id": "OPT-002",

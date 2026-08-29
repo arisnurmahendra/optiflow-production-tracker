@@ -59,7 +59,7 @@ Status:
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `OPT-001` | Finalize documentation contract audit | Ready | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | #1 |
+| `OPT-001` | Finalize documentation contract audit | Closed | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | #1 |
 | `OPT-002` | Create UI/UX design system contract | Ready | P1 | `type:docs`, `area:ui-ux`, `priority:p1`, `sync:github` | `M0 - Contracts & Planning` | #2 |
 | `OPT-003` | Bootstrap Vue 3 + Vite single-file build | Backlog | P0 | `type:feature`, `area:frontend`, `area:deployment`, `priority:p0`, `sync:github` | `M1 - Project Bootstrap` | #3 |
 | `OPT-004` | Harden `.claspignore` and Clasp deployment flow | Backlog | P1 | `type:feature`, `area:deployment`, `priority:p1`, `sync:github` | `M1 - Project Bootstrap` | #4 |
@@ -86,7 +86,13 @@ Status:
 | `OPT-025` | Execute 1 line / 1 shift pilot rollout | Backlog | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
 | `OPT-026` | Produce QCC Step 1-8 report package | Backlog | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
 
-## 5. Issue Template
+## 5. Closed Issue Log
+
+| ID | GitHub Issue | Closed At | Verification |
+| :--- | :--- | :--- | :--- |
+| `OPT-001` | #1 | 2026-08-30 | JSON validation passed; mojibake check passed; contract keyword coverage passed; `docs/DOCUMENTATION_AUDIT.md` added and pushed in commit `a1c9bc4`. |
+
+## 6. Issue Template
 
 Use this body when creating GitHub Issues:
 
@@ -124,4 +130,3 @@ Describe the desired outcome.
 
 - None, or list blockers.
 ```
-
