@@ -89,5 +89,10 @@ Keep snapshot artifacts ignored by Git unless the user explicitly asks to revive
 - OPT-019 / GitHub #19: MASTER_RECAP batch aggregation completed.
 - OPT-020 / GitHub #20: desktop supervisor control center completed.
 - OPT-021 / GitHub #21: management read-only dashboard completed.
+- OPT-022 / GitHub #22: native GAS test runner completed.
+- OPT-023 / GitHub #23: production security hardening checklist completed.
+- OPT-024 / GitHub #24: production deployment checklist completed.
+- OPT-025 / GitHub #25: pilot rollout plan completed; field evidence remains external.
+- OPT-026 / GitHub #26: QCC Step 1-8 report package template completed.
 
 Update this section only after issue closure or meaningful architecture changes.

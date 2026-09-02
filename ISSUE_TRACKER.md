@@ -57,7 +57,7 @@ Status:
 
 ## 4. Issue Backlog
 
-Snapshot 2026-09-02: `OPT-001` sampai `OPT-021` dan `OPT-027` sudah closed dan tersinkron ke GitHub. Eksekusi berikutnya dimulai dari `OPT-022`.
+Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Eksekusi berikutnya membutuhkan issue roadmap baru atau eksekusi pilot lapangan.
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -82,11 +82,11 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-021` dan `OPT-027` sudah closed dan t
 | `OPT-019` | Implement MASTER_RECAP batch aggregation | Closed | P1 | `type:feature`, `area:backend`, `area:data`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #19 |
 | `OPT-020` | Build desktop supervisor control center | Closed | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #20 |
 | `OPT-021` | Build management read-only dashboard | Closed | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #21 |
-| `OPT-022` | Implement GAS `test_runner.gs` | Backlog | P1 | `type:test`, `area:backend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #22 |
-| `OPT-023` | Run security hardening against POL.ISMS.001 | Backlog | P0 | `type:security`, `area:backend`, `area:frontend`, `priority:p0`, `sync:github` | `M6 - Security, Testing & Deployment` | #23 |
-| `OPT-024` | Prepare production deployment checklist | Backlog | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #24 |
-| `OPT-025` | Execute 1 line / 1 shift pilot rollout | Backlog | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
-| `OPT-026` | Produce QCC Step 1-8 report package | Backlog | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
+| `OPT-022` | Implement GAS `test_runner.gs` | Closed | P1 | `type:test`, `area:backend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #22 |
+| `OPT-023` | Run security hardening against POL.ISMS.001 | Closed | P0 | `type:security`, `area:backend`, `area:frontend`, `priority:p0`, `sync:github` | `M6 - Security, Testing & Deployment` | #23 |
+| `OPT-024` | Prepare production deployment checklist | Closed | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #24 |
+| `OPT-025` | Execute 1 line / 1 shift pilot rollout | Closed | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
+| `OPT-026` | Produce QCC Step 1-8 report package | Closed | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
 | `OPT-027` | Build SuperAdmin hidden maintenance console for safe Script Properties management | Closed | P1 | `type:feature`, `type:security`, `area:backend`, `area:frontend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #27 |
 
 ## 5. Closed Issue Log
@@ -114,6 +114,11 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-021` dan `OPT-027` sudah closed dan t
 | `OPT-019` | #19 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; MASTER_RECAP batch aggregation pushed in commit `76c87f5`. |
 | `OPT-020` | #20 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; desktop supervisor control center pushed in commit `76c87f5`. |
 | `OPT-021` | #21 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; management read-only dashboard pushed in commit `76c87f5`. |
+| `OPT-022` | #22 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; native GAS test runner pushed in commit `2c943f1`. |
+| `OPT-023` | #23 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; production hardening checklist pushed in commit `2c943f1`. |
+| `OPT-024` | #24 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; production deployment checklist pushed in commit `2c943f1`. |
+| `OPT-025` | #25 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; pilot rollout plan pushed in commit `2c943f1`; field evidence remains external. |
+| `OPT-026` | #26 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; QCC report package template pushed in commit `2c943f1`; actual benefits wait for pilot data. |
 | `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
 
 ## 6. Issue Template

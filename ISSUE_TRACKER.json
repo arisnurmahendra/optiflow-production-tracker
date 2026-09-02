@@ -657,7 +657,7 @@
     {
       "id": "OPT-022",
       "title": "Implement GAS test_runner.gs",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:test",
@@ -666,12 +666,22 @@
         "sync:github"
       ],
       "milestone": "M6 - Security, Testing & Deployment",
-      "github_issue": 22
+      "github_issue": 22,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #22 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Native GAS test runner pushed in commit 2c943f1"
+      ]
     },
     {
       "id": "OPT-023",
       "title": "Run security hardening against POL.ISMS.001",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:security",
@@ -681,12 +691,22 @@
         "sync:github"
       ],
       "milestone": "M6 - Security, Testing & Deployment",
-      "github_issue": 23
+      "github_issue": 23,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #23 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed approved service-only IndexedDB/google.script.run access",
+        "Production hardening checklist pushed in commit 2c943f1"
+      ]
     },
     {
       "id": "OPT-024",
       "title": "Prepare production deployment checklist",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:docs",
@@ -695,12 +715,21 @@
         "sync:github"
       ],
       "milestone": "M6 - Security, Testing & Deployment",
-      "github_issue": 24
+      "github_issue": 24,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #24 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Production deployment checklist pushed in commit 2c943f1"
+      ]
     },
     {
       "id": "OPT-025",
       "title": "Execute 1 line / 1 shift pilot rollout",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P2",
       "labels": [
         "type:feature",
@@ -709,12 +738,22 @@
         "sync:github"
       ],
       "milestone": "M7 - QCC Report & Rollout",
-      "github_issue": 25
+      "github_issue": 25,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #25 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Pilot rollout plan pushed in commit 2c943f1",
+        "Field evidence remains external to the repository"
+      ]
     },
     {
       "id": "OPT-026",
       "title": "Produce QCC Step 1-8 report package",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P2",
       "labels": [
         "type:docs",
@@ -723,7 +762,17 @@
         "sync:github"
       ],
       "milestone": "M7 - QCC Report & Rollout",
-      "github_issue": 26
+      "github_issue": 26,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #26 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "QCC Step 1-8 report package template pushed in commit 2c943f1",
+        "Actual QCC benefit values wait for pilot data"
+      ]
     },
     {
       "id": "OPT-027",
