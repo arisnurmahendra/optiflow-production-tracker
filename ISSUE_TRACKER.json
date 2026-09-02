@@ -480,7 +480,7 @@
     {
       "id": "OPT-015",
       "title": "Build Mandor approval inbox and conflict comparison UI",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -491,7 +491,17 @@
         "sync:github"
       ],
       "milestone": "M4 - Offline Sync & Conflict Control",
-      "github_issue": 15
+      "github_issue": 15,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #15 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Mandor approval inbox UI pushed in commit fda4fc6"
+      ]
     },
     {
       "id": "OPT-016",

@@ -72,5 +72,6 @@ Keep snapshot artifacts ignored by Git unless the user explicitly asks to revive
 - OPT-012 / GitHub #12: append-only RAW_LOGS submit endpoint completed.
 - OPT-013 / GitHub #13: Offline-Tolerant sync queue completed.
 - OPT-014 / GitHub #14: CONFLICT_PENDING detection and quarantine routing completed.
+- OPT-015 / GitHub #15: Mandor approval inbox and conflict comparison UI completed.
 
 Update this section only after issue closure or meaningful architecture changes.
