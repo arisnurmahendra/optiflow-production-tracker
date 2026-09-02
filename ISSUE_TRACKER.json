@@ -408,7 +408,7 @@
     {
       "id": "OPT-012",
       "title": "Implement append-only RAW_LOGS submit endpoint",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -418,7 +418,16 @@
         "sync:github"
       ],
       "milestone": "M3 - Operator Mobile MVP",
-      "github_issue": 12
+      "github_issue": 12,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #12 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Append-only RAW_LOGS endpoint pushed in commit af5d583"
+      ]
     },
     {
       "id": "OPT-013",

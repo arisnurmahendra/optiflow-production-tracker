@@ -64,10 +64,11 @@ Keep snapshot artifacts ignored by Git unless the user explicitly asks to revive
 ## Recent Closed Work
 
 - OPT-001 / GitHub #1: documentation contract audit completed.
-- OPT-002 / GitHub #3: UI/UX design system contract completed.
+- OPT-002 / GitHub #2: UI/UX design system contract completed.
 - OPT-027: hidden SuperAdmin Script Properties maintenance console completed.
 - OPT-009 / GitHub #9: API adapter and mock GAS behavior completed.
 - OPT-010 / GitHub #10: operator report form validation completed.
 - OPT-011 / GitHub #11: operator global state persistence completed.
+- OPT-012 / GitHub #12: append-only RAW_LOGS submit endpoint completed.
 
 Update this section only after issue closure or meaningful architecture changes.
