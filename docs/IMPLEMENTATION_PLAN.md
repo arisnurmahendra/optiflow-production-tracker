@@ -15,6 +15,14 @@
 - UI/UX mengikuti `UI_UX_CONTRACT.md`.
 - Setiap fase harus punya kriteria selesai yang bisa diverifikasi.
 
+## 1A. Snapshot Implementasi Saat Ini
+
+Status per 2026-09-02:
+- Selesai: `OPT-001` sampai `OPT-016` dan `OPT-027`.
+- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, dan expiry gate.
+- Belum selesai: backend approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch aggregation, supervisor desktop control center penuh, management dashboard penuh, native `test_runner.gs`, hardening produksi final, pilot rollout, dan paket QCC final.
+- Roadmap berikutnya dimulai dari `OPT-017` daily closing workflow.
+
 ## 2. Fase 0 - Baseline Repository
 
 Tujuan:

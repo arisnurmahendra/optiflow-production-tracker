@@ -87,3 +87,23 @@ Audit log wajib memfilter:
 - Duplicate `transaction_id` tidak menggandakan data.
 - Dashboard membaca `MASTER_RECAP`, bukan seluruh `RAW_LOGS`.
 - Build frontend menghasilkan satu `Index.html` tanpa file `.js` atau `.css` terpisah di `/dist`.
+
+## 8. Current Control Implementation Status
+
+Implemented and locally tested:
+- `AUTH_MODE` session flow for development simulation and production Google identity lookup.
+- `ROLE_PERMISSIONS` exact-match authorization with fail-closed behavior.
+- Safe structured response and safe frontend error normalization.
+- Callable wrapper validation audit before backend business logic.
+- Append-only production submit with duplicate `transaction_id` protection.
+- Conflict quarantine for machine/operator/time collision.
+- Active defect category validation for reject submissions.
+- Script Properties maintenance allowlist with secret masking and audit events.
+- `APP_ACTIVE_UNTIL` access gate for expired or invalid application period.
+- Single-file frontend build verification.
+
+Still required before production rollout:
+- Set production Script Properties in the target Apps Script project.
+- Run role/RBAC smoke tests with real Google Workspace accounts.
+- Implement backend approval mutation, daily closing, adjustment, recap, and dashboard isolation before management reporting is treated as official.
+- Add native `test_runner.gs` or an equivalent Apps Script-side smoke runner for production environment checks.

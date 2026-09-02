@@ -57,6 +57,8 @@ Status:
 
 ## 4. Issue Backlog
 
+Snapshot 2026-09-02: `OPT-001` sampai `OPT-016` dan `OPT-027` sudah closed dan tersinkron ke GitHub. Eksekusi berikutnya dimulai dari `OPT-017`.
+
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `OPT-001` | Finalize documentation contract audit | Closed | P0 | `type:docs`, `area:process`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | #1 |

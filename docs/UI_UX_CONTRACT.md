@@ -8,6 +8,11 @@ OPTIFLOW memakai gaya Industrial Soft UI.
 
 Neumorphism dan Claymorphism boleh dipakai sebagai aksen visual, tetapi tidak boleh menjadi satu-satunya indikator affordance, status, atau prioritas aksi. Sistem harus tetap terasa utilitarian, cepat dibaca, dan cocok untuk operator produksi, Mandor, Supervisor, HRD, SuperAdmin, dan Management.
 
+Status implementasi 2026-09-02:
+- Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
+- Approval inbox decision saat ini masih staged di frontend; backend approval mutation belum menjadi sumber kebenaran sampai issue lanjutan selesai.
+- Desktop management dashboard penuh dan supervisor control center masih backlog.
+
 ## 2. Prinsip Visual
 
 - Tampilan utama harus bersih, terang, dan kontras tinggi.

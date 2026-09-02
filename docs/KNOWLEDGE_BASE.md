@@ -50,7 +50,19 @@ Ringkasan langkah:
 - Strategi resolusi konflik memakai event sourcing: data offline selalu append-only ke `RAW_LOGS`, konflik menjadi `CONFLICT_PENDING`, dan Mandor menyelesaikan konflik melalui Human-in-the-Loop.
 - Setiap iterasi perubahan wajib menjaga benang merah dengan referensi inovasi/QCC, termasuk materi "Mencari Ide Inovasi" bila tersedia di repo.
 
-## 5. Risiko Yang Harus Dijaga
+## 5. Snapshot Implementasi Saat Ini
+
+Per 2026-09-02, implementasi sudah mencakup:
+- Frontend Vue 3 mobile operator dengan autosave draft, IndexedDB queue, sync status, dan preview Pareto defect.
+- Backend GAS modular untuk health check, sheet bootstrap, auth/session, RBAC, validation, audit, production logs, quarantine, access gate, dan Script Properties maintenance.
+- Append-only `RAW_LOGS` dengan idempotency `transaction_id`.
+- Conflict detection untuk mesin sama/operator berbeda/waktu berdekatan ke `CONFLICT_PENDING`.
+- Default `DEFECT_CATEGORIES` untuk Pareto awal: solder tipis, solder bridge, komponen missing, dan visual scratch.
+- Hidden SuperAdmin console untuk key Script Properties yang disahkan, tanpa membuka secret mentah ke frontend.
+
+Implementasi berikutnya masih perlu mengunci workflow Mandor di backend: approval mutation, daily closing, adjustment, recap batch, dashboard penuh, dan pilot rollout.
+
+## 6. Risiko Yang Harus Dijaga
 
 - Kuota dan timeout Google Apps Script.
 - Kebocoran PII dari frontend atau audit log.
@@ -59,3 +71,5 @@ Ringkasan langkah:
 - Rekap salah tanggal karena timezone.
 - File build frontend terpisah sehingga tidak kompatibel dengan HTML Service.
 - Penghapusan permanen yang menghilangkan jejak audit.
+- Katalog defect yang tidak dirawat dapat menurunkan kualitas Pareto dan prioritas QCC.
+- Approval UI yang masih staged tidak boleh disalahartikan sebagai data sudah terkunci sampai endpoint approval backend selesai.

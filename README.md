@@ -77,9 +77,66 @@ Upgrade proses setelah MVP:
 
 ## Status Saat Ini
 
-Repo sudah memiliki kontrak implementasi, file Apps Script awal, bootstrap Vue 3 + Vite single-file build, adapter API, mock GAS lokal, form operator mobile, dan persistence IndexedDB untuk draft/queue. Backend business logic produksi lanjutan dan test runner GAS penuh masih dikerjakan melalui issue lanjutan.
+Repo sudah melewati implementasi `OPT-001` sampai `OPT-016` dan `OPT-027`. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, dan hidden SuperAdmin maintenance console sudah tersedia.
 
-Langkah berikutnya adalah mengikuti fase pada [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), dimulai dari bootstrap struktur proyek dan setup kontrak sheet.
+Yang sudah terimplementasi:
+- Vue 3 operator UI dengan Industrial Soft UI, form produksi mobile-friendly, autosave draft, queue status, dan preview Pareto defect.
+- Vite single-file build dengan `vite-plugin-singlefile`; `/dist` hanya boleh menghasilkan `Index.html`.
+- `apiAdapter.js` sebagai satu-satunya jalur frontend ke GAS, dengan allowlist callable, timeout, safe structured response, dan safe error.
+- `mock_gas.js` untuk development lokal dengan latency, failure simulation, idempotency, dan conflict simulation.
+- Global State/composable untuk hydrate draft, autosave background, enqueue submit, dan sync queue.
+- IndexedDB persistence untuk `drafts` dan `queue`; UI tidak membaca/menulis IndexedDB langsung.
+- GAS modular di `gas/*.gs` dengan `Code.js` sebagai entrypoint tipis.
+- Bootstrap dan health check semua sheet kontrak, termasuk seed awal `DEFECT_CATEGORIES`.
+- `AUTH_MODE` session context, role simulation untuk development, dan production lookup via Google account.
+- RBAC exact match berbasis `ROLE_PERMISSIONS`; tidak ada implicit allow untuk `SuperAdmin`.
+- Input Validation & Sanitization pada callable wrapper sebelum auth, sheet access, atau business logic.
+- Append-only submit endpoint ke `RAW_LOGS` dengan idempotency `transaction_id`.
+- Conflict flagging mesin/operator/waktu menjadi `CONFLICT_PENDING` dan routing ke `QUARANTINE`.
+- Mandor approval inbox UI untuk membandingkan konflik dan staging keputusan.
+- Hidden SuperAdmin maintenance console untuk Script Properties allowlisted, termasuk `APP_ACTIVE_UNTIL`.
+- Expiry gate `APP_ACTIVE_UNTIL`; aplikasi expired/invalid menampilkan halaman akses ditolak.
+- Test scripts untuk frontend adapter, operator form, IndexedDB, GAS sheet, auth, permission, production logs, dan Script Properties.
+
+Yang belum menjadi implementasi penuh:
+- Backend approval mutation untuk mengunci keputusan Mandor ke `QUARANTINE`.
+- Daily closing, adjustment workflow, batch `MASTER_RECAP`, dashboard management penuh, dan `test_runner.gs` native di GAS.
+- Pilot rollout dan paket laporan QCC final.
+
+Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), mulai dari `OPT-017` daily closing workflow.
+
+## Rule Logika Aplikasi
+
+- UI hanya berbicara dengan Global State/composable; IndexedDB hanya diakses oleh persistence service.
+- Frontend tidak boleh memanggil `google.script.run` langsung; semua call melewati `apiAdapter.js`.
+- Setiap payload submit membawa `transaction_id` UUID, `device_timestamp` UTC dari device, `client_version`, dan data produksi sesuai schema.
+- `perolehan_ok + perolehan_reject` tidak boleh melebihi `target_harian + tandon`.
+- Jika `perolehan_reject > 0`, `defect_category_id` wajib ada dan harus aktif di `DEFECT_CATEGORIES`.
+- Submit ke GAS bersifat append-only ke `RAW_LOGS`; retry dengan `transaction_id` sama tidak boleh menggandakan data.
+- Queue IndexedDB hanya dihapus setelah response GAS success yang tervalidasi.
+- Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard final sebelum Human-in-the-Loop.
+- Role truth berasal dari `USER_ROLES`; permission truth berasal dari `ROLE_PERMISSIONS`.
+- `AUTH_MODE=ON` memakai `Session.getActiveUser().getEmail()`, sedangkan `AUTH_MODE=OFF` hanya untuk simulasi role development.
+- Script Properties hanya boleh dimutasi melalui endpoint maintenance allowlisted dan permission eksplisit.
+- `APP_ACTIVE_UNTIL` memakai format `YYYY-MM-DD` dan berlaku inclusive berdasarkan timezone `Asia/Jakarta`.
+
+## Hambatan Dan Tantangan
+
+- Google Apps Script memiliki quota, timeout, dan concurrent execution limit; IndexedDB queue dan caching dipakai untuk mengurangi beban call.
+- GAS HTML Service berjalan dalam sandbox iframe, sehingga aplikasi ini Offline-Tolerant, bukan PWA Offline-First penuh.
+- Semua aset frontend harus dibundel ke satu `Index.html`; ini memperbesar file hasil build, tetapi wajib untuk kompatibilitas HTML Service.
+- Google Sheets bukan database relasional; integritas dijaga lewat schema contract, append-only logs, RBAC, audit trail, dan batch recap.
+- Konflik akibat input offline tidak boleh otomatis menimpa data resmi; Mandor harus menjadi Human-in-the-Loop.
+- PII dan Script Properties berisiko bocor jika dikirim ke frontend; backend wajib masking dan tidak pernah mengirim secret mentah.
+- Dokumentasi mudah tertinggal saat coding cepat; proyek ini memakai Documentation-Driven Development dan issue tracker sebagai rem pengaman.
+
+## Optimasi Performa
+
+- Single-file frontend menghindari asset loading terpisah di GAS HTML Service.
+- IndexedDB menyimpan draft dan queue sehingga input operator tetap responsif ketika koneksi tidak stabil.
+- Autosave berjalan di background dengan debounce agar input angka tidak lag.
+- Dashboard lanjutan wajib membaca `MASTER_RECAP`, bukan menarik seluruh `RAW_LOGS`.
+- API adapter memakai timeout agar UI tidak menggantung saat GAS lambat.
 
 ## Deployment Ke Google Apps Script
 
@@ -97,25 +154,30 @@ Perintah tersebut menjalankan build single-file, membuat ulang `deploy/`, lalu m
 deploy/appsscript.json
 deploy/Code.js
 deploy/Index.html
+deploy/gas/*.gs
 ```
 
 Gunakan `.clasp.example.json` sebagai template aman untuk setup lokal. File `.clasp.json` asli tetap di-ignore karena memuat `scriptId`.
 
 ## Struktur Backend GAS
 
-Backend dibuat modular agar mudah diskalakan:
+Backend dibuat modular agar mudah diskalakan. Modul aktif saat ini:
 
 ```txt
 Code.js
 gas/
-├─ audit.gs
-├─ auth.gs
-├─ config.gs
-├─ health.gs
-├─ permissions.gs
-├─ response.gs
-├─ sheets.gs
-└─ validation.gs
+|-- accessGate.gs
+|-- audit.gs
+|-- auth.gs
+|-- config.gs
+|-- health.gs
+|-- permissions.gs
+|-- productionLogs.gs
+|-- quarantine.gs
+|-- response.gs
+|-- scriptProperties.gs
+|-- sheets.gs
+`-- validation.gs
 ```
 
 `Code.js` hanya berperan sebagai entrypoint untuk `doGet()` dan wrapper fungsi yang dipanggil frontend. Business logic backend ditempatkan di modul `gas/*.gs` dengan namespace object agar aman di global scope Google Apps Script.
@@ -128,11 +190,26 @@ Validasi backend:
 npm run test:gas
 ```
 
-Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, dan test permission matrix.
+Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, test permission matrix, test production logs/quarantine, dan test Script Properties.
 
 ## Frontend API Adapter
 
 Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation.
+
+## Verifikasi Lokal
+
+```powershell
+npm test
+npm run build:verify
+npm run prepare:gas
+npm audit --audit-level=moderate
+```
+
+Expected:
+- Semua test frontend dan GAS helper lulus.
+- `dist/Index.html` adalah satu-satunya output runtime frontend.
+- `deploy/` berisi artifact siap push ke GAS.
+- Audit dependency tidak menemukan vulnerability moderate atau lebih tinggi.
 
 ## Author
 

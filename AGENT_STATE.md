@@ -15,6 +15,16 @@ This file does not replace the contracts. It tells the agent which contract to r
 - Backend rule: `Code.js` stays thin; scalable GAS logic belongs in modular `gas/*.gs` files.
 - Security rule: every external GAS input path starts with `Input Validation & Sanitization`.
 - Data rule: operator sync is append-only event sourcing into `RAW_LOGS`; conflicts become `CONFLICT_PENDING`.
+- Implemented scope: `OPT-001` through `OPT-016` plus `OPT-027`.
+- Current next roadmap item: `OPT-017` daily closing workflow.
+
+## Implemented Runtime Features
+
+- Frontend: Vue 3 operator form, autosave draft, sync queue controls, Pareto defect preview, Mandor approval inbox UI, and hidden SuperAdmin maintenance console.
+- Services: API adapter allowlist/timeout/safe response, mock GAS, IndexedDB persistence, operator report store, approval helpers, and defect/Pareto helpers.
+- Backend: access gate, audit, auth/session, RBAC permissions, sheet bootstrap/health, production append-only submit, duplicate detection, conflict quarantine, Script Properties maintenance, and validation.
+- Tests: frontend API/approval/defect/operator/state tests, GAS validation/sheets/auth/permissions/production logs/script properties tests, single-file build verification, and GAS deploy preparation.
+- Remaining major gaps: backend approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard official, native `test_runner.gs`, production hardening, pilot rollout, and QCC final package.
 
 ## Context Routing Matrix
 

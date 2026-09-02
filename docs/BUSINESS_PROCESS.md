@@ -20,6 +20,11 @@ Target OPTIFLOW:
 - Anomali ditangani melalui approval, bukan koreksi manual diam-diam.
 - Sistem bersifat Offline-Tolerant: aplikasi butuh internet untuk loading awal, tetapi data input tetap aman jika koneksi putus setelah aplikasi terbuka.
 
+Status implementasi 2026-09-02:
+- Alur operator sampai queue, sync, append-only submit, duplicate handling, conflict routing, dan Pareto-ready defect capture sudah tersedia.
+- Mandor approval inbox sudah tersedia sebagai UI staged decision untuk review konflik.
+- Backend approval mutation, daily closing, adjustment, batch recap, dan dashboard official masih menjadi pekerjaan issue lanjutan.
+
 ## 2. Role Dan Hak Akses
 
 | Role | Hak akses utama |
