@@ -22,8 +22,8 @@ Target OPTIFLOW:
 
 Status implementasi 2026-09-02:
 - Alur operator sampai queue, sync, append-only submit, duplicate handling, conflict routing, dan Pareto-ready defect capture sudah tersedia.
-- Mandor approval inbox sudah tersedia sebagai UI staged decision untuk review konflik.
-- Backend approval mutation, daily closing, adjustment, batch recap, dan dashboard official masih menjadi pekerjaan issue lanjutan.
+- Mandor approval inbox sudah terhubung ke backend approval mutation dengan fallback staged lokal saat endpoint belum tersedia di environment.
+- Daily closing, adjustment, batch recap, supervisor control center, dan management dashboard read-only sudah tersedia untuk scope M5.
 
 ## 2. Role Dan Hak Akses
 
@@ -144,7 +144,7 @@ Kontrak approval inbox Mandor:
 2. Mandor dapat memfilter kasus berdasarkan status dan line tanpa kehilangan konteks detail aktif.
 3. Detail konflik wajib menampilkan perbandingan data current vs conflict-with: operator termasking, machine, OK, reject, defect, dan waktu perangkat.
 4. Tombol keputusan UI minimal mencakup `Approve current`, `Reject both`, dan `Request correction`.
-5. Selama endpoint approval backend belum tersedia, aksi UI hanya boleh distage di state frontend dan tidak boleh mengubah `MASTER_RECAP`.
+5. Jika endpoint approval backend gagal atau belum tersedia pada environment lokal, aksi UI hanya boleh distage di state frontend dan tidak boleh mengubah `MASTER_RECAP`.
 
 Backend quarantine routing:
 1. Endpoint submit produksi membentuk record `RAW_LOGS` terlebih dahulu tanpa menulis ke sheet.
@@ -162,6 +162,8 @@ Backend quarantine routing:
 4. Setelah closing, transaksi baru untuk tanggal/line/shift tersebut ditolak atau diarahkan ke adjustment sesuai permission.
 5. Koreksi setelah closing dicatat di `ADJUSTMENT_LOGS`.
 6. Adjustment hanya mempengaruhi rekap setelah disetujui dan diaudit.
+7. Reopen closing hanya boleh dilakukan role berizin dan harus menambah event baru, bukan menghapus closing lama.
+8. Adjustment dibuat sebagai `PENDING`, lalu menjadi `APPROVED` atau `REJECTED` melalui aksi terpisah.
 
 ## 8. Alur Rekap
 
@@ -172,12 +174,15 @@ Backend quarantine routing:
 5. Metadata `qcc_factor` dan `severity` dari `DEFECT_CATEGORIES` dipakai sebagai dasar Pareto defect dan prioritas improvement.
 6. Hasil ditulis ke `MASTER_RECAP`.
 7. Dashboard membaca `MASTER_RECAP`, bukan seluruh data mentah.
+8. Batch recap harus idempotent: menjalankan ulang scope yang sama tidak boleh menggandakan baris `MASTER_RECAP`.
 
 ## 9. Dashboard Dan Monitoring
 
 - Dashboard operasional menampilkan target, OK, reject, defect rate, pending sync, quarantine pending, dan status closing.
 - Dashboard improvement menampilkan Pareto defect, before-after QCC, paper saving, time saving, dan Target vs Actual.
 - Snapshot operator dipakai untuk melihat status submit dan pencapaian harian, bukan sebagai satu-satunya dasar penilaian kinerja personal.
+- Supervisor control center memakai filter dan pagination backend untuk `RAW_LOGS`, `QUARANTINE`, `DAILY_CLOSING`, dan `ADJUSTMENT_LOGS`.
+- Management dashboard bersifat read-only dan hanya membaca `MASTER_RECAP` plus ringkasan status pending, bukan seluruh transaksi mentah.
 
 ## 10. Pilot Rollout
 

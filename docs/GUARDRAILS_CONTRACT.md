@@ -132,8 +132,7 @@ Per 2026-09-02, guardrail berikut sudah memiliki implementasi dan test lokal:
 - API adapter memakai callable allowlist, timeout, normalisasi response, dan safe error.
 - IndexedDB hanya diakses melalui `src/services/indexedDbPersistence.js`; UI melewati `useOperatorReportStore`.
 - `mock_gas.js` meniru response GAS untuk health, session, Script Properties, dan submit produksi.
-- Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, active defect validation, and Script Properties maintenance memiliki test script.
+- Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, recap, dashboard APIs, active defect validation, and Script Properties maintenance memiliki test script.
 
 Guardrail yang masih menunggu issue lanjutan:
-- Backend approval mutation untuk mengubah status quarantine secara resmi.
-- Daily closing, adjustment, `MASTER_RECAP`, dashboard server-side pagination, native `test_runner.gs`, dan production hardening final.
+- Native `test_runner.gs`, production hardening final, pilot rollout, dan final QCC package.

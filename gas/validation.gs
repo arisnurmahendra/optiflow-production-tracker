@@ -212,6 +212,121 @@ var OptiflowValidation = (function () {
     };
   }
 
+  function validateDailyClosingRequest(args, request, functionName) {
+    var payload = validateRequestObject(args, request, functionName, ['session', 'factory_date', 'line_id', 'shift_id', 'notes'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      factory_date: normalizeFactoryDate(payload.factory_date, 'factory_date'),
+      line_id: normalizeIdentifier(payload.line_id, 'line_id'),
+      shift_id: normalizeIdentifier(payload.shift_id, 'shift_id'),
+      notes: normalizeFreeText(payload.notes, 'notes', 180),
+    };
+  }
+
+  function validateQuarantineDecisionRequest(args, request, functionName) {
+    var payload = validateRequestObject(args, request, functionName, ['session', 'quarantine_id', 'notes'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      quarantine_id: normalizeIdentifier(payload.quarantine_id, 'quarantine_id'),
+      notes: normalizeFreeText(payload.notes, 'notes', 180),
+    };
+  }
+
+  function validateAdjustmentCreateRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'createAdjustment', [
+      'session',
+      'source_transaction_id',
+      'adjustment_type',
+      'delta',
+      'reason',
+    ], false);
+    var delta = validateRequestObject([payload.delta], payload.delta, 'createAdjustment.delta', [
+      'target_harian',
+      'tandon',
+      'perolehan_ok',
+      'perolehan_reject',
+      'defect_category_id',
+      'defect_notes',
+    ], false);
+    var normalizedDelta = {};
+
+    ['target_harian', 'tandon', 'perolehan_ok', 'perolehan_reject'].forEach(function (field) {
+      if (delta[field] !== undefined) {
+        normalizedDelta[field] = normalizeSignedInteger(delta[field], field);
+      }
+    });
+
+    if (delta.defect_category_id !== undefined) {
+      normalizedDelta.defect_category_id = normalizeOptionalIdentifier(delta.defect_category_id, 'defect_category_id');
+    }
+
+    if (delta.defect_notes !== undefined) {
+      normalizedDelta.defect_notes = normalizeFreeText(delta.defect_notes, 'defect_notes', OPTIFLOW_PRODUCTION_LOGS.max_defect_notes_length);
+    }
+
+    if (Object.keys(normalizedDelta).length === 0) {
+      throw new Error('Input Validation & Sanitization: adjustment delta cannot be empty.');
+    }
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      source_transaction_id: normalizeUuid(payload.source_transaction_id, 'source_transaction_id'),
+      adjustment_type: normalizeEnum(payload.adjustment_type, 'adjustment_type', ['CORRECTION', 'POST_CLOSING_ADJUSTMENT', 'VOID']),
+      delta: normalizedDelta,
+      reason: normalizeFreeText(payload.reason, 'reason', 240),
+    };
+  }
+
+  function validateAdjustmentDecisionRequest(args, request, functionName) {
+    var payload = validateRequestObject(args, request, functionName, ['session', 'adjustment_id', 'notes'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      adjustment_id: normalizeUuid(payload.adjustment_id, 'adjustment_id'),
+      notes: normalizeFreeText(payload.notes, 'notes', 180),
+    };
+  }
+
+  function validateRecapRunRequest(args, request) {
+    var payload = validateFilterRequest(args, request, 'runMasterRecap', false);
+    return payload;
+  }
+
+  function validateListRequest(args, request, functionName) {
+    return validateFilterRequest(args, request, functionName, true);
+  }
+
+  function validateFilterRequest(args, request, functionName, allowMissing) {
+    var payload = validateRequestObject(args, request, functionName, ['session', 'filter', 'page', 'page_size'], allowMissing);
+    var rawFilter = payload.filter || {};
+    var filter = validateRequestObject([rawFilter], rawFilter, functionName + '.filter', [
+      'factory_date',
+      'line_id',
+      'shift_id',
+      'machine_id',
+      'operator_email',
+      'status',
+    ], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      filter: {
+        factory_date: filter.factory_date ? normalizeFactoryDate(filter.factory_date, 'factory_date') : '',
+        line_id: filter.line_id ? normalizeIdentifier(filter.line_id, 'line_id') : '',
+        shift_id: filter.shift_id ? normalizeIdentifier(filter.shift_id, 'shift_id') : '',
+        machine_id: filter.machine_id ? normalizeIdentifier(filter.machine_id, 'machine_id') : '',
+        operator_email: filter.operator_email ? normalizeEmail(filter.operator_email, 'operator_email') : '',
+        status: filter.status ? normalizeIdentifier(filter.status, 'status') : '',
+      },
+      pagination: {
+        page: normalizePage(payload.page),
+        page_size: normalizePageSize(payload.page_size),
+      },
+    };
+  }
+
   function validateRequestObject(args, request, functionName, allowedKeys, allowMissing) {
     if ((!args || args.length === 0 || request === undefined || request === null) && allowMissing) {
       return {};
@@ -288,6 +403,19 @@ var OptiflowValidation = (function () {
     }
 
     return new Date(normalized).toISOString();
+  }
+
+  function normalizeFactoryDate(value, fieldName) {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' must use YYYY-MM-DD format.');
+    }
+
+    var normalized = value.trim();
+    if (isNaN(new Date(normalized + 'T00:00:00Z').getTime())) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' is not a valid date.');
+    }
+
+    return normalized;
   }
 
   function normalizeEnum(value, fieldName, allowedValues) {
@@ -368,6 +496,46 @@ var OptiflowValidation = (function () {
     return numberValue;
   }
 
+  function normalizeSignedInteger(value, fieldName) {
+    var numberValue = Number(value);
+
+    if (!isFinite(numberValue) || Math.floor(numberValue) !== numberValue) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' must be an integer.');
+    }
+
+    if (Math.abs(numberValue) > OPTIFLOW_PRODUCTION_LOGS.max_integer_value) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' is outside allowed bounds.');
+    }
+
+    return numberValue;
+  }
+
+  function normalizePage(value) {
+    if (value === undefined || value === null || value === '') {
+      return 1;
+    }
+
+    var page = Number(value);
+    if (!isFinite(page) || Math.floor(page) !== page || page < 1 || page > 10000) {
+      throw new Error('Input Validation & Sanitization: page is outside allowed bounds.');
+    }
+
+    return page;
+  }
+
+  function normalizePageSize(value) {
+    if (value === undefined || value === null || value === '') {
+      return 20;
+    }
+
+    var pageSize = Number(value);
+    if (!isFinite(pageSize) || Math.floor(pageSize) !== pageSize || pageSize < 1 || pageSize > 100) {
+      throw new Error('Input Validation & Sanitization: page_size is outside allowed bounds.');
+    }
+
+    return pageSize;
+  }
+
   function normalizeFreeText(value, fieldName, maxLength) {
     if (value === undefined || value === null) {
       return '';
@@ -396,6 +564,12 @@ var OptiflowValidation = (function () {
     assertDoGetEvent: assertDoGetEvent,
     validateOptionalSessionRequest: validateOptionalSessionRequest,
     validatePermissionCheckRequest: validatePermissionCheckRequest,
+    validateAdjustmentCreateRequest: validateAdjustmentCreateRequest,
+    validateAdjustmentDecisionRequest: validateAdjustmentDecisionRequest,
+    validateDailyClosingRequest: validateDailyClosingRequest,
+    validateListRequest: validateListRequest,
+    validateQuarantineDecisionRequest: validateQuarantineDecisionRequest,
+    validateRecapRunRequest: validateRecapRunRequest,
     validateScriptPropertiesStatusRequest: validateScriptPropertiesStatusRequest,
     validateScriptPropertyDeleteRequest: validateScriptPropertyDeleteRequest,
     validateScriptPropertyUpdateRequest: validateScriptPropertyUpdateRequest,

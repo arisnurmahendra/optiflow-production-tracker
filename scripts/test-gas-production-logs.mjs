@@ -149,6 +149,7 @@ const files = [
   'gas/audit.gs',
   'gas/permissions.gs',
   'gas/auth.gs',
+  'gas/dailyClosing.gs',
   'gas/quarantine.gs',
   'gas/productionLogs.gs',
   'Code.js',

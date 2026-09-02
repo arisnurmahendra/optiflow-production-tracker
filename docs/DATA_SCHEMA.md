@@ -25,7 +25,7 @@ Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header da
 Status implementasi 2026-09-02:
 - `OptiflowSheets.bootstrap()` membuat sheet/header kontrak dan men-seed `DEFECT_CATEGORIES` saat kosong.
 - `submitProductionReport` sudah menulis append-only ke `RAW_LOGS`, menolak duplicate `transaction_id`, memvalidasi kategori defect aktif, dan merutekan konflik mesin/operator/waktu ke `QUARANTINE`.
-- Schema untuk `DAILY_CLOSING`, `ADJUSTMENT_LOGS`, dan `MASTER_RECAP` sudah menjadi kontrak, tetapi workflow penuh masih berada di issue lanjutan.
+- `DAILY_CLOSING`, `ADJUSTMENT_LOGS`, dan `MASTER_RECAP` sudah memiliki workflow backend M5, termasuk closing/reopen append-only, adjustment approval, dan recap idempotent.
 
 ## 2. Schema `USER_ROLES`
 
@@ -179,6 +179,8 @@ Default bootstrap wajib mengisi katalog MVP jika sheet masih kosong: `DEF-SOLDER
 | `approved_by` | String atau kosong | Email approver. |
 | `approved_at` | String atau kosong | ISO 8601 UTC saat approval. |
 | `created_at` | String UTC | Waktu dibuat. |
+
+`delta_json` hanya boleh memuat field produksi yang disetujui: `target_harian`, `tandon`, `perolehan_ok`, `perolehan_reject`, `defect_category_id`, dan `defect_notes`. Nilai numerik memakai delta integer, sedangkan field defect memakai nilai pengganti yang tervalidasi.
 
 ## 12. Schema `AUDIT_LOGS`
 
@@ -363,3 +365,22 @@ Semua endpoint maintenance wajib menolak key yang tidak ada di allowlist, action
 - Data `CONFLICT_PENDING` wajib direferensikan ke `QUARANTINE` dengan `reason_code=MACHINE_OPERATOR_TIME_COLLISION`.
 - Data `CONFLICT_PENDING` tidak boleh dihitung ke `MASTER_RECAP` sampai Mandor/Supervisor melakukan approve.
 - Jika `perolehan_reject > 0`, `defect_category_id` wajib merujuk kategori aktif di `DEFECT_CATEGORIES`; kategori tidak aktif atau tidak dikenal wajib ditolak oleh frontend dan backend.
+
+## 18. Kontrak Callable M5
+
+Callable closing:
+- `closeDailyClosing(request)` menerima `session`, `factory_date`, `line_id`, `shift_id`, dan `notes`.
+- `reopenDailyClosing(request)` menerima field yang sama dan menghasilkan status terbaru `REOPENED`.
+- Closing ditulis append-only ke `DAILY_CLOSING`; status terbaru dihitung dari baris terakhir untuk `factory_date + line_id + shift_id`.
+- Closing wajib ditolak jika masih ada `QUARANTINE` aktif untuk scope yang sama.
+
+Callable adjustment:
+- `createAdjustment(request)` menerima `session`, `source_transaction_id`, `adjustment_type`, `delta`, dan `reason`.
+- `approveAdjustment(request)` dan `rejectAdjustment(request)` menerima `session`, `adjustment_id`, dan `notes`.
+- Adjustment ditulis append-only ke `ADJUSTMENT_LOGS`; status terbaru dihitung dari baris terakhir untuk `adjustment_id`.
+- Adjustment hanya mempengaruhi recap jika status terbaru `APPROVED`.
+
+Callable recap/dashboard:
+- `runMasterRecap(request)` menerima `session`, optional `factory_date`, `line_id`, dan `shift_id`, lalu mengganti data turunan di `MASTER_RECAP` secara idempotent untuk scope tersebut.
+- `getSupervisorControlCenter(request)` menerima `session`, filter server-side, `page`, dan `page_size`.
+- `getManagementDashboard(request)` menerima `session`, filter server-side, `page`, dan `page_size`, lalu membaca `MASTER_RECAP` tanpa menampilkan data mentah `RAW_LOGS`.

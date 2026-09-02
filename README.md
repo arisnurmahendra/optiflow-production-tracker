@@ -96,14 +96,14 @@ Yang sudah terimplementasi:
 - Mandor approval inbox UI untuk membandingkan konflik dan staging keputusan.
 - Hidden SuperAdmin maintenance console untuk Script Properties allowlisted, termasuk `APP_ACTIVE_UNTIL`.
 - Expiry gate `APP_ACTIVE_UNTIL`; aplikasi expired/invalid menampilkan halaman akses ditolak.
+- Backend approval mutation untuk quarantine, daily closing, adjustment workflow, batch `MASTER_RECAP`, supervisor control center, dan management read-only dashboard.
 - Test scripts untuk frontend adapter, operator form, IndexedDB, GAS sheet, auth, permission, production logs, dan Script Properties.
 
 Yang belum menjadi implementasi penuh:
-- Backend approval mutation untuk mengunci keputusan Mandor ke `QUARANTINE`.
-- Daily closing, adjustment workflow, batch `MASTER_RECAP`, dashboard management penuh, dan `test_runner.gs` native di GAS.
+- `test_runner.gs` native di GAS dan production hardening checklist final.
 - Pilot rollout dan paket laporan QCC final.
 
-Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), mulai dari `OPT-017` daily closing workflow.
+Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), mulai dari `OPT-022` native GAS test runner dan hardening produksi.
 
 ## Rule Logika Aplikasi
 

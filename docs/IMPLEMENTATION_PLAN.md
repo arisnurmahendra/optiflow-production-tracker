@@ -18,10 +18,10 @@
 ## 1A. Snapshot Implementasi Saat Ini
 
 Status per 2026-09-02:
-- Selesai: `OPT-001` sampai `OPT-016` dan `OPT-027`.
+- Selesai: `OPT-001` sampai `OPT-021` dan `OPT-027`.
 - Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, dan expiry gate.
-- Belum selesai: backend approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch aggregation, supervisor desktop control center penuh, management dashboard penuh, native `test_runner.gs`, hardening produksi final, pilot rollout, dan paket QCC final.
-- Roadmap berikutnya dimulai dari `OPT-017` daily closing workflow.
+- M5 selesai: backend quarantine approval mutation, daily closing, adjustment, recap, supervisor control center, dan management dashboard.
+- Belum selesai setelah M5: native `test_runner.gs`, hardening produksi final, pilot rollout, dan paket QCC final.
 
 ## 2. Fase 0 - Baseline Repository
 
@@ -239,6 +239,8 @@ Deliverables:
 - Blokir submit/koreksi langsung setelah status `CLOSED`.
 - `ADJUSTMENT_LOGS` untuk koreksi setelah closing.
 - Approval adjustment sebelum masuk recap.
+- Endpoint M5: `closeDailyClosing`, `reopenDailyClosing`, `createAdjustment`, `approveAdjustment`, `rejectAdjustment`, `runMasterRecap`, `getSupervisorControlCenter`, dan `getManagementDashboard`.
+- Supervisor control center dan management dashboard memakai pagination/filter dari backend.
 
 Kriteria selesai:
 - Data tanggal/line/shift yang sudah closed tidak bisa diubah langsung.

@@ -2,7 +2,7 @@
 
 > Issue: `OPT-001` / GitHub `#1`  
 > Scope: audit keselarasan dokumen kontrak sebelum implementasi runtime dimulai.  
-> Status: Passed for planning baseline; refreshed against implemented runtime through `OPT-016` and `OPT-027` on 2026-09-02.
+> Status: Passed for planning baseline; refreshed against implemented runtime through `OPT-021` and `OPT-027` on 2026-09-02.
 
 ## 1. Audit Objective
 
@@ -58,18 +58,17 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 - Management dashboard isolation is consistent: dashboard reads `MASTER_RECAP`, not `RAW_LOGS`, and excludes unapproved conflict data.
 - Security baseline is consistent with Google Workspace identity: `AUTH_MODE` is an environment toggle, while role truth remains in `USER_ROLES`.
 - UI/UX contract is aligned with operational needs: mobile prioritizes fast input, desktop prioritizes scan/review/dashboard control.
-- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval inbox UI, Pareto-ready defect capture, and safe Script Properties maintenance.
+- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, and safe Script Properties maintenance.
 
 ## 4A. Current Code Alignment Snapshot
 
 Implemented and verified modules:
-- Frontend: `src/App.vue`, `src/composables/useOperatorReportStore.js`, `src/services/apiAdapter.js`, `src/services/mock_gas.js`, `src/services/indexedDbPersistence.js`, `src/services/operatorReportForm.js`, `src/services/approvalInbox.js`, and `src/services/defectCategories.js`.
-- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, and `gas/validation.gs`.
-- Verification scripts: frontend adapter/state/form/approval/defect tests, GAS validation audit, sheets/auth/permissions/production logs/script properties tests, singlefile build verification, and GAS deploy preparation.
+- Frontend: `src/App.vue`, `src/composables/useOperatorReportStore.js`, `src/services/apiAdapter.js`, `src/services/mock_gas.js`, `src/services/indexedDbPersistence.js`, `src/services/operatorReportForm.js`, `src/services/approvalInbox.js`, `src/services/defectCategories.js`, `src/services/supervisorControlCenter.js`, and `src/services/managementDashboard.js`.
+- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, and `gas/validation.gs`.
+- Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties tests, singlefile build verification, and GAS deploy preparation.
 
 Known remaining implementation gaps:
-- Approval inbox decisions are staged in frontend state until backend approval mutation is implemented.
-- Daily closing, adjustment logs, `MASTER_RECAP`, dashboard management, native GAS `test_runner.gs`, and pilot/QCC final package remain tracked in later issues.
+- Native GAS `test_runner.gs`, production hardening, pilot rollout, and pilot/QCC final package remain tracked in later issues.
 
 ## 5. Verification Commands
 

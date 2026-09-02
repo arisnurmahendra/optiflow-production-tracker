@@ -59,8 +59,9 @@ Per 2026-09-02, implementasi sudah mencakup:
 - Conflict detection untuk mesin sama/operator berbeda/waktu berdekatan ke `CONFLICT_PENDING`.
 - Default `DEFECT_CATEGORIES` untuk Pareto awal: solder tipis, solder bridge, komponen missing, dan visual scratch.
 - Hidden SuperAdmin console untuk key Script Properties yang disahkan, tanpa membuka secret mentah ke frontend.
+- Workflow Mandor untuk approval mutation, daily closing, adjustment, recap batch, supervisor control center, dan dashboard management read-only.
 
-Implementasi berikutnya masih perlu mengunci workflow Mandor di backend: approval mutation, daily closing, adjustment, recap batch, dashboard penuh, dan pilot rollout.
+Fokus berikutnya bergeser ke native GAS test runner, hardening produksi, pilot rollout, dan validasi benefit QCC.
 
 ## 6. Risiko Yang Harus Dijaga
 
@@ -72,4 +73,4 @@ Implementasi berikutnya masih perlu mengunci workflow Mandor di backend: approva
 - File build frontend terpisah sehingga tidak kompatibel dengan HTML Service.
 - Penghapusan permanen yang menghilangkan jejak audit.
 - Katalog defect yang tidak dirawat dapat menurunkan kualitas Pareto dan prioritas QCC.
-- Approval UI yang masih staged tidak boleh disalahartikan sebagai data sudah terkunci sampai endpoint approval backend selesai.
+- Fallback staged pada UI approval hanya boleh dianggap lokal jika endpoint backend gagal di environment tersebut.

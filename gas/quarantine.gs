@@ -55,6 +55,83 @@ var OptiflowQuarantine = (function () {
     };
   }
 
+  function approve(payload, session) {
+    return decide(payload, session, 'APPROVED', 'QUARANTINE_APPROVED');
+  }
+
+  function reject(payload, session) {
+    return decide(payload, session, 'REJECTED', 'QUARANTINE_REJECTED');
+  }
+
+  function requestCorrection(payload, session) {
+    return decide(payload, session, 'CORRECTION_REQUESTED', 'QUARANTINE_CORRECTION_REQUESTED');
+  }
+
+  function decide(payload, session, nextStatus, auditAction) {
+    var latest = getLatestQuarantine(payload.quarantine_id);
+
+    if (!latest) {
+      throw new Error('Quarantine case was not found.');
+    }
+
+    if (['APPROVED', 'REJECTED'].indexOf(latest.status) !== -1) {
+      return OptiflowResponse.success({
+        quarantine_id: latest.quarantine_id,
+        transaction_id: latest.transaction_id,
+        status: latest.status,
+        duplicate: true,
+      });
+    }
+
+    var now = new Date().toISOString();
+    OptiflowSheets.appendRecord(QUARANTINE, {
+      quarantine_id: latest.quarantine_id,
+      transaction_id: latest.transaction_id,
+      reason_code: latest.reason_code,
+      payload_json: latest.payload_json,
+      status: nextStatus,
+      reviewed_by: session.email,
+      reviewed_at: now,
+      notes: payload.notes,
+    });
+
+    OptiflowAudit.write(auditAction, session, {
+      quarantine_id: latest.quarantine_id,
+      transaction_id: latest.transaction_id,
+      status: nextStatus,
+    });
+
+    return OptiflowResponse.success({
+      quarantine_id: latest.quarantine_id,
+      transaction_id: latest.transaction_id,
+      status: nextStatus,
+      reviewed_at: now,
+      duplicate: false,
+    });
+  }
+
+  function getLatestQuarantine(quarantineId) {
+    var normalized = String(quarantineId || '').trim();
+    var latest = null;
+
+    OptiflowSheets.getRows(QUARANTINE).forEach(function (row) {
+      if (String(row.quarantine_id || '').trim() === normalized) {
+        latest = {
+          quarantine_id: String(row.quarantine_id || ''),
+          transaction_id: String(row.transaction_id || '').trim().toLowerCase(),
+          reason_code: String(row.reason_code || ''),
+          payload_json: String(row.payload_json || '{}'),
+          status: String(row.status || '').trim().toUpperCase(),
+          reviewed_by: String(row.reviewed_by || ''),
+          reviewed_at: String(row.reviewed_at || ''),
+          notes: String(row.notes || ''),
+        };
+      }
+    });
+
+    return latest;
+  }
+
   function findMachineOperatorTimeConflict(record) {
     var rows = OptiflowSheets.getRows(RAW_LOGS);
     var deviceTime = new Date(record.device_timestamp).getTime();
@@ -127,7 +204,11 @@ var OptiflowQuarantine = (function () {
   }
 
   return Object.freeze({
+    approve: approve,
     evaluateProductionReport: evaluateProductionReport,
+    getLatestQuarantine: getLatestQuarantine,
+    reject: reject,
+    requestCorrection: requestCorrection,
     routeProductionReport: routeProductionReport,
   });
 })();

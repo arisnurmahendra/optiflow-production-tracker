@@ -101,3 +101,124 @@ function submitProductionReport(request) {
 
   return OptiflowProductionLogs.submit(payload, session);
 }
+
+function approveQuarantine(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateQuarantineDecisionRequest(arguments, request, 'approveQuarantine');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'quarantine',
+    action: 'approve',
+  });
+
+  return OptiflowQuarantine.approve(payload, session);
+}
+
+function rejectQuarantine(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateQuarantineDecisionRequest(arguments, request, 'rejectQuarantine');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'quarantine',
+    action: 'reject',
+  });
+
+  return OptiflowQuarantine.reject(payload, session);
+}
+
+function requestQuarantineCorrection(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateQuarantineDecisionRequest(arguments, request, 'requestQuarantineCorrection');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'quarantine',
+    action: 'request_correction',
+  });
+
+  return OptiflowQuarantine.requestCorrection(payload, session);
+}
+
+function closeDailyClosing(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateDailyClosingRequest(arguments, request, 'closeDailyClosing');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'daily_closing',
+    action: 'create',
+  });
+
+  return OptiflowDailyClosing.close(payload, session);
+}
+
+function reopenDailyClosing(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateDailyClosingRequest(arguments, request, 'reopenDailyClosing');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'daily_closing',
+    action: 'reopen',
+  });
+
+  return OptiflowDailyClosing.reopen(payload, session);
+}
+
+function createAdjustment(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateAdjustmentCreateRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'adjustment',
+    action: 'create',
+  });
+
+  return OptiflowAdjustments.create(payload, session);
+}
+
+function approveAdjustment(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateAdjustmentDecisionRequest(arguments, request, 'approveAdjustment');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'adjustment',
+    action: 'approve',
+  });
+
+  return OptiflowAdjustments.approve(payload, session);
+}
+
+function rejectAdjustment(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateAdjustmentDecisionRequest(arguments, request, 'rejectAdjustment');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'adjustment',
+    action: 'reject',
+  });
+
+  return OptiflowAdjustments.reject(payload, session);
+}
+
+function runMasterRecap(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateRecapRunRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'dashboard',
+    action: 'read',
+  });
+
+  return OptiflowRecap.run(payload, session);
+}
+
+function getSupervisorControlCenter(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateListRequest(arguments, request, 'getSupervisorControlCenter');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'quarantine',
+    action: 'read',
+  });
+
+  return OptiflowDashboard.getSupervisorControlCenter(payload, session);
+}
+
+function getManagementDashboard(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateListRequest(arguments, request, 'getManagementDashboard');
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'dashboard',
+    action: 'read',
+  });
+
+  return OptiflowDashboard.getManagementDashboard(payload, session);
+}

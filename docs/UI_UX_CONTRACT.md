@@ -10,8 +10,7 @@ Neumorphism dan Claymorphism boleh dipakai sebagai aksen visual, tetapi tidak bo
 
 Status implementasi 2026-09-02:
 - Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
-- Approval inbox decision saat ini masih staged di frontend; backend approval mutation belum menjadi sumber kebenaran sampai issue lanjutan selesai.
-- Desktop management dashboard penuh dan supervisor control center masih backlog.
+- Scope M5 sudah menambahkan control center desktop, daily closing action, adjustment review, dan management dashboard read-only.
 
 ## 2. Prinsip Visual
 
@@ -74,7 +73,7 @@ Wajib:
 - Tombol closing hanya aktif ketika kondisi line/shift memenuhi rule.
 - Notifikasi pending review terlihat tanpa membuka dashboard penuh.
 - Tombol keputusan konflik minimal 44px dan memakai teks eksplisit, bukan ikon saja.
-- Jika approval backend belum tersedia, UI wajib menandai keputusan sebagai staged agar tidak memberi kesan data sudah terkunci.
+- Jika approval backend gagal atau belum tersedia pada environment lokal, UI wajib menandai keputusan sebagai staged agar tidak memberi kesan data sudah terkunci.
 
 ## 6. Desktop Supervisor
 
@@ -88,6 +87,7 @@ Wajib:
 - Timeline event sourcing untuk transaksi konflik.
 - Approval inbox desktop memakai tabel di kiri dan detail comparison drawer atau pane di kanan.
 - `CONFLICT_PENDING` harus memiliki highlight baris, badge teks, dan alasan konflik yang terlihat tanpa membuka detail.
+- Closing dan adjustment harus memakai confirmation dialog dan status badge yang jelas.
 
 ## 7. Desktop Management
 
@@ -98,6 +98,7 @@ Wajib:
 - Data `CONFLICT_PENDING` tidak dihitung.
 - Tampilkan badge jika masih ada quarantine pending atau closing belum selesai.
 - Widget utama: target vs actual, OK, reject, defect rate, closing status, Pareto defect, dan trend harian.
+- Dashboard harus menampilkan empty/loading/error state tanpa meminta user membaca log teknis.
 
 ## 8. Hidden SuperAdmin Maintenance Console
 

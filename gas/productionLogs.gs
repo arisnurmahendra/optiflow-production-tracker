@@ -22,6 +22,10 @@ var OptiflowProductionLogs = (function () {
     }
 
     var record = buildRawLogRecord(payload, operatorEmail, now, 'ACCEPTED');
+    if (OptiflowDailyClosing.isClosed(record.factory_date, record.line_id, record.shift_id)) {
+      throw new Error('Production report rejected: daily closing is CLOSED for this line/shift/date.');
+    }
+
     assertActiveDefectCategory(record);
     var quarantineDecision = OptiflowQuarantine.evaluateProductionReport(record);
     record.status = quarantineDecision.status;

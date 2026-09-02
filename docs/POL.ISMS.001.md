@@ -101,9 +101,10 @@ Implemented and locally tested:
 - Script Properties maintenance allowlist with secret masking and audit events.
 - `APP_ACTIVE_UNTIL` access gate for expired or invalid application period.
 - Single-file frontend build verification.
+- Backend quarantine approval mutation, daily closing, adjustment approval, idempotent `MASTER_RECAP`, supervisor control center, and management read-only dashboard.
 
 Still required before production rollout:
 - Set production Script Properties in the target Apps Script project.
 - Run role/RBAC smoke tests with real Google Workspace accounts.
-- Implement backend approval mutation, daily closing, adjustment, recap, and dashboard isolation before management reporting is treated as official.
 - Add native `test_runner.gs` or an equivalent Apps Script-side smoke runner for production environment checks.
+- Complete production hardening checklist, pilot rollout, and QCC benefit validation before full rollout.

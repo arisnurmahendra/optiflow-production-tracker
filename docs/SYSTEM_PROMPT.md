@@ -45,10 +45,10 @@ Primary contracts:
 - Production GAS calls are wrapped through `google.script.run.withSuccessHandler().withFailureHandler()`.
 
 Current implementation baseline:
-- Completed runtime scope covers `OPT-001` through `OPT-016` plus `OPT-027`.
-- Existing frontend modules include API adapter, mock GAS, IndexedDB persistence, operator report store, operator report form, approval inbox UI helpers, and defect/Pareto helpers.
-- Existing GAS modules include access gate, audit, auth, config, health, permissions, production logs, quarantine, response, script properties, sheets, and validation.
-- Do not claim backend approval mutation, daily closing, adjustment, `MASTER_RECAP`, full dashboards, native `test_runner.gs`, or pilot rollout are complete until their tracker issues are closed.
+- Completed runtime scope covers `OPT-001` through `OPT-021` plus `OPT-027`.
+- Existing frontend modules include API adapter, mock GAS, IndexedDB persistence, operator report store, operator report form, approval inbox UI helpers, defect/Pareto helpers, supervisor control center helpers, and management dashboard helpers.
+- Existing GAS modules include access gate, adjustments, audit, auth, config, daily closing, dashboard, health, permissions, production logs, quarantine, recap, response, script properties, sheets, and validation.
+- Do not claim native `test_runner.gs`, production hardening, pilot rollout, or final QCC report package are complete until their tracker issues are closed.
 
 ## 3. Security Rules
 

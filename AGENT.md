@@ -15,9 +15,9 @@ Before code changes, use the Low-Token Context Protocol:
 4. Do not use `chatgpt_snapshot.py` or generated snapshot folders as the active context source for agent-mode work unless the user explicitly requests it.
 
 Current implementation baseline as of 2026-09-02:
-- Completed runtime scope: `OPT-001` through `OPT-016` plus `OPT-027`.
-- Implemented: Vite single-file frontend, safe deploy staging, modular GAS, sheet bootstrap/health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator mobile form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, Mandor approval inbox UI, Pareto-ready defect capture, hidden Script Properties console, and `APP_ACTIVE_UNTIL` access gate.
-- Not yet complete: backend approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch, desktop dashboard/control center, native `test_runner.gs`, production hardening checklist, pilot rollout, and final QCC report package.
+- Completed runtime scope: `OPT-001` through `OPT-021` plus `OPT-027`.
+- Implemented: Vite single-file frontend, safe deploy staging, modular GAS, sheet bootstrap/health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator mobile form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, backend quarantine approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch, supervisor control center, management read-only dashboard, Pareto-ready defect capture, hidden Script Properties console, and `APP_ACTIVE_UNTIL` access gate.
+- Not yet complete: native `test_runner.gs`, production hardening checklist, pilot rollout, and final QCC report package.
 
 ## 2. Core Principles
 

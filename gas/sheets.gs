@@ -88,6 +88,34 @@ var OptiflowSheets = (function () {
     sheet.appendRow(row);
   }
 
+  function replaceDataRows(sheetName, records, filterFn) {
+    var spreadsheet = getSpreadsheet();
+    var sheet = spreadsheet.getSheetByName(sheetName);
+
+    if (!sheet) {
+      throw new Error('Missing required sheet ' + sheetName + '. Run bootstrapSheets first.');
+    }
+
+    var headers = OPTIFLOW_SHEET_SCHEMAS[sheetName];
+    var existing = getRows(sheetName);
+    var retained = typeof filterFn === 'function'
+      ? existing.filter(function (record) { return !filterFn(record); })
+      : [];
+    var nextRows = retained.concat(records || []).map(function (record) {
+      return headers.map(function (header) {
+        return record[header] === undefined ? '' : record[header];
+      });
+    });
+
+    if (sheet.getLastRow() > 1) {
+      sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+    }
+
+    if (nextRows.length > 0) {
+      sheet.getRange(2, 1, nextRows.length, headers.length).setValues(nextRows);
+    }
+  }
+
   function seedDefaultDefectCategories(sheet) {
     OPTIFLOW_DEFAULT_DEFECT_CATEGORIES.forEach(function (category) {
       appendRow(sheet, 'DEFECT_CATEGORIES', {
@@ -229,5 +257,6 @@ var OptiflowSheets = (function () {
     appendRecord: appendRecord,
     getRows: getRows,
     healthCheck: healthCheck,
+    replaceDataRows: replaceDataRows,
   });
 })();

@@ -20,6 +20,18 @@ import {
   machineOptions,
   shiftOptions,
 } from './services/operatorReportForm.js';
+import {
+  buildDashboardTiles,
+  defaultDashboardFilters,
+  formatCompact,
+} from './services/managementDashboard.js';
+import {
+  createAdjustmentPayload,
+  createClosingPayload,
+  defaultSupervisorFilters,
+  getFirstPageItems,
+  summarizeControlCenter,
+} from './services/supervisorControlCenter.js';
 
 const operatorStore = useOperatorReportStore();
 const {
@@ -71,6 +83,22 @@ const activeComparisonRows = computed(() => {
     ['Defect', activeApprovalCase.value.current.defect_category_id || '-', activeApprovalCase.value.conflict_with?.defect_category_id || '-'],
   ];
 });
+const supervisorFilters = ref({ ...defaultSupervisorFilters });
+const supervisorData = ref(null);
+const supervisorLoading = ref(false);
+const supervisorError = ref('');
+const supervisorMessage = ref('');
+const dashboardFilters = ref({ ...defaultDashboardFilters });
+const dashboardData = ref(null);
+const dashboardLoading = ref(false);
+const dashboardError = ref('');
+const m5Session = { simulated_role: 'Mandor' };
+const managementSession = { simulated_role: 'Management' };
+const supervisorTiles = computed(() => summarizeControlCenter(supervisorData.value || {}));
+const dashboardTiles = computed(() => buildDashboardTiles(dashboardData.value || {}));
+const supervisorRawRows = computed(() => getFirstPageItems(supervisorData.value?.raw_logs));
+const supervisorQuarantineRows = computed(() => getFirstPageItems(supervisorData.value?.quarantine));
+const dashboardRows = computed(() => getFirstPageItems(dashboardData.value?.rows));
 const selectedDefectCategory = computed(() => getDefectCategory(form.value.defect_category_id));
 const paretoPreview = computed(() => createParetoRejectSummary([
   {
@@ -212,13 +240,128 @@ function setActiveApprovalCase(id) {
   approvalMessage.value = '';
 }
 
-function stageApprovalAction(action) {
+async function stageApprovalAction(action) {
   if (!activeApprovalCase.value) {
     return;
   }
 
+  const decisionMap = {
+    APPROVE_CURRENT: api.approveQuarantine,
+    REJECT_BOTH: api.rejectQuarantine,
+    REQUEST_CORRECTION: api.requestQuarantineCorrection,
+  };
+
+  try {
+    await decisionMap[action]({
+      session: m5Session,
+      quarantine_id: activeApprovalCase.value.id,
+      notes: action.replace(/_/g, ' '),
+    });
+    approvalMessage.value = `Keputusan ${action.replace(/_/g, ' ')} tersimpan di backend.`;
+  } catch (error) {
+    approvalMessage.value = `${getSafeErrorMessage(error)} Keputusan distage lokal.`;
+  }
+
   approvalCases.value = resolveApprovalCase(approvalCases.value, activeApprovalCase.value.id, action);
-  approvalMessage.value = `Keputusan ${action.replace(/_/g, ' ')} distage. Endpoint approval backend akan mengunci data pada issue berikutnya.`;
+  await refreshSupervisorControlCenter();
+}
+
+async function refreshSupervisorControlCenter() {
+  supervisorLoading.value = true;
+  supervisorError.value = '';
+
+  try {
+    const response = await api.getSupervisorControlCenter({
+      session: m5Session,
+      filter: compactFilter(supervisorFilters.value),
+      page: 1,
+      page_size: 8,
+    });
+    supervisorData.value = response.data;
+  } catch (error) {
+    supervisorError.value = getSafeErrorMessage(error);
+  } finally {
+    supervisorLoading.value = false;
+  }
+}
+
+async function closeCurrentScope() {
+  if (!window.confirm('Closing line/shift ini?')) {
+    return;
+  }
+
+  supervisorMessage.value = '';
+  try {
+    await api.closeDailyClosing({
+      session: m5Session,
+      ...createClosingPayload(supervisorFilters.value, 'Closed from supervisor control center.'),
+    });
+    supervisorMessage.value = 'Closing tersimpan.';
+    await refreshSupervisorControlCenter();
+    await refreshManagementDashboard();
+  } catch (error) {
+    supervisorError.value = getSafeErrorMessage(error);
+  }
+}
+
+async function createAdjustmentFromFirstRow() {
+  const firstRow = supervisorRawRows.value[0];
+  if (!firstRow) {
+    supervisorError.value = 'Tidak ada transaksi sumber untuk adjustment.';
+    return;
+  }
+
+  if (!window.confirm('Buat adjustment draft dari transaksi pertama pada filter ini?')) {
+    return;
+  }
+
+  try {
+    await api.createAdjustment({
+      session: m5Session,
+      ...createAdjustmentPayload(firstRow.transaction_id, { perolehan_ok: 0 }, 'No-op verification adjustment.'),
+    });
+    supervisorMessage.value = 'Adjustment draft dibuat.';
+    await refreshSupervisorControlCenter();
+  } catch (error) {
+    supervisorError.value = getSafeErrorMessage(error);
+  }
+}
+
+async function runRecapAndDashboard() {
+  dashboardLoading.value = true;
+  dashboardError.value = '';
+
+  try {
+    await api.runMasterRecap({
+      session: managementSession,
+      filter: compactFilter(dashboardFilters.value),
+      page: 1,
+      page_size: 8,
+    });
+    await refreshManagementDashboard();
+  } catch (error) {
+    dashboardError.value = getSafeErrorMessage(error);
+    dashboardLoading.value = false;
+  }
+}
+
+async function refreshManagementDashboard() {
+  dashboardLoading.value = true;
+  dashboardError.value = '';
+
+  try {
+    const response = await api.getManagementDashboard({
+      session: managementSession,
+      filter: compactFilter(dashboardFilters.value),
+      page: 1,
+      page_size: 8,
+    });
+    dashboardData.value = response.data;
+  } catch (error) {
+    dashboardError.value = getSafeErrorMessage(error);
+  } finally {
+    dashboardLoading.value = false;
+  }
 }
 
 function formatDateTime(timestamp) {
@@ -275,6 +418,8 @@ function handleKeydown(event) {
 
 onMounted(() => {
   hydrate();
+  refreshSupervisorControlCenter();
+  refreshManagementDashboard();
   window.addEventListener('keydown', handleKeydown);
 });
 
@@ -282,6 +427,10 @@ onBeforeUnmount(() => {
   operatorStore.dispose();
   window.removeEventListener('keydown', handleKeydown);
 });
+
+function compactFilter(filter) {
+  return Object.fromEntries(Object.entries(filter).filter(([, value]) => value !== ''));
+}
 </script>
 
 <template>
@@ -566,6 +715,217 @@ onBeforeUnmount(() => {
               </button>
             </div>
           </aside>
+        </div>
+      </section>
+
+      <section class="panel supervisor-panel" aria-labelledby="supervisor-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Supervisor</p>
+            <h2 id="supervisor-title">Control center</h2>
+          </div>
+          <span class="badge">{{ supervisorLoading ? 'Memuat' : 'Server-side view' }}</span>
+        </div>
+
+        <div class="control-filters" aria-label="Filter supervisor">
+          <label class="field">
+            <span>Tanggal</span>
+            <input v-model="supervisorFilters.factory_date" aria-label="Tanggal supervisor" />
+          </label>
+          <label class="field">
+            <span>Line</span>
+            <select v-model="supervisorFilters.line_id" aria-label="Line supervisor">
+              <option v-for="option in lineOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Shift</span>
+            <select v-model="supervisorFilters.shift_id" aria-label="Shift supervisor">
+              <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+          <button class="button secondary" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
+        </div>
+
+        <div class="mini-metrics" aria-label="Ringkasan control center">
+          <article v-for="tile in supervisorTiles" :key="tile.label" :class="['mini-metric', tile.tone]">
+            <span>{{ tile.label }}</span>
+            <strong>{{ tile.value }}</strong>
+          </article>
+        </div>
+
+        <div v-if="supervisorError" class="inline-error" role="alert">
+          {{ supervisorError }}
+        </div>
+        <div v-if="supervisorMessage" class="inline-info" role="status">
+          {{ supervisorMessage }}
+        </div>
+
+        <div class="control-actions">
+          <button class="button primary" type="button" @click="closeCurrentScope">Close line/shift</button>
+          <button class="button secondary" type="button" @click="createAdjustmentFromFirstRow">Create adjustment</button>
+        </div>
+
+        <div class="split-tables">
+          <div class="table-wrap">
+            <h3>Raw logs</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction</th>
+                  <th>Machine</th>
+                  <th>OK</th>
+                  <th>Reject</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in supervisorRawRows" :key="row.transaction_id">
+                  <td>{{ row.transaction_id }}</td>
+                  <td>{{ row.machine_id }}</td>
+                  <td>{{ row.perolehan_ok }}</td>
+                  <td>{{ row.perolehan_reject }}</td>
+                  <td><span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : 'success']">{{ row.status }}</span></td>
+                </tr>
+                <tr v-if="supervisorRawRows.length === 0">
+                  <td colspan="5">Tidak ada data pada filter ini.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <h3>Quarantine</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Case</th>
+                  <th>Reason</th>
+                  <th>Machine</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in supervisorQuarantineRows" :key="row.quarantine_id">
+                  <td>{{ row.quarantine_id }}</td>
+                  <td>{{ row.reason_code }}</td>
+                  <td>{{ row.machine_id }}</td>
+                  <td><span :class="['status', row.status === 'APPROVED' ? 'success' : row.status === 'REJECTED' ? 'danger' : 'conflict']">{{ row.status }}</span></td>
+                </tr>
+                <tr v-if="supervisorQuarantineRows.length === 0">
+                  <td colspan="4">Tidak ada quarantine aktif.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel dashboard-panel" aria-labelledby="dashboard-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Management</p>
+            <h2 id="dashboard-title">Read-only dashboard</h2>
+          </div>
+          <span class="badge">{{ dashboardLoading ? 'Memuat' : 'MASTER_RECAP' }}</span>
+        </div>
+
+        <div class="control-filters" aria-label="Filter dashboard">
+          <label class="field">
+            <span>Tanggal</span>
+            <input v-model="dashboardFilters.factory_date" aria-label="Tanggal dashboard" />
+          </label>
+          <label class="field">
+            <span>Line</span>
+            <select v-model="dashboardFilters.line_id" aria-label="Line dashboard">
+              <option value="">Semua line</option>
+              <option v-for="option in lineOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Shift</span>
+            <select v-model="dashboardFilters.shift_id" aria-label="Shift dashboard">
+              <option value="">Semua shift</option>
+              <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+          <button class="button primary" type="button" @click="runRecapAndDashboard">Run recap</button>
+        </div>
+
+        <div class="mini-metrics" aria-label="Ringkasan dashboard">
+          <article v-for="tile in dashboardTiles" :key="tile.label" :class="['mini-metric', tile.tone]">
+            <span>{{ tile.label }}</span>
+            <strong>{{ tile.value }}</strong>
+          </article>
+        </div>
+
+        <div class="approval-summary" aria-label="Status dashboard">
+          <span class="status warning">Quarantine {{ dashboardData?.summary?.pending_quarantine || 0 }}</span>
+          <span class="status warning">Open closing {{ dashboardData?.summary?.open_closing || 0 }}</span>
+        </div>
+
+        <div v-if="dashboardError" class="inline-error" role="alert">
+          {{ dashboardError }}
+        </div>
+
+        <div class="split-tables">
+          <div class="table-wrap">
+            <h3>Recap rows</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Line</th>
+                  <th>Shift</th>
+                  <th>Machine</th>
+                  <th>OK</th>
+                  <th>Reject</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in dashboardRows" :key="row.recap_id">
+                  <td>{{ row.line_id }}</td>
+                  <td>{{ row.shift_id }}</td>
+                  <td>{{ row.machine_id }}</td>
+                  <td>{{ formatCompact(row.ok_total) }}</td>
+                  <td>{{ formatCompact(row.reject_total) }}</td>
+                </tr>
+                <tr v-if="dashboardRows.length === 0">
+                  <td colspan="5">Recap belum tersedia untuk filter ini.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <h3>Pareto defect</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Defect</th>
+                  <th>Reject</th>
+                  <th>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in dashboardData?.pareto || []" :key="row.defect_category_id">
+                  <td>{{ row.defect_category_id }}</td>
+                  <td>{{ formatCompact(row.reject_total) }}</td>
+                  <td>{{ row.pareto_percent }}%</td>
+                </tr>
+                <tr v-if="(dashboardData?.pareto || []).length === 0">
+                  <td colspan="3">Belum ada reject Pareto.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
