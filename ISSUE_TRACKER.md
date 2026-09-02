@@ -74,7 +74,7 @@ Status:
 | `OPT-013` | Implement Offline-Tolerant sync queue | Closed | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #13 |
 | `OPT-014` | Implement CONFLICT_PENDING detection and quarantine routing | Closed | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #14 |
 | `OPT-015` | Build Mandor approval inbox and conflict comparison UI | Closed | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #15 |
-| `OPT-016` | Implement defect categories and Pareto-ready reject capture | Backlog | P2 | `type:feature`, `area:data`, `area:frontend`, `priority:p2`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #16 |
+| `OPT-016` | Implement defect categories and Pareto-ready reject capture | Closed | P2 | `type:feature`, `area:data`, `area:frontend`, `priority:p2`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #16 |
 | `OPT-017` | Implement daily closing workflow | Backlog | P1 | `type:feature`, `area:backend`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #17 |
 | `OPT-018` | Implement adjustment logs after closing | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #18 |
 | `OPT-019` | Implement MASTER_RECAP batch aggregation | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #19 |
@@ -106,6 +106,7 @@ Status:
 | `OPT-013` | #13 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; Offline-Tolerant sync queue pushed in commit `f5451b7`. |
 | `OPT-014` | #14 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; conflict quarantine routing pushed in commit `2ea7f4d`. |
 | `OPT-015` | #15 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; Mandor approval inbox UI pushed in commit `fda4fc6`. |
+| `OPT-016` | #16 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; Pareto-ready defect capture pushed in commit `e638a2a`. |
 | `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
 
 ## 6. Issue Template

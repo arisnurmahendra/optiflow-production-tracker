@@ -506,7 +506,7 @@
     {
       "id": "OPT-016",
       "title": "Implement defect categories and Pareto-ready reject capture",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P2",
       "labels": [
         "type:feature",
@@ -516,7 +516,17 @@
         "sync:github"
       ],
       "milestone": "M4 - Offline Sync & Conflict Control",
-      "github_issue": 16
+      "github_issue": 16,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #16 confirmed CLOSED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Pareto-ready defect capture pushed in commit e638a2a"
+      ]
     },
     {
       "id": "OPT-017",
