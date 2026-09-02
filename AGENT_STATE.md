@@ -70,5 +70,6 @@ Keep snapshot artifacts ignored by Git unless the user explicitly asks to revive
 - OPT-010 / GitHub #10: operator report form validation completed.
 - OPT-011 / GitHub #11: operator global state persistence completed.
 - OPT-012 / GitHub #12: append-only RAW_LOGS submit endpoint completed.
+- OPT-013 / GitHub #13: Offline-Tolerant sync queue completed.
 
 Update this section only after issue closure or meaningful architecture changes.
