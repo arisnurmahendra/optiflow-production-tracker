@@ -531,7 +531,7 @@
     {
       "id": "OPT-017",
       "title": "Implement daily closing workflow",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -541,12 +541,22 @@
         "sync:github"
       ],
       "milestone": "M5 - Supervisor Control & Recap",
-      "github_issue": 17
+      "github_issue": 17,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #17 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Daily closing workflow pushed in commit 76c87f5"
+      ]
     },
     {
       "id": "OPT-018",
       "title": "Implement adjustment logs after closing",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -557,12 +567,22 @@
         "sync:github"
       ],
       "milestone": "M5 - Supervisor Control & Recap",
-      "github_issue": 18
+      "github_issue": 18,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #18 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Adjustment logs after closing pushed in commit 76c87f5"
+      ]
     },
     {
       "id": "OPT-019",
       "title": "Implement MASTER_RECAP batch aggregation",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -572,12 +592,22 @@
         "sync:github"
       ],
       "milestone": "M5 - Supervisor Control & Recap",
-      "github_issue": 19
+      "github_issue": 19,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #19 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "MASTER_RECAP batch aggregation pushed in commit 76c87f5"
+      ]
     },
     {
       "id": "OPT-020",
       "title": "Build desktop supervisor control center",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P2",
       "labels": [
         "type:feature",
@@ -587,12 +617,22 @@
         "sync:github"
       ],
       "milestone": "M5 - Supervisor Control & Recap",
-      "github_issue": 20
+      "github_issue": 20,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #20 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Desktop supervisor control center pushed in commit 76c87f5"
+      ]
     },
     {
       "id": "OPT-021",
       "title": "Build management read-only dashboard",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P2",
       "labels": [
         "type:feature",
@@ -602,7 +642,17 @@
         "sync:github"
       ],
       "milestone": "M5 - Supervisor Control & Recap",
-      "github_issue": 21
+      "github_issue": 21,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #21 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Direct-access scan confirmed App.vue has no direct IndexedDB or google.script.run usage",
+        "Management read-only dashboard pushed in commit 76c87f5"
+      ]
     },
     {
       "id": "OPT-022",

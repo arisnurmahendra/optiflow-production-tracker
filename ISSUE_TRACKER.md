@@ -57,7 +57,7 @@ Status:
 
 ## 4. Issue Backlog
 
-Snapshot 2026-09-02: `OPT-001` sampai `OPT-016` dan `OPT-027` sudah closed dan tersinkron ke GitHub. Eksekusi berikutnya dimulai dari `OPT-017`.
+Snapshot 2026-09-02: `OPT-001` sampai `OPT-021` dan `OPT-027` sudah closed dan tersinkron ke GitHub. Eksekusi berikutnya dimulai dari `OPT-022`.
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -77,11 +77,11 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-016` dan `OPT-027` sudah closed dan t
 | `OPT-014` | Implement CONFLICT_PENDING detection and quarantine routing | Closed | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #14 |
 | `OPT-015` | Build Mandor approval inbox and conflict comparison UI | Closed | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #15 |
 | `OPT-016` | Implement defect categories and Pareto-ready reject capture | Closed | P2 | `type:feature`, `area:data`, `area:frontend`, `priority:p2`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #16 |
-| `OPT-017` | Implement daily closing workflow | Backlog | P1 | `type:feature`, `area:backend`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #17 |
-| `OPT-018` | Implement adjustment logs after closing | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #18 |
-| `OPT-019` | Implement MASTER_RECAP batch aggregation | Backlog | P1 | `type:feature`, `area:backend`, `area:data`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #19 |
-| `OPT-020` | Build desktop supervisor control center | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #20 |
-| `OPT-021` | Build management read-only dashboard | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #21 |
+| `OPT-017` | Implement daily closing workflow | Closed | P1 | `type:feature`, `area:backend`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #17 |
+| `OPT-018` | Implement adjustment logs after closing | Closed | P1 | `type:feature`, `area:backend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #18 |
+| `OPT-019` | Implement MASTER_RECAP batch aggregation | Closed | P1 | `type:feature`, `area:backend`, `area:data`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | #19 |
+| `OPT-020` | Build desktop supervisor control center | Closed | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #20 |
+| `OPT-021` | Build management read-only dashboard | Closed | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | #21 |
 | `OPT-022` | Implement GAS `test_runner.gs` | Backlog | P1 | `type:test`, `area:backend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #22 |
 | `OPT-023` | Run security hardening against POL.ISMS.001 | Backlog | P0 | `type:security`, `area:backend`, `area:frontend`, `priority:p0`, `sync:github` | `M6 - Security, Testing & Deployment` | #23 |
 | `OPT-024` | Prepare production deployment checklist | Backlog | P1 | `type:docs`, `area:deployment`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #24 |
@@ -109,6 +109,11 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-016` dan `OPT-027` sudah closed dan t
 | `OPT-014` | #14 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; conflict quarantine routing pushed in commit `2ea7f4d`. |
 | `OPT-015` | #15 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; Mandor approval inbox UI pushed in commit `fda4fc6`. |
 | `OPT-016` | #16 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; Pareto-ready defect capture pushed in commit `e638a2a`. |
+| `OPT-017` | #17 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; daily closing workflow pushed in commit `76c87f5`. |
+| `OPT-018` | #18 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; adjustment logs after closing pushed in commit `76c87f5`. |
+| `OPT-019` | #19 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; MASTER_RECAP batch aggregation pushed in commit `76c87f5`. |
+| `OPT-020` | #20 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; desktop supervisor control center pushed in commit `76c87f5`. |
+| `OPT-021` | #21 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, `npm audit --audit-level=moderate`, and direct-access scan passed; management read-only dashboard pushed in commit `76c87f5`. |
 | `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
 
 ## 6. Issue Template
