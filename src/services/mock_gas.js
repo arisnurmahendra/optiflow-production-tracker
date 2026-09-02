@@ -58,6 +58,8 @@ export function createMockGas(options = {}) {
   const failureRate = options.failureRate ?? DEFAULT_FAILURE_RATE;
   const state = {
     properties: structuredCloneSafe(options.properties || DEFAULT_PROPERTIES),
+    rawLogs: [],
+    quarantine: [],
     session: options.session || {
       auth_mode: 'OFF',
       email: 'dev.simulated@optiflow.local',
@@ -143,6 +145,60 @@ export function createMockGas(options = {}) {
       property.value_preview = property.sensitivity === 'SECRET' ? '' : maskPreview(property.key, request.value);
       return respond({ property });
     },
+    submitProductionReport: (request = {}) => {
+      const existing = state.rawLogs.find((row) =>
+        row.transaction_id === request.metadata?.transaction_id,
+      );
+
+      if (existing) {
+        return respond({
+          transaction_id: existing.transaction_id,
+          status: existing.status,
+          duplicate: true,
+          appended: false,
+          quarantine_id: '',
+        });
+      }
+
+      const serverReceivedAt = new Date().toISOString();
+      const factoryDate = request.metadata?.device_timestamp
+        ? request.metadata.device_timestamp.slice(0, 10)
+        : serverReceivedAt.slice(0, 10);
+      const conflict = state.rawLogs.find((row) =>
+        row.machine_id === request.payload?.machine_id
+        && row.operator_email !== request.metadata?.operator_email
+        && Math.abs(new Date(row.device_timestamp).getTime() - new Date(request.metadata?.device_timestamp).getTime()) <= 10 * 60 * 1000,
+      );
+      const status = conflict ? 'CONFLICT_PENDING' : 'ACCEPTED';
+      const record = {
+        ...request.metadata,
+        ...request.payload,
+        server_received_at: serverReceivedAt,
+        factory_date: factoryDate,
+        status,
+      };
+
+      state.rawLogs.push(record);
+
+      const quarantineId = conflict ? `mock-quarantine-${state.quarantine.length + 1}` : '';
+      if (conflict) {
+        state.quarantine.push({
+          quarantine_id: quarantineId,
+          transaction_id: record.transaction_id,
+          reason_code: 'MACHINE_OPERATOR_TIME_COLLISION',
+          status: 'CONFLICT_PENDING',
+        });
+      }
+
+      return respond({
+        transaction_id: record.transaction_id,
+        status,
+        duplicate: false,
+        appended: true,
+        quarantine_id: quarantineId,
+        server_received_at: serverReceivedAt,
+      });
+    },
   });
 
   function simulateNetwork(response) {
@@ -185,6 +241,7 @@ function createGoogleScriptRunMock(mockGas) {
     getSessionContext(payload) { this.invoke('getSessionContext', payload); },
     rotateSecretProperty(payload) { this.invoke('rotateSecretProperty', payload); },
     setScriptProperty(payload) { this.invoke('setScriptProperty', payload); },
+    submitProductionReport(payload) { this.invoke('submitProductionReport', payload); },
   };
 }
 

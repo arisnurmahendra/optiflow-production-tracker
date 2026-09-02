@@ -188,8 +188,13 @@ Authorization wajib memakai exact match `role + resource + action`. Missing perm
 
 ## 13. Kontrak JSON Submit Produksi
 
+Callable GAS `submitProductionReport` menerima object request dengan field `metadata` dan `payload`. Field `session` opsional hanya dipakai untuk simulasi role saat `AUTH_MODE=OFF`; pada `AUTH_MODE=ON`, backend tetap memakai identitas Google Workspace dari `Session.getActiveUser()` dan tidak mempercayai role/email dari frontend sebagai batas keamanan.
+
 ```json
 {
+  "session": {
+    "simulated_role": "Operator"
+  },
   "metadata": {
     "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
     "device_timestamp": "2026-08-29T22:42:48.000Z",

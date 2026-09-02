@@ -90,3 +90,14 @@ function rotateSecretProperty(request) {
   var payload = OptiflowValidation.validateSecretRotationRequest(arguments, request);
   return OptiflowScriptProperties.rotateSecret(payload);
 }
+
+function submitProductionReport(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateProductionReportSubmitRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'production_report',
+    action: 'create',
+  });
+
+  return OptiflowProductionLogs.submit(payload, session);
+}

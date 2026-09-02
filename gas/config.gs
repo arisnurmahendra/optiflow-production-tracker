@@ -31,6 +31,12 @@ var OPTIFLOW_AUTH_MODES = Object.freeze({
   OFF: 'OFF',
 });
 
+var OPTIFLOW_PRODUCTION_LOGS = Object.freeze({
+  conflict_window_minutes: 10,
+  max_integer_value: 999999,
+  max_defect_notes_length: 140,
+});
+
 var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   schema: Object.freeze(['bootstrap', 'read_health']),
   session: Object.freeze(['read']),

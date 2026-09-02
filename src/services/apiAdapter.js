@@ -10,6 +10,7 @@ const CALLABLES = Object.freeze({
   getSessionContext: 'getSessionContext',
   rotateSecretProperty: 'rotateSecretProperty',
   setScriptProperty: 'setScriptProperty',
+  submitProductionReport: 'submitProductionReport',
 });
 
 export class ApiAdapterError extends Error {
@@ -49,6 +50,7 @@ export function createApiAdapter(options = {}) {
     getSessionContext: (request = {}) => call(CALLABLES.getSessionContext, request),
     rotateSecretProperty: (request) => call(CALLABLES.rotateSecretProperty, request),
     setScriptProperty: (request) => call(CALLABLES.setScriptProperty, request),
+    submitProductionReport: (request) => call(CALLABLES.submitProductionReport, request),
   });
 }
 
