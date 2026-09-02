@@ -39,6 +39,7 @@ Read only the contracts that match the work:
 - Roadmap, phases, deployment assumptions, CLASP process: `docs/IMPLEMENTATION_PLAN.md` and `README.md`.
 - Issue lifecycle, labels, milestone, GitHub sync: `ISSUE_TRACKER.md` and `ISSUE_TRACKER.json`.
 - QCC or improvement narrative: `docs/QCC_8_STEPS_7_TOOLS.md` and `docs/KNOWLEDGE_BASE.md`.
+- Production hardening/deploy/pilot/QCC artifacts: `docs/PRODUCTION_HARDENING_CHECKLIST.md`, `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `docs/PILOT_ROLLOUT_PLAN.md`, and `docs/QCC_REPORT_PACKAGE.md`.
 - Documentation consistency audit only: `docs/DOCUMENTATION_AUDIT.md`.
 
 Escalate to a full documentation sweep only when the change is cross-cutting, a contract conflict appears, or the routed files do not answer the requirement.

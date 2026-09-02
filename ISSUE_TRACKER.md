@@ -148,7 +148,7 @@ Describe the desired outcome.
 - [ ] Implementation follows relevant guardrails.
 - [ ] Validation, authorization, audit, idempotency, or offline behavior handled where relevant.
 - [ ] Relevant test/manual verification completed.
-- [ ] ISSUE_TRACKER.md updated with GitHub issue number/status.
+- [ ] `ISSUE_TRACKER.md` and `ISSUE_TRACKER.json` updated with GitHub issue number/status.
 
 ## Verification
 

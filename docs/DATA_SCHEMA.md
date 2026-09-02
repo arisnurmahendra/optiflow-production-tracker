@@ -22,10 +22,11 @@ OPTIFLOW menggunakan beberapa sheet yang dipisahkan berdasarkan fungsi agar tran
 
 Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header dari kontrak ini hanya ketika sheet masih kosong. Health check schema wajib melaporkan sheet hilang, kolom hilang, urutan kolom tidak sesuai, kolom ekstra, dan formula pada `RAW_LOGS`.
 
-Status implementasi 2026-09-02:
+Status implementasi 2026-09-03:
 - `OptiflowSheets.bootstrap()` membuat sheet/header kontrak dan men-seed `DEFECT_CATEGORIES` saat kosong.
 - `submitProductionReport` sudah menulis append-only ke `RAW_LOGS`, menolak duplicate `transaction_id`, memvalidasi kategori defect aktif, dan merutekan konflik mesin/operator/waktu ke `QUARANTINE`.
 - `DAILY_CLOSING`, `ADJUSTMENT_LOGS`, dan `MASTER_RECAP` sudah memiliki workflow backend M5, termasuk closing/reopen append-only, adjustment approval, dan recap idempotent.
+- `ROLE_PERMISSIONS` sudah mencakup resource `test_runner:run` untuk native smoke runner Apps Script.
 
 ## 2. Schema `USER_ROLES`
 

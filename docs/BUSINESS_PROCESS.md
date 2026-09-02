@@ -20,10 +20,11 @@ Target OPTIFLOW:
 - Anomali ditangani melalui approval, bukan koreksi manual diam-diam.
 - Sistem bersifat Offline-Tolerant: aplikasi butuh internet untuk loading awal, tetapi data input tetap aman jika koneksi putus setelah aplikasi terbuka.
 
-Status implementasi 2026-09-02:
+Status implementasi 2026-09-03:
 - Alur operator sampai queue, sync, append-only submit, duplicate handling, conflict routing, dan Pareto-ready defect capture sudah tersedia.
-- Mandor approval inbox sudah terhubung ke backend approval mutation dengan fallback staged lokal saat endpoint belum tersedia di environment.
+- Mandor approval inbox sudah terhubung ke backend approval mutation dengan fallback staged lokal saat environment deploy belum memuat endpoint terbaru.
 - Daily closing, adjustment, batch recap, supervisor control center, dan management dashboard read-only sudah tersedia untuk scope M5.
+- Native GAS test runner, checklist deployment, checklist hardening, pilot plan, dan template paket QCC sudah tersedia sebagai artefak M6/M7.
 
 ## 2. Role Dan Hak Akses
 

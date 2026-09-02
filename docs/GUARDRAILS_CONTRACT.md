@@ -127,14 +127,14 @@
 
 ## 9. Current Guardrail Coverage
 
-Per 2026-09-02, guardrail berikut sudah memiliki implementasi dan test lokal:
+Per 2026-09-03, guardrail berikut sudah memiliki implementasi dan test lokal:
 - Single-file build diverifikasi oleh `npm run build:verify`.
 - GAS deploy staging dibuat oleh `npm run prepare:gas` ke folder `deploy/`.
 - Callable wrapper `Code.js` diaudit oleh `npm run audit:gas:validation`.
 - API adapter memakai callable allowlist, timeout, normalisasi response, dan safe error.
 - IndexedDB hanya diakses melalui `src/services/indexedDbPersistence.js`; UI melewati `useOperatorReportStore`.
-- `mock_gas.js` meniru response GAS untuk health, session, Script Properties, dan submit produksi.
-- Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, recap, dashboard APIs, active defect validation, and Script Properties maintenance memiliki test script.
+- `mock_gas.js` meniru response GAS untuk health, session, Script Properties, submit produksi, approval/quarantine, closing, adjustment, recap, dan dashboard.
+- Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, recap, dashboard APIs, active defect validation, Script Properties maintenance, and native GAS test runner memiliki test script.
 
 Guardrail yang sudah tersedia sebagai artefak M6/M7:
 - Native `test_runner.gs` untuk smoke test Apps Script-side.

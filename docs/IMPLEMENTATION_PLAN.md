@@ -17,9 +17,9 @@
 
 ## 1A. Snapshot Implementasi Saat Ini
 
-Status per 2026-09-02:
-- Selesai: `OPT-001` sampai `OPT-021` dan `OPT-027`.
-- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, dan expiry gate.
+Status per 2026-09-03:
+- Selesai: `OPT-001` sampai `OPT-027`.
+- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, expiry gate, native GAS test runner, hardening checklist, deployment checklist, pilot plan, dan QCC package template.
 - M5 selesai: backend quarantine approval mutation, daily closing, adjustment, recap, supervisor control center, dan management dashboard.
 - Setelah M6/M7 artifact closure, sisa pekerjaan utama adalah eksekusi smoke test di GAS target, pilot lapangan, dan validasi benefit QCC aktual dari data pilot.
 

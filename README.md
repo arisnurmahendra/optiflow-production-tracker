@@ -77,7 +77,7 @@ Upgrade proses setelah MVP:
 
 ## Status Saat Ini
 
-Repo sudah melewati implementasi `OPT-001` sampai `OPT-016` dan `OPT-027`. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, dan hidden SuperAdmin maintenance console sudah tersedia.
+Repo sudah melewati implementasi `OPT-001` sampai `OPT-027`. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, daily closing, adjustment, recap, dashboard, hidden SuperAdmin maintenance console, native GAS test runner, dan artefak production readiness sudah tersedia.
 
 Yang sudah terimplementasi:
 - Vue 3 operator UI dengan Industrial Soft UI, form produksi mobile-friendly, autosave draft, queue status, dan preview Pareto defect.
@@ -168,13 +168,17 @@ Backend dibuat modular agar mudah diskalakan. Modul aktif saat ini:
 Code.js
 gas/
 |-- accessGate.gs
+|-- adjustments.gs
 |-- audit.gs
 |-- auth.gs
 |-- config.gs
+|-- dailyClosing.gs
+|-- dashboard.gs
 |-- health.gs
 |-- permissions.gs
 |-- productionLogs.gs
 |-- quarantine.gs
+|-- recap.gs
 |-- response.gs
 |-- scriptProperties.gs
 |-- sheets.gs

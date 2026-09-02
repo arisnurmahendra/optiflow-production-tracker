@@ -2,7 +2,7 @@
 
 > Issue: `OPT-001` / GitHub `#1`  
 > Scope: audit keselarasan dokumen kontrak sebelum implementasi runtime dimulai.  
-> Status: Passed for planning baseline; refreshed against implemented runtime through `OPT-021` and `OPT-027` on 2026-09-02.
+> Status: Passed for planning baseline; refreshed against implemented runtime through `OPT-027` on 2026-09-03.
 
 ## 1. Audit Objective
 
@@ -25,6 +25,10 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 | `docs/QCC_8_STEPS_7_TOOLS.md` | Kontrak narasi improvement QCC | Pass |
 | `docs/POL.ISMS.001.md` | Baseline kontrol keamanan | Pass |
 | `docs/SYSTEM_PROMPT.md` | Instruksi agen lanjutan | Pass |
+| `docs/PRODUCTION_HARDENING_CHECKLIST.md` | Checklist hardening produksi | Pass |
+| `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md` | Checklist deployment dan rollback | Pass |
+| `docs/PILOT_ROLLOUT_PLAN.md` | Rencana pilot 1 line / 1 shift | Pass |
+| `docs/QCC_REPORT_PACKAGE.md` | Template paket laporan QCC Step 1-8 | Pass |
 
 ## 3. Mechanism Coverage Matrix
 
@@ -45,6 +49,8 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 | Soft-delete and audit trail | Yes | Yes | Yes | Yes | Yes | Yes | `POL.ISMS.001.md` | Pass |
 | Daily closing and adjustment | Yes | Yes | Yes | Yes | Yes | Yes | N/A | Pass |
 | Dashboard data isolation | Yes | Yes | Yes | Yes | Yes | Yes | `UI_UX_CONTRACT.md` | Pass |
+| Native GAS test runner | Yes | Yes | Yes | Yes | Yes | Yes | `PRODUCTION_HARDENING_CHECKLIST.md` | Pass |
+| Production readiness artifacts | Yes | Yes | Yes | N/A | Yes | Yes | `PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `PILOT_ROLLOUT_PLAN.md`, `QCC_REPORT_PACKAGE.md` | Pass |
 | QCC 8 Steps and 7 Tools | Yes | Yes | Yes | N/A | Yes | Yes | `QCC_8_STEPS_7_TOOLS.md` | Pass |
 | Industrial Soft UI | Yes | Yes | Yes | N/A | N/A | Yes | `UI_UX_CONTRACT.md` | Pass |
 
@@ -58,17 +64,17 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 - Management dashboard isolation is consistent: dashboard reads `MASTER_RECAP`, not `RAW_LOGS`, and excludes unapproved conflict data.
 - Security baseline is consistent with Google Workspace identity: `AUTH_MODE` is an environment toggle, while role truth remains in `USER_ROLES`.
 - UI/UX contract is aligned with operational needs: mobile prioritizes fast input, desktop prioritizes scan/review/dashboard control.
-- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, and safe Script Properties maintenance.
+- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, safe Script Properties maintenance, native GAS test runner, and production readiness artifacts.
 
 ## 4A. Current Code Alignment Snapshot
 
 Implemented and verified modules:
 - Frontend: `src/App.vue`, `src/composables/useOperatorReportStore.js`, `src/services/apiAdapter.js`, `src/services/mock_gas.js`, `src/services/indexedDbPersistence.js`, `src/services/operatorReportForm.js`, `src/services/approvalInbox.js`, `src/services/defectCategories.js`, `src/services/supervisorControlCenter.js`, and `src/services/managementDashboard.js`.
 - Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, `gas/test_runner.gs`, and `gas/validation.gs`.
-- Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties tests, singlefile build verification, and GAS deploy preparation.
+- Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties/test-runner tests, singlefile build verification, and GAS deploy preparation.
 
-Known remaining implementation gaps:
-- Native GAS `test_runner.gs`, production hardening checklist, deployment checklist, pilot rollout plan, and QCC package template are covered by M6/M7 tracker issues; pilot result evidence remains dependent on field execution.
+Known remaining evidence gaps:
+- Target Apps Script smoke result, real pilot execution data, and actual QCC benefit values remain dependent on field execution outside the repository.
 
 ## 5. Verification Commands
 
