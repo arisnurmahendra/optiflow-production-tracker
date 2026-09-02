@@ -110,6 +110,8 @@
 - UI wajib menampilkan status sync dan tidak boleh menghapus draft lokal sebelum server mengonfirmasi hasil submit.
 - Draft atau queue IndexedDB hanya boleh dihapus setelah response GAS mengembalikan status success yang tervalidasi.
 - Backend wajib memiliki `test_runner.gs` atau file test GAS setara untuk pengujian unit/manual CRUD, validation, idempotency, RBAC, quarantine, closing, adjustment, dan recap.
+- `test_runner.gs` wajib menghasilkan ringkasan Pass/Fail yang aman: tidak memuat secret, token, stack trace, payload produksi mentah, atau PII mentah.
+- Callable test runner wajib tetap memakai Input Validation & Sanitization, RBAC resource `test_runner:run`, dan audit event.
 
 ## 8. Documentation-Driven Development
 
@@ -134,5 +136,9 @@ Per 2026-09-02, guardrail berikut sudah memiliki implementasi dan test lokal:
 - `mock_gas.js` meniru response GAS untuk health, session, Script Properties, dan submit produksi.
 - Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, recap, dashboard APIs, active defect validation, and Script Properties maintenance memiliki test script.
 
-Guardrail yang masih menunggu issue lanjutan:
-- Native `test_runner.gs`, production hardening final, pilot rollout, dan final QCC package.
+Guardrail yang sudah tersedia sebagai artefak M6/M7:
+- Native `test_runner.gs` untuk smoke test Apps Script-side.
+- Production hardening checklist di `docs/PRODUCTION_HARDENING_CHECKLIST.md`.
+- Production deployment checklist di `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`.
+- Pilot rollout plan di `docs/PILOT_ROLLOUT_PLAN.md`.
+- QCC final report package di `docs/QCC_REPORT_PACKAGE.md`.

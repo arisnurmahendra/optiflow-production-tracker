@@ -222,3 +222,14 @@ function getManagementDashboard(request) {
 
   return OptiflowDashboard.getManagementDashboard(payload, session);
 }
+
+function runGasTestRunner(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateTestRunnerRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'test_runner',
+    action: 'run',
+  });
+
+  return OptiflowTestRunner.run(payload, session);
+}

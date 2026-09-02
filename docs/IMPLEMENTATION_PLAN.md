@@ -21,7 +21,7 @@ Status per 2026-09-02:
 - Selesai: `OPT-001` sampai `OPT-021` dan `OPT-027`.
 - Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, dan expiry gate.
 - M5 selesai: backend quarantine approval mutation, daily closing, adjustment, recap, supervisor control center, dan management dashboard.
-- Belum selesai setelah M5: native `test_runner.gs`, hardening produksi final, pilot rollout, dan paket QCC final.
+- Setelah M6/M7 artifact closure, sisa pekerjaan utama adalah eksekusi smoke test di GAS target, pilot lapangan, dan validasi benefit QCC aktual dari data pilot.
 
 ## 2. Fase 0 - Baseline Repository
 
@@ -262,6 +262,9 @@ Deliverables:
 - Hidden maintenance console SuperAdmin untuk status/update/delete/rotate Script Properties berbasis allowlist.
 - Expiry gate berbasis `APP_ACTIVE_UNTIL` yang menampilkan halaman akses ditolak saat aplikasi sudah melewati masa aktif.
 - Production API wrapper memakai `google.script.run.withSuccessHandler().withFailureHandler()`.
+- Artefak checklist:
+  - `docs/PRODUCTION_HARDENING_CHECKLIST.md`.
+  - `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`.
 
 Kriteria selesai:
 - Tidak ada secret di frontend.
@@ -273,6 +276,7 @@ Kriteria selesai:
 - Script Properties maintenance menolak key non-allowlist, tidak membocorkan secret, dan mencatat audit.
 - `doGet()` memblokir akses ketika `APP_ACTIVE_UNTIL` expired atau invalid tanpa merender aplikasi utama.
 - Test runner GAS menghasilkan log Pass/Fail untuk CRUD, validation, idempotency, RBAC, quarantine, closing, adjustment, dan recap.
+- Checklist hardening dan deployment memiliki langkah, bukti verifikasi, dan rollback gate ringkas.
 
 ## 11. Fase 9 - Pilot Rollout Dan Process Stabilization
 
@@ -285,11 +289,13 @@ Deliverables:
 - SOP closing harian.
 - Pengukuran waktu submit, waktu review quarantine, waktu recap, duplicate rate, dan sync failure rate.
 - Log improvement untuk penyempurnaan rule anomali.
+- Artefak pilot: `docs/PILOT_ROLLOUT_PLAN.md`.
 
 Kriteria selesai:
 - Pilot mencapai target proses atau gap-nya terdokumentasi.
 - Mandor menyetujui SOP harian.
 - Risiko rollout sudah dicatat dengan corrective action.
+- Keputusan lanjut rollout atau ulang pilot dicatat berdasarkan metrik pilot.
 
 ## 12. Fase 10 - QCC Report Dan Standardisasi
 
@@ -300,6 +306,7 @@ Deliverables:
 - Narasi Step 1 sampai Step 8 sesuai `QCC_8_STEPS_7_TOOLS.md`.
 - Tabel Pareto/SIPOC, Target SMART, Fishbone, Cost vs Benefit, 5W2H, PICA, Target vs Actual, dan Root Cause Closure.
 - Draft SOP/IK/WI untuk proses pelaporan produksi digital.
+- Artefak final: `docs/QCC_REPORT_PACKAGE.md`.
 
 Kriteria selesai:
 - Step 2 tidak menyebut solusi digital.
@@ -307,6 +314,7 @@ Kriteria selesai:
 - Evaluasi Step 6 membandingkan aktual terhadap target Step 2.
 - Standardisasi Step 7 memasukkan SOP, visual management, dan IT Poka-Yoke.
 - Knowledge base dan dokumen inovasi/QCC diperbarui jika hasil pilot mengubah narasi improvement.
+- Paket QCC jelas membedakan data yang sudah aktual dari placeholder yang menunggu hasil pilot.
 
 ## 13. Backlog Setelah MVP
 

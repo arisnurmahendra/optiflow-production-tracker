@@ -293,6 +293,7 @@ Baseline resource/action:
 | `dashboard` | `read` |
 | `user_role` | `create`, `read`, `update`, `soft_delete` |
 | `script_property` | `read_status`, `update`, `delete`, `rotate_secret` |
+| `test_runner` | `run` |
 
 ## 15. Standardisasi QCC
 
@@ -301,3 +302,12 @@ Hasil implementasi yang terbukti efektif harus dikunci melalui:
 - Visual management untuk operator dan mandor.
 - Poka-Yoke IT seperti validasi angka, idempotency, role control, dan audit trail.
 - Review berkala menggunakan data `MASTER_RECAP`.
+
+## 16. Production Readiness, Pilot, Dan QCC Package
+
+Urutan stabilisasi produksi:
+1. `test_runner.gs` dijalankan oleh `SuperAdmin` untuk smoke test schema, RBAC, validasi, idempotency, quarantine, closing, adjustment, recap, access gate, dan Script Properties status tanpa membocorkan secret.
+2. Hardening mengikuti `docs/PRODUCTION_HARDENING_CHECKLIST.md` dan baseline `POL.ISMS.001.md` sebelum deploy production.
+3. Deployment production mengikuti `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`; push GAS wajib lewat `npm run push:gas`.
+4. Pilot memakai `docs/PILOT_ROLLOUT_PLAN.md` untuk 1 line, 1 shift, dan 1 Mandor sebelum rollout lebih luas.
+5. Paket laporan QCC memakai `docs/QCC_REPORT_PACKAGE.md`; hasil pilot menjadi sumber aktual Step 5 dan Step 6.

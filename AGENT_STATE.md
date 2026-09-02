@@ -15,16 +15,16 @@ This file does not replace the contracts. It tells the agent which contract to r
 - Backend rule: `Code.js` stays thin; scalable GAS logic belongs in modular `gas/*.gs` files.
 - Security rule: every external GAS input path starts with `Input Validation & Sanitization`.
 - Data rule: operator sync is append-only event sourcing into `RAW_LOGS`; conflicts become `CONFLICT_PENDING`.
-- Implemented scope: `OPT-001` through `OPT-021` plus `OPT-027`.
-- Current next roadmap item: `OPT-022` native GAS test runner.
+- Implemented scope: `OPT-001` through `OPT-027`.
+- Current next roadmap item: production pilot execution evidence after M6/M7 artifact closure.
 
 ## Implemented Runtime Features
 
 - Frontend: Vue 3 operator form, autosave draft, sync queue controls, Pareto defect preview, Mandor approval inbox UI, and hidden SuperAdmin maintenance console.
 - Services: API adapter allowlist/timeout/safe response, mock GAS, IndexedDB persistence, operator report store, approval helpers, and defect/Pareto helpers.
-- Backend: access gate, audit, auth/session, RBAC permissions, sheet bootstrap/health, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, Script Properties maintenance, and validation.
-- Tests: frontend API/approval/defect/M5/operator/state tests, GAS validation/sheets/auth/permissions/production logs/M5/script properties tests, single-file build verification, and GAS deploy preparation.
-- Remaining major gaps: native `test_runner.gs`, production hardening, pilot rollout, and QCC final package.
+- Backend: access gate, audit, auth/session, RBAC permissions, sheet bootstrap/health, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, Script Properties maintenance, native test runner, and validation.
+- Tests: frontend API/approval/defect/M5/operator/state tests, GAS validation/sheets/auth/permissions/production logs/M5/script properties/test-runner tests, single-file build verification, and GAS deploy preparation.
+- Remaining major gaps: target-environment smoke evidence, field pilot execution, and actual QCC benefit validation from pilot data.
 
 ## Context Routing Matrix
 

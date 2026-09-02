@@ -50,12 +50,14 @@ Status implementasi 2026-09-02:
 | :--- | :--- | :--- |
 | `permission_id` | String | ID permission unik, misalnya `operator.submit_report`. |
 | `role` | Enum | `Operator`, `Mandor`, `Management`, `HRD`, `SuperAdmin`. |
-| `resource` | String | Resource aplikasi, misalnya `production_report`, `quarantine`, `user_role`, atau `dashboard`. |
-| `action` | String | Aksi yang diizinkan, misalnya `create`, `read`, `approve`, `reject`, `update`, atau `soft_delete`. |
+| `resource` | String | Resource aplikasi, misalnya `production_report`, `quarantine`, `user_role`, `dashboard`, atau `test_runner`. |
+| `action` | String | Aksi yang diizinkan, misalnya `create`, `read`, `approve`, `reject`, `update`, `soft_delete`, atau `run`. |
 | `is_allowed` | Boolean | `TRUE` jika role diizinkan melakukan aksi. |
 | `updated_at` | String | ISO 8601 UTC saat permission diperbarui. |
 
 Authorization wajib memakai exact match `role + resource + action`. Missing permission, `is_allowed=FALSE`, role tidak dikenal, resource tidak dikenal, atau action tidak dikenal wajib ditolak. `SuperAdmin` tetap harus memiliki permission eksplisit di matrix.
+
+Resource `test_runner` hanya memiliki action `run` dan ditujukan untuk smoke test produksi oleh `SuperAdmin` atau role lain yang diberi izin eksplisit. Hasil runner wajib berupa ringkasan Pass/Fail tanpa secret, PII mentah, atau payload produksi lengkap.
 
 ## 4. Schema `RAW_LOGS`
 

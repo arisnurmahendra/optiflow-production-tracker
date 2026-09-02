@@ -64,11 +64,11 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 
 Implemented and verified modules:
 - Frontend: `src/App.vue`, `src/composables/useOperatorReportStore.js`, `src/services/apiAdapter.js`, `src/services/mock_gas.js`, `src/services/indexedDbPersistence.js`, `src/services/operatorReportForm.js`, `src/services/approvalInbox.js`, `src/services/defectCategories.js`, `src/services/supervisorControlCenter.js`, and `src/services/managementDashboard.js`.
-- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, and `gas/validation.gs`.
+- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, `gas/test_runner.gs`, and `gas/validation.gs`.
 - Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties tests, singlefile build verification, and GAS deploy preparation.
 
 Known remaining implementation gaps:
-- Native GAS `test_runner.gs`, production hardening, pilot rollout, and pilot/QCC final package remain tracked in later issues.
+- Native GAS `test_runner.gs`, production hardening checklist, deployment checklist, pilot rollout plan, and QCC package template are covered by M6/M7 tracker issues; pilot result evidence remains dependent on field execution.
 
 ## 5. Verification Commands
 

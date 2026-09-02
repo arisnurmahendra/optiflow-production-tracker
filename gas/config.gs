@@ -80,6 +80,7 @@ var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   daily_closing: Object.freeze(['create', 'read', 'reopen']),
   adjustment: Object.freeze(['create', 'read', 'approve', 'reject']),
   dashboard: Object.freeze(['read']),
+  test_runner: Object.freeze(['run']),
   user_role: Object.freeze(['create', 'read', 'update', 'soft_delete']),
   script_property: Object.freeze(['read_status', 'update', 'delete', 'rotate_secret']),
 });

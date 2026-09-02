@@ -61,7 +61,7 @@ Per 2026-09-02, implementasi sudah mencakup:
 - Hidden SuperAdmin console untuk key Script Properties yang disahkan, tanpa membuka secret mentah ke frontend.
 - Workflow Mandor untuk approval mutation, daily closing, adjustment, recap batch, supervisor control center, dan dashboard management read-only.
 
-Fokus berikutnya bergeser ke native GAS test runner, hardening produksi, pilot rollout, dan validasi benefit QCC.
+Fokus berikutnya bergeser ke eksekusi smoke test di GAS target, pilot rollout, dan validasi benefit QCC aktual.
 
 ## 6. Risiko Yang Harus Dijaga
 
@@ -73,4 +73,5 @@ Fokus berikutnya bergeser ke native GAS test runner, hardening produksi, pilot r
 - File build frontend terpisah sehingga tidak kompatibel dengan HTML Service.
 - Penghapusan permanen yang menghilangkan jejak audit.
 - Katalog defect yang tidak dirawat dapat menurunkan kualitas Pareto dan prioritas QCC.
+- Checklist produksi, pilot, dan QCC harus diisi dengan bukti aktual sebelum rollout penuh.
 - Fallback staged pada UI approval hanya boleh dianggap lokal jika endpoint backend gagal di environment tersebut.

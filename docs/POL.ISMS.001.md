@@ -106,5 +106,5 @@ Implemented and locally tested:
 Still required before production rollout:
 - Set production Script Properties in the target Apps Script project.
 - Run role/RBAC smoke tests with real Google Workspace accounts.
-- Add native `test_runner.gs` or an equivalent Apps Script-side smoke runner for production environment checks.
-- Complete production hardening checklist, pilot rollout, and QCC benefit validation before full rollout.
+- Run native `test_runner.gs` in the target Apps Script project after deployment and record the Pass/Fail summary.
+- Complete `docs/PRODUCTION_HARDENING_CHECKLIST.md`, `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `docs/PILOT_ROLLOUT_PLAN.md`, and `docs/QCC_REPORT_PACKAGE.md` before full rollout.

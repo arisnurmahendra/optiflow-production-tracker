@@ -97,13 +97,14 @@ Yang sudah terimplementasi:
 - Hidden SuperAdmin maintenance console untuk Script Properties allowlisted, termasuk `APP_ACTIVE_UNTIL`.
 - Expiry gate `APP_ACTIVE_UNTIL`; aplikasi expired/invalid menampilkan halaman akses ditolak.
 - Backend approval mutation untuk quarantine, daily closing, adjustment workflow, batch `MASTER_RECAP`, supervisor control center, dan management read-only dashboard.
-- Test scripts untuk frontend adapter, operator form, IndexedDB, GAS sheet, auth, permission, production logs, dan Script Properties.
+- Test scripts untuk frontend adapter, operator form, IndexedDB, GAS sheet, auth, permission, production logs, Script Properties, dan native GAS test runner.
+- Production hardening checklist, deployment checklist, pilot rollout plan, dan QCC report package.
 
 Yang belum menjadi implementasi penuh:
-- `test_runner.gs` native di GAS dan production hardening checklist final.
-- Pilot rollout dan paket laporan QCC final.
+- Eksekusi pilot aktual di line/shift production.
+- Pengisian hasil QCC aktual setelah data pilot tersedia.
 
-Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), mulai dari `OPT-022` native GAS test runner dan hardening produksi.
+Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), mulai dari eksekusi smoke test di GAS target dan pilot rollout.
 
 ## Rule Logika Aplikasi
 
@@ -177,6 +178,7 @@ gas/
 |-- response.gs
 |-- scriptProperties.gs
 |-- sheets.gs
+|-- test_runner.gs
 `-- validation.gs
 ```
 
@@ -190,7 +192,15 @@ Validasi backend:
 npm run test:gas
 ```
 
-Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, test permission matrix, test production logs/quarantine, dan test Script Properties.
+Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, test permission matrix, test production logs/quarantine, test Script Properties, dan test native GAS runner.
+
+Native runner untuk Apps Script target:
+
+```javascript
+runGasTestRunner({ session: { simulated_role: 'SuperAdmin' }, mode: 'SMOKE' })
+```
+
+Di production `AUTH_MODE=ON`, jalankan dengan akun SuperAdmin yang terdaftar dan memiliki permission `test_runner:run`.
 
 ## Frontend API Adapter
 
@@ -204,6 +214,13 @@ npm run build:verify
 npm run prepare:gas
 npm audit --audit-level=moderate
 ```
+
+## Dokumen Produksi Dan Rollout
+
+- [docs/PRODUCTION_HARDENING_CHECKLIST.md](docs/PRODUCTION_HARDENING_CHECKLIST.md): gate keamanan sebelum production.
+- [docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md](docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md): urutan build, prepare, push, smoke, dan rollback.
+- [docs/PILOT_ROLLOUT_PLAN.md](docs/PILOT_ROLLOUT_PLAN.md): pilot 1 line / 1 shift.
+- [docs/QCC_REPORT_PACKAGE.md](docs/QCC_REPORT_PACKAGE.md): template paket laporan QCC Step 1-8.
 
 Expected:
 - Semua test frontend dan GAS helper lulus.

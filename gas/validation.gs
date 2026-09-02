@@ -294,6 +294,16 @@ var OptiflowValidation = (function () {
     return payload;
   }
 
+  function validateTestRunnerRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'runGasTestRunner', ['session', 'mode'], true);
+    var mode = payload.mode === undefined || payload.mode === '' ? 'SMOKE' : normalizeEnum(payload.mode, 'mode', ['SMOKE']);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      mode: mode,
+    };
+  }
+
   function validateListRequest(args, request, functionName) {
     return validateFilterRequest(args, request, functionName, true);
   }
@@ -570,6 +580,7 @@ var OptiflowValidation = (function () {
     validateListRequest: validateListRequest,
     validateQuarantineDecisionRequest: validateQuarantineDecisionRequest,
     validateRecapRunRequest: validateRecapRunRequest,
+    validateTestRunnerRequest: validateTestRunnerRequest,
     validateScriptPropertiesStatusRequest: validateScriptPropertiesStatusRequest,
     validateScriptPropertyDeleteRequest: validateScriptPropertyDeleteRequest,
     validateScriptPropertyUpdateRequest: validateScriptPropertyUpdateRequest,
