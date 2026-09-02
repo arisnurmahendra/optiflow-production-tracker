@@ -76,7 +76,7 @@ Upgrade proses setelah MVP:
 
 ## Status Saat Ini
 
-Repo sudah memiliki kontrak implementasi, file Apps Script awal, dan bootstrap Vue 3 + Vite single-file build. Adapter API, schema validator, persistence IndexedDB, backend business logic, dan test runner masih dikerjakan melalui issue lanjutan.
+Repo sudah memiliki kontrak implementasi, file Apps Script awal, bootstrap Vue 3 + Vite single-file build, adapter API, mock GAS lokal, form operator mobile, dan persistence IndexedDB untuk draft/queue. Backend business logic produksi lanjutan dan test runner GAS penuh masih dikerjakan melalui issue lanjutan.
 
 Langkah berikutnya adalah mengikuti fase pada [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), dimulai dari bootstrap struktur proyek dan setup kontrak sheet.
 

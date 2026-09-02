@@ -48,6 +48,8 @@
 - Komponen UI tidak boleh membaca atau menulis langsung ke IndexedDB.
 - Komponen UI hanya boleh berinteraksi dengan Global State/composables.
 - IndexedDB hanya boleh diakses melalui persistence service yang dipanggil oleh Global State.
+- Persistence service IndexedDB wajib memisahkan draft operator dan queue transaksi, serta mengembalikan error aman jika IndexedDB tidak tersedia.
+- Global State wajib hydrate data secara asinkron pada startup dan autosave draft di background tanpa memblokir input operator.
 - Arsitektur frontend wajib disebut `Offline-Tolerant`, bukan `Offline-First`.
 - Google Apps Script HTML Service berjalan di sandbox iframe `script.googleusercontent.com`; Service Worker/PWA tidak boleh dijadikan dependency utama karena tidak didukung secara native di GAS.
 - Aplikasi boleh membutuhkan koneksi internet untuk loading awal `Index.html`, tetapi input yang sudah berjalan harus aman di IndexedDB saat koneksi terputus.

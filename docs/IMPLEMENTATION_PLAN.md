@@ -119,6 +119,8 @@ Deliverables:
 - Autosave draft lokal sebelum submit.
 - Global State/composables sebagai satu-satunya interface UI untuk membaca/menulis draft.
 - Persistence service IndexedDB yang hanya dipanggil oleh Global State.
+- IndexedDB object store minimal: `drafts` untuk draft operator dan `queue` untuk transaksi pending sync.
+- Global State melakukan hydrate startup, autosave background, enqueue submit, dan status error persistence yang aman.
 - Validasi Zod di client.
 - Validasi server di GAS melalui blok awal `Input Validation & Sanitization`.
 - Payload mengikuti kontrak JSON.
@@ -135,6 +137,7 @@ Kriteria selesai:
 - Payload yang melanggar `DATA_SCHEMA.md` ditolak sebelum business logic berjalan.
 - Form mobile dapat membentuk payload dengan `transaction_id`, `device_timestamp`, metadata client, dan field payload sesuai kontrak.
 - Draft tidak hilang saat browser reload sebelum submit.
+- Queue transaksi tersimpan di IndexedDB sebagai `PENDING_SYNC` dan tidak dihapus sebelum success GAS pada issue sync berikutnya.
 - Reject dengan nilai lebih dari 0 meminta kategori defect.
 - Komponen UI tidak memiliki direct access ke IndexedDB.
 

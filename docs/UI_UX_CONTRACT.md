@@ -50,6 +50,7 @@ Wajib:
 - Tombol submit solid dan jelas.
 - Error validasi angka dan kategori defect tampil inline dekat field terkait.
 - Summary total target/OK/reject harus terlihat sebelum submit.
+- Status hydrate/autosave IndexedDB harus terlihat dengan bahasa ringkas seperti `Draft dimuat`, `Draft tersimpan`, atau `Queue gagal`.
 
 Dilarang:
 - Tabel besar di layar operator.

@@ -1,39 +1,33 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useOperatorReportStore } from './composables/useOperatorReportStore.js';
 import { ApiAdapterError, api } from './services/apiAdapter.js';
 import {
-  createDraftQueueItem,
-  createOperatorReportPayload,
   defectOptions,
   formatNumber,
-  initialOperatorReportForm,
   lineOptions,
   machineOptions,
   shiftOptions,
 } from './services/operatorReportForm.js';
 
-const form = ref({ ...initialOperatorReportForm });
-const formErrors = ref({});
-const draftStatus = ref('Draft tersimpan');
-const submitMessage = ref('');
-const stagedQueueItems = ref([
-  { id: 'TX-1042', status: 'PENDING_SYNC', time: '08:42' },
-  { id: 'TX-1043', status: 'CONFLICT_PENDING', time: '08:51' },
-]);
-
-const totalOutput = computed(() => Number(form.value.perolehan_ok || 0) + Number(form.value.perolehan_reject || 0));
-const productionCapacity = computed(() => Number(form.value.target_harian || 0) + Number(form.value.tandon || 0));
-const shouldShowDefect = computed(() => Number(form.value.perolehan_reject || 0) > 0);
-const isTotalValid = computed(() => totalOutput.value <= productionCapacity.value);
-
-const metrics = computed(() => [
-  { label: 'Target', value: formatNumber(form.value.target_harian), tone: 'neutral' },
-  { label: 'OK', value: formatNumber(form.value.perolehan_ok), tone: 'success' },
-  { label: 'Reject', value: formatNumber(form.value.perolehan_reject), tone: 'danger' },
-  { label: 'Queue', value: formatNumber(stagedQueueItems.value.length), tone: 'warning' },
-]);
-
-const queueItems = computed(() => stagedQueueItems.value);
+const operatorStore = useOperatorReportStore();
+const {
+  clearFieldError,
+  draftStatus,
+  form,
+  formErrors,
+  hydrate,
+  isTotalValid,
+  metrics,
+  normalizeRejectState,
+  persistenceError,
+  queueItems,
+  saveDraft,
+  shouldShowDefect,
+  submitMessage,
+  submitOperatorReport,
+  totalOutput,
+} = operatorStore;
 
 const reviewRows = [
   { machine: 'SLD-14', operator: 'Andi', ok: 420, reject: 8, status: 'SYNCED' },
@@ -91,49 +85,6 @@ const maintenanceSummary = computed(() => {
   const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
   return `${setCount}/${maintenanceProperties.value.length} key siap`;
 });
-
-function saveDraft() {
-  draftStatus.value = 'Draft tersimpan';
-  submitMessage.value = 'Draft siap dipersist ke IndexedDB pada OPT-011.';
-}
-
-function submitOperatorReport() {
-  const result = createOperatorReportPayload(form.value, {
-    operatorEmail: 'dev.operator@optiflow.local',
-  });
-
-  formErrors.value = result.errors;
-
-  if (!result.valid) {
-    submitMessage.value = 'Periksa field yang ditandai sebelum submit.';
-    return;
-  }
-
-  const queueItem = createDraftQueueItem(result.data);
-  stagedQueueItems.value = [queueItem, ...stagedQueueItems.value].slice(0, 5);
-  draftStatus.value = 'Menunggu sinkronisasi';
-  submitMessage.value = `Payload ${queueItem.id} siap dikirim melalui sync queue.`;
-}
-
-function clearFieldError(field) {
-  if (!formErrors.value[field]) {
-    return;
-  }
-
-  formErrors.value = {
-    ...formErrors.value,
-    [field]: '',
-  };
-}
-
-function normalizeRejectState() {
-  clearFieldError('perolehan_reject');
-
-  if (!shouldShowDefect.value) {
-    form.value.defect_category_id = '';
-    clearFieldError('defect_category_id');
-  }
-}
 
 function openMaintenanceConsole() {
   isMaintenanceOpen.value = true;
@@ -248,10 +199,12 @@ function handleKeydown(event) {
 }
 
 onMounted(() => {
+  hydrate();
   window.addEventListener('keydown', handleKeydown);
 });
 
 onBeforeUnmount(() => {
+  operatorStore.dispose();
   window.removeEventListener('keydown', handleKeydown);
 });
 </script>
@@ -362,6 +315,10 @@ onBeforeUnmount(() => {
           <span>Total perolehan</span>
           <strong>{{ formatNumber(totalOutput) }}</strong>
           <small>{{ isTotalValid ? 'OK + Reject masih dalam Target + Tandon' : 'OK + Reject melebihi Target + Tandon' }}</small>
+        </div>
+
+        <div v-if="persistenceError" class="inline-error" role="alert">
+          {{ persistenceError }}
         </div>
 
         <div v-if="submitMessage" class="inline-info" role="status">

@@ -71,12 +71,14 @@ Fase read:
 1. Saat browser dimuat, Global State membaca snapshot draft dan queue terakhir dari IndexedDB secara asinkron.
 2. Setelah data masuk ke variabel reactive, UI merender nilai target, OK, reject, status sync, dan draft secara instan.
 3. Jika IndexedDB gagal dibaca, UI tetap terbuka dengan state kosong dan menampilkan error aman.
+4. Implementasi Global State untuk operator berada di composable `useOperatorReportStore`; IndexedDB hanya disentuh melalui `indexedDbPersistence`.
 
 Fase write:
 1. Saat operator mengetik, variabel Global State langsung berubah agar UI tetap responsif.
 2. Global State menjalankan persist async di background untuk menyimpan draft terbaru ke IndexedDB.
 3. Persist background tidak boleh memblokir input operator.
 4. Jika persist gagal, Global State menandai status draft sebagai `FAILED` dan memberi opsi retry.
+5. Submit form menyimpan payload ke queue lokal `PENDING_SYNC`; pengiriman otomatis ke GAS tetap berada di tahap sync issue lanjutan.
 
 Fase sync:
 1. Saat device online, Global State membungkus data menjadi JSON payload sesuai `DATA_SCHEMA.md`.

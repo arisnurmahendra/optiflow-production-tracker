@@ -69,7 +69,7 @@ Status:
 | `OPT-008` | Implement Input Validation & Sanitization blocks for GAS endpoints | Closed | P0 | `type:security`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | #8 |
 | `OPT-009` | Build production `apiAdapter.js` and local `mock_gas.js` | Closed | P1 | `type:feature`, `area:frontend`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #9 |
 | `OPT-010` | Build mobile operator reporting form | Closed | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #10 |
-| `OPT-011` | Implement Global State and IndexedDB persistence service | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #11 |
+| `OPT-011` | Implement Global State and IndexedDB persistence service | Review | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | #11 |
 | `OPT-012` | Implement append-only RAW_LOGS submit endpoint | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M3 - Operator Mobile MVP` | #12 |
 | `OPT-013` | Implement Offline-Tolerant sync queue | Backlog | P1 | `type:feature`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #13 |
 | `OPT-014` | Implement CONFLICT_PENDING detection and quarantine routing | Backlog | P0 | `type:feature`, `area:backend`, `area:data`, `priority:p0`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #14 |

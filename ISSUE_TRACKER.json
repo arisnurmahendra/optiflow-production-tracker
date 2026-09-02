@@ -382,7 +382,7 @@
     {
       "id": "OPT-011",
       "title": "Implement Global State and IndexedDB persistence service",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",
