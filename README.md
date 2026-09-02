@@ -61,6 +61,7 @@ Upgrade proses setelah MVP:
 ## Dokumen Kontrak
 
 - [AGENT.md](AGENT.md): aturan kerja agen dan batasan implementasi.
+- [AGENT_STATE.md](AGENT_STATE.md): konteks ringkas agent untuk mode hemat token dan routing dokumen.
 - [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md): roadmap teknis dan urutan eksekusi.
 - [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md): kontrak Google Sheets dan payload JSON.
 - [docs/BUSINESS_PROCESS.md](docs/BUSINESS_PROCESS.md): SOP proses bisnis, role, dan alur approval.

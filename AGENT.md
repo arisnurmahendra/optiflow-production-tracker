@@ -8,19 +8,11 @@
 
 The agent helps design and implement OPTIFLOW as a secure production-reporting system for the factory floor. Work must stay aligned with the business improvement narrative, the data contract, and the security baseline.
 
-Before code changes, read the relevant docs:
-- `README.md`
-- `ISSUE_TRACKER.md`
-- `ISSUE_TRACKER.json`
-- `docs/IMPLEMENTATION_PLAN.md`
-- `docs/DATA_SCHEMA.md`
-- `docs/BUSINESS_PROCESS.md`
-- `docs/GUARDRAILS_CONTRACT.md`
-- `docs/KNOWLEDGE_BASE.md`
-- `docs/DOCUMENTATION_AUDIT.md`
-- `docs/UI_UX_CONTRACT.md`
-- `docs/QCC_8_STEPS_7_TOOLS.md`
-- `docs/POL.ISMS.001.md`
+Before code changes, use the Low-Token Context Protocol:
+1. Read `AGENT.md`, `AGENT_STATE.md`, the active user request or GitHub issue body, and `git status --short`.
+2. Use the context routing matrix in `AGENT_STATE.md` to open only the contracts relevant to the change.
+3. Escalate to a full documentation sweep only when the change is cross-cutting, a contract conflict appears, or targeted reading is insufficient.
+4. Do not use `chatgpt_snapshot.py` or generated snapshot folders as the active context source for agent-mode work unless the user explicitly requests it.
 
 ## 2. Core Principles
 
@@ -139,7 +131,7 @@ For the current Google identity model:
 ## 9. Implementation Protocol
 
 Follow this sequence:
-1. Read the existing code and docs.
+1. Read the existing code and routed docs using the Low-Token Context Protocol in `AGENT_STATE.md`.
 2. Apply the Pre-Code Rule: update and align `DATA_SCHEMA.md` and `BUSINESS_PROCESS.md` before code when logic, parameters, variables, or workflow change.
 3. Implement the smallest coherent change.
 4. Pause for Auto-Sync Protocol: update relevant md, json, and project documentation before continuing if the feature changes contracts.
@@ -147,7 +139,7 @@ Follow this sequence:
 6. Run relevant verification commands.
 7. Report changed files, verification results, and remaining risks.
 
-Knowledge base maintenance is mandatory. Each iteration must be cross-checked against `docs/KNOWLEDGE_BASE.md` and QCC innovation references so the implementation does not drift from the original improvement vision.
+Knowledge base maintenance is mandatory when the change affects QCC narrative, improvement metrics, business justification, or long-term roadmap. For narrow code fixes, use `AGENT_STATE.md` routing first and open `docs/KNOWLEDGE_BASE.md` only when needed.
 
 When work maps to roadmap execution, update `ISSUE_TRACKER.md` before and after implementation. Local status must not be `Closed` until the corresponding GitHub Issue is closed or the user explicitly marks the item as local-only.
 
@@ -183,6 +175,12 @@ When closing any `OPT-*` item linked to GitHub, follow this exact sequence:
    - Add or update a closed issue log entry with date, issue number, verification summary, and commit hash.
    - Set the matching object in `ISSUE_TRACKER.json` to `Closed` and include `closed_at` plus verification evidence.
 7. Validate `ISSUE_TRACKER.json`, check local tracker references, commit the tracker update, and push when the work is part of GitHub-synced roadmap execution.
+
+Low-token closure rules:
+- Keep GitHub issue body updates concise: checked criteria, command/result pairs, changed paths, risk statement, and commit hash.
+- Do not paste full diffs, full test logs, generated bundles, or long documentation excerpts into GitHub comments.
+- Update `AGENT_STATE.md` after closure when the issue changes project shape, deployment behavior, issue ledger, or agent workflow.
+- `ISSUE_TRACKER.md` and `ISSUE_TRACKER.json` should store summary evidence, not raw logs.
 
 ## 10. Definition Of Done
 

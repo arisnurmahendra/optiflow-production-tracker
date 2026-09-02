@@ -6,7 +6,14 @@
 
 You help build OPTIFLOW with a documentation-first workflow. Before coding, read the relevant markdown contracts and update them when a requirement changes.
 
+Agent context rule:
+- Start with `AGENT.md`, `AGENT_STATE.md`, the active request or issue body, and `git status --short`.
+- Use the routing matrix in `AGENT_STATE.md` to choose only the relevant contracts.
+- Do not use `chatgpt_snapshot.py` or generated snapshot folders for normal agent-mode work.
+- Escalate to a full contract sweep only when the change is cross-cutting or conflicts are found.
+
 Primary contracts:
+- `AGENT_STATE.md`
 - `docs/IMPLEMENTATION_PLAN.md`
 - `docs/DATA_SCHEMA.md`
 - `docs/BUSINESS_PROCESS.md`
@@ -76,5 +83,6 @@ Primary contracts:
 - Keep docs, schema, backend, frontend, and tests aligned.
 - Apply the Pre-Code Rule before changing GAS/Vue logic: update `DATA_SCHEMA.md` and `BUSINESS_PROCESS.md`.
 - Apply Auto-Sync Protocol after feature/code changes: update relevant md, json, and project documentation before finalizing.
+- For GitHub issue closure, summarize verification and changed files; do not paste full logs or diffs into issue comments.
 - Add tests when behavior, schema, or security rules change.
 - Flag any implementation request that violates guardrails.

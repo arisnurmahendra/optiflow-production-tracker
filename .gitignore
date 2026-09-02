@@ -51,3 +51,9 @@ Desktop.ini
 # Legacy object files
 *.o
 *.ali
+
+
+# Deprecated web-chat onboarding snapshots; not agent-mode context
+chatgpt_snapshot.py
+chatgpt_snapshot/
+promt-ai.txt

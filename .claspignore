@@ -56,3 +56,8 @@ yarn.lock
 .clasp.json
 .claspignore
 .gitignore
+
+# Deprecated web-chat onboarding snapshots; not GAS runtime
+chatgpt_snapshot.py
+chatgpt_snapshot/**
+promt-ai.txt
