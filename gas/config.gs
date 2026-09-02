@@ -37,6 +37,10 @@ var OPTIFLOW_PRODUCTION_LOGS = Object.freeze({
   max_defect_notes_length: 140,
 });
 
+var OPTIFLOW_QUARANTINE_REASONS = Object.freeze({
+  MACHINE_OPERATOR_TIME_COLLISION: 'MACHINE_OPERATOR_TIME_COLLISION',
+});
+
 var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   schema: Object.freeze(['bootstrap', 'read_health']),
   session: Object.freeze(['read']),

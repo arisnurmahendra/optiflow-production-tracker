@@ -188,6 +188,7 @@ Deliverables:
 - Alur status `PENDING -> CORRECTION_REQUESTED -> RESUBMITTED -> APPROVED/REJECTED`.
 - Alur konflik `CONFLICT_PENDING -> APPROVED/REJECTED`.
 - Human-in-the-Loop memastikan data sync dari IndexedDB tidak langsung mengunci rekap utama ketika ada konflik, reject rule, atau anomali.
+- Backend conflict detection dan quarantine routing dipisah ke modul GAS khusus agar rule anomali berikutnya bisa ditambahkan tanpa membesarkan entrypoint submit.
 - Audit trail untuk keputusan approval.
 
 Kriteria selesai:

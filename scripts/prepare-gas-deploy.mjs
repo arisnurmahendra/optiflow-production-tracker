@@ -36,4 +36,4 @@ for (const file of gasFiles) {
   await cp(join(repoRoot, file), join(deployDir, file));
 }
 
-console.log('gas deploy ok: deploy/appsscript.json, deploy/Code.js, deploy/Index.html');
+console.log('gas deploy ok: deploy/appsscript.json, deploy/Code.js, deploy/Index.html, deploy/gas');

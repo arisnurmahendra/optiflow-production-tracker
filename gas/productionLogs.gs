@@ -1,7 +1,5 @@
 var OptiflowProductionLogs = (function () {
   var RAW_LOGS = 'RAW_LOGS';
-  var QUARANTINE = 'QUARANTINE';
-  var CONFLICT_REASON = 'MACHINE_OPERATOR_TIME_COLLISION';
 
   function submit(payload, session) {
     var now = new Date().toISOString();
@@ -23,46 +21,26 @@ var OptiflowProductionLogs = (function () {
       });
     }
 
-    var conflict = findMachineOperatorTimeConflict(payload, operatorEmail);
-    var status = conflict ? 'CONFLICT_PENDING' : 'ACCEPTED';
-    var record = buildRawLogRecord(payload, operatorEmail, now, status);
+    var record = buildRawLogRecord(payload, operatorEmail, now, 'ACCEPTED');
+    var quarantineDecision = OptiflowQuarantine.evaluateProductionReport(record);
+    record.status = quarantineDecision.status;
 
     OptiflowSheets.appendRecord(RAW_LOGS, record);
 
-    var quarantineId = '';
-    if (conflict) {
-      quarantineId = Utilities.getUuid();
-      OptiflowSheets.appendRecord(QUARANTINE, {
-        quarantine_id: quarantineId,
-        transaction_id: payload.metadata.transaction_id,
-        reason_code: CONFLICT_REASON,
-        payload_json: JSON.stringify({
-          current: record,
-          conflict_with: {
-            transaction_id: conflict.transaction_id,
-            operator_email: conflict.operator_email,
-            device_timestamp: conflict.device_timestamp,
-            machine_id: conflict.machine_id,
-          },
-        }),
-        status: 'CONFLICT_PENDING',
-        reviewed_by: '',
-        reviewed_at: '',
-        notes: 'Auto-flagged by machine/operator/time conflict rule.',
-      });
-    }
+    var quarantineRoute = OptiflowQuarantine.routeProductionReport(record, quarantineDecision, session);
+    var quarantineId = quarantineRoute.quarantine_id;
 
-    OptiflowAudit.write(conflict ? 'PRODUCTION_REPORT_CONFLICT_PENDING' : 'PRODUCTION_REPORT_ACCEPTED', session, {
+    OptiflowAudit.write(quarantineDecision.requires_quarantine ? 'PRODUCTION_REPORT_CONFLICT_PENDING' : 'PRODUCTION_REPORT_ACCEPTED', session, {
       transaction_id: payload.metadata.transaction_id,
       machine_id: payload.payload.machine_id,
       sync_type: payload.metadata.sync_type,
-      status: status,
+      status: record.status,
       quarantine_id: quarantineId,
     });
 
     return OptiflowResponse.success({
       transaction_id: payload.metadata.transaction_id,
-      status: status,
+      status: record.status,
       duplicate: false,
       appended: true,
       quarantine_id: quarantineId,
@@ -98,35 +76,6 @@ var OptiflowProductionLogs = (function () {
     for (var index = 0; index < rows.length; index += 1) {
       if (String(rows[index].transaction_id || '').trim().toLowerCase() === transactionId) {
         return rows[index];
-      }
-    }
-
-    return null;
-  }
-
-  function findMachineOperatorTimeConflict(payload, operatorEmail) {
-    var rows = OptiflowSheets.getRows(RAW_LOGS);
-    var deviceTime = new Date(payload.metadata.device_timestamp).getTime();
-    var windowMs = OPTIFLOW_PRODUCTION_LOGS.conflict_window_minutes * 60 * 1000;
-
-    for (var index = rows.length - 1; index >= 0; index -= 1) {
-      var row = rows[index];
-
-      if (String(row.machine_id || '').trim().toUpperCase() !== payload.payload.machine_id) {
-        continue;
-      }
-
-      if (String(row.operator_email || '').trim().toLowerCase() === operatorEmail) {
-        continue;
-      }
-
-      if (['ACCEPTED', 'CONFLICT_PENDING', 'QUARANTINED'].indexOf(String(row.status || '').trim().toUpperCase()) === -1) {
-        continue;
-      }
-
-      var rowTime = new Date(row.device_timestamp).getTime();
-      if (!isNaN(rowTime) && Math.abs(deviceTime - rowTime) <= windowMs) {
-        return row;
       }
     }
 

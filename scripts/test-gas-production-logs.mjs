@@ -149,6 +149,7 @@ const files = [
   'gas/audit.gs',
   'gas/permissions.gs',
   'gas/auth.gs',
+  'gas/quarantine.gs',
   'gas/productionLogs.gs',
   'Code.js',
 ];
@@ -203,6 +204,15 @@ if (rawLogs.getLastRow() !== 2) {
   throw new Error('Expected duplicate submit not to append another RAW_LOGS row.');
 }
 
+const sameOperatorRequest = structuredClone(baseRequest);
+sameOperatorRequest.metadata.transaction_id = '550e8400-e29b-41d4-a716-446655440003';
+sameOperatorRequest.metadata.device_timestamp = '2026-08-29T22:45:48.000Z';
+
+const sameOperator = vm.runInNewContext(`submitProductionReport(${JSON.stringify(sameOperatorRequest)})`, context);
+if (!sameOperator.ok || sameOperator.data.status !== 'ACCEPTED' || sameOperator.data.quarantine_id) {
+  throw new Error('Expected same operator near the same machine to remain ACCEPTED.');
+}
+
 const conflictRequest = structuredClone(baseRequest);
 conflictRequest.metadata.transaction_id = '550e8400-e29b-41d4-a716-446655440001';
 conflictRequest.metadata.operator_email = 'other.operator@example.com';
@@ -216,6 +226,28 @@ if (!conflict.ok || conflict.data.status !== 'CONFLICT_PENDING' || !conflict.dat
 const quarantine = spreadsheet.getSheetByName('QUARANTINE');
 if (quarantine.getLastRow() !== 2) {
   throw new Error('Expected conflict to create one QUARANTINE row.');
+}
+
+const quarantineHeader = context.OPTIFLOW_SHEET_SCHEMAS.QUARANTINE;
+const payloadIndex = quarantineHeader.indexOf('payload_json');
+const reasonIndex = quarantineHeader.indexOf('reason_code');
+const quarantinePayload = JSON.parse(quarantine.rows[1][payloadIndex]);
+
+if (quarantine.rows[1][reasonIndex] !== 'MACHINE_OPERATOR_TIME_COLLISION'
+  || quarantinePayload.current.operator_email
+  || !quarantinePayload.current.operator_email_masked
+  || !quarantinePayload.conflict_with.operator_email_masked) {
+  throw new Error('Expected quarantine routing to store conflict reason and masked payload.');
+}
+
+const outsideWindowRequest = structuredClone(baseRequest);
+outsideWindowRequest.metadata.transaction_id = '550e8400-e29b-41d4-a716-446655440002';
+outsideWindowRequest.metadata.operator_email = 'far.operator@example.com';
+outsideWindowRequest.metadata.device_timestamp = '2026-08-29T23:30:48.000Z';
+
+const outsideWindow = vm.runInNewContext(`submitProductionReport(${JSON.stringify(outsideWindowRequest)})`, context);
+if (!outsideWindow.ok || outsideWindow.data.status !== 'ACCEPTED' || outsideWindow.data.quarantine_id) {
+  throw new Error('Expected same machine outside conflict window to remain ACCEPTED.');
 }
 
 let rejected = false;
@@ -238,8 +270,9 @@ const auditActions = auditLogs.rows.slice(1).map((row) => row[actionIndex]);
 
 if (!auditActions.includes('PRODUCTION_REPORT_ACCEPTED')
   || !auditActions.includes('PRODUCTION_REPORT_DUPLICATE')
-  || !auditActions.includes('PRODUCTION_REPORT_CONFLICT_PENDING')) {
-  throw new Error('Expected accepted, duplicate, and conflict production audit events.');
+  || !auditActions.includes('PRODUCTION_REPORT_CONFLICT_PENDING')
+  || !auditActions.includes('QUARANTINE_ROUTED')) {
+  throw new Error('Expected accepted, duplicate, conflict, and quarantine audit events.');
 }
 
 console.log('gas production logs test ok');

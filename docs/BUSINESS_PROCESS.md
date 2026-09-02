@@ -131,6 +131,13 @@ Prinsip Human-in-the-Loop:
 - Data konflik memicu notifikasi peringatan di antarmuka Vue 3 milik Mandor.
 - Mandor memegang otorisasi untuk memilih data yang di-approve atau membatalkan data konflik melalui reject.
 - Data konflik, anomali, atau data yang terkena rule review hanya masuk rekap setelah Mandor/Supervisor menekan approve.
+
+Backend quarantine routing:
+1. Endpoint submit produksi membentuk record `RAW_LOGS` terlebih dahulu tanpa menulis ke sheet.
+2. Modul quarantine backend mengevaluasi record tersebut terhadap `RAW_LOGS` existing.
+3. Jika rule mesin/operator/waktu aktif, record ditulis append-only ke `RAW_LOGS` dengan status `CONFLICT_PENDING`.
+4. Modul quarantine membuat baris `QUARANTINE` dengan `reason_code=MACHINE_OPERATOR_TIME_COLLISION`, payload pembanding yang dimasking, dan status `CONFLICT_PENDING`.
+5. Event routing dicatat ke `AUDIT_LOGS` sebelum response dikembalikan ke frontend.
 - Proses approve menjadi bagian dari standardisasi QCC Step 7.
 
 ## 7. Daily Closing Dan Adjustment
