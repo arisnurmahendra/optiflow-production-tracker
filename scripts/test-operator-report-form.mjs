@@ -38,6 +38,15 @@ if (noDefect.valid || !noDefect.errors.defect_category_id) {
   throw new Error('Expected reject without defect category to fail.');
 }
 
+const unknownDefect = validateOperatorReport({
+  ...initialOperatorReportForm,
+  defect_category_id: 'DEF-UNKNOWN',
+});
+
+if (unknownDefect.valid || !unknownDefect.errors.defect_category_id) {
+  throw new Error('Expected unknown defect category to fail.');
+}
+
 const negative = validateOperatorReport({
   ...initialOperatorReportForm,
   tandon: -1,

@@ -22,6 +22,7 @@ var OptiflowProductionLogs = (function () {
     }
 
     var record = buildRawLogRecord(payload, operatorEmail, now, 'ACCEPTED');
+    assertActiveDefectCategory(record);
     var quarantineDecision = OptiflowQuarantine.evaluateProductionReport(record);
     record.status = quarantineDecision.status;
 
@@ -80,6 +81,25 @@ var OptiflowProductionLogs = (function () {
     }
 
     return null;
+  }
+
+  function assertActiveDefectCategory(record) {
+    if (Number(record.perolehan_reject || 0) <= 0) {
+      return;
+    }
+
+    var exists = OptiflowSheets.getRows('DEFECT_CATEGORIES').some(function (category) {
+      return String(category.defect_category_id || '').trim().toUpperCase() === String(record.defect_category_id || '').trim().toUpperCase()
+        && isTruthy(category.status_aktif);
+    });
+
+    if (!exists) {
+      throw new Error('Defect category is not active or not found.');
+    }
+  }
+
+  function isTruthy(value) {
+    return value === true || String(value).toUpperCase() === 'TRUE';
   }
 
   function resolveOperatorEmail(payloadEmail, session) {

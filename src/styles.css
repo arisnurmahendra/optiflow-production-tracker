@@ -299,6 +299,36 @@ input:focus,
   margin-top: 12px;
 }
 
+.defect-insight {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.defect-insight div {
+  min-height: 58px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  gap: 3px;
+  background: #f8fafc;
+}
+
+.defect-insight span {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.defect-insight strong {
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .field-error {
   min-height: 16px;
   color: #991b1b;
@@ -681,6 +711,7 @@ td:nth-child(4) {
 
   .field-grid,
   .defect-row,
+  .defect-insight,
   .number-grid {
     grid-template-columns: 1fr;
   }

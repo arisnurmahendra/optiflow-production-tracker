@@ -109,6 +109,8 @@ Authorization wajib memakai exact match `role + resource + action`. Missing perm
 | `status_aktif` | Boolean | `TRUE` jika kategori aktif. |
 | `updated_at` | String UTC | Waktu diperbarui. |
 
+Default bootstrap wajib mengisi katalog MVP jika sheet masih kosong: `DEF-SOLDER-THIN`, `DEF-SOLDER-BRIDGE`, `DEF-COMPONENT-MISS`, dan `DEF-VISUAL-SCRATCH`. Setiap kategori wajib membawa `qcc_factor` dan `severity` agar capture reject siap dipakai untuk Pareto dan QCC Step 1.
+
 ## 8. Schema `QUARANTINE`
 
 | Kolom | Tipe | Keterangan |
@@ -355,3 +357,4 @@ Semua endpoint maintenance wajib menolak key yang tidak ada di allowlist, action
 - Jika backend mendeteksi dua transaksi dengan `machine_id` sama, `operator_email` berbeda, dan selisih `device_timestamp` berada dalam conflict time window yang dikonfigurasi, transaksi wajib diberi status `CONFLICT_PENDING`.
 - Data `CONFLICT_PENDING` wajib direferensikan ke `QUARANTINE` dengan `reason_code=MACHINE_OPERATOR_TIME_COLLISION`.
 - Data `CONFLICT_PENDING` tidak boleh dihitung ke `MASTER_RECAP` sampai Mandor/Supervisor melakukan approve.
+- Jika `perolehan_reject > 0`, `defect_category_id` wajib merujuk kategori aktif di `DEFECT_CATEGORIES`; kategori tidak aktif atau tidak dikenal wajib ditolak oleh frontend dan backend.

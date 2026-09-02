@@ -37,14 +37,15 @@ Target OPTIFLOW:
 3. Operator memilih line, shift, machine ID, target harian, tandon, OK, dan reject.
 4. Frontend menjalankan validasi Zod.
 5. Jika reject lebih dari 0, operator wajib memilih kategori defect.
-6. Frontend menyimpan draft otomatis di IndexedDB sebelum submit.
-7. Frontend membuat `transaction_id` UUID dan `device_timestamp` UTC.
-8. Submit dikirim melalui `apiAdapter.js`.
-9. Backend melakukan validasi server.
-10. Jika valid dan tidak anomali, data ditulis ke `RAW_LOGS` dengan status `ACCEPTED`.
-11. Jika duplikat, backend mengembalikan status idempotent tanpa menulis ulang.
-12. Jika backend mendeteksi konflik mesin sama, operator berbeda, dan waktu berdekatan, data ditulis dengan status `CONFLICT_PENDING` dan masuk `QUARANTINE`.
-13. Jika anomali lain muncul, data dicatat ke `RAW_LOGS` dan/atau `QUARANTINE` sesuai rule.
+6. Kategori defect membawa `qcc_factor` dan `severity` agar reject langsung siap untuk Pareto awal dan analisis QCC.
+7. Frontend menyimpan draft otomatis di IndexedDB sebelum submit.
+8. Frontend membuat `transaction_id` UUID dan `device_timestamp` UTC.
+9. Submit dikirim melalui `apiAdapter.js`.
+10. Backend melakukan validasi server.
+11. Jika valid dan tidak anomali, data ditulis ke `RAW_LOGS` dengan status `ACCEPTED`.
+12. Jika duplikat, backend mengembalikan status idempotent tanpa menulis ulang.
+13. Jika backend mendeteksi konflik mesin sama, operator berbeda, dan waktu berdekatan, data ditulis dengan status `CONFLICT_PENDING` dan masuk `QUARANTINE`.
+14. Jika anomali lain muncul, data dicatat ke `RAW_LOGS` dan/atau `QUARANTINE` sesuai rule.
 
 Tahap `OPT-010` hanya menstandardisasi form operator, validasi Zod, pembuatan payload, dan staging submit di UI. Persistensi IndexedDB penuh berada di `OPT-011`, endpoint GAS append-only berada di `OPT-012`, dan retry sync queue berada di `OPT-013`.
 
@@ -107,6 +108,7 @@ Data masuk quarantine jika memenuhi indikasi:
 - Timestamp perangkat terlalu jauh dari waktu server.
 - Submit masuk ke line/shift/tanggal yang sudah closing.
 - Reject lebih dari 0 tanpa kategori defect.
+- Reject memakai kategori defect tidak aktif atau tidak dikenal.
 - Rule validasi bisnis baru yang disetujui dalam dokumen kontrak.
 
 Mandor/Supervisor dapat:
@@ -162,8 +164,9 @@ Backend quarantine routing:
 2. Backend membaca transaksi valid dari `RAW_LOGS`, keputusan final dari `QUARANTINE`, dan adjustment approved dari `ADJUSTMENT_LOGS`.
 3. Rekap dihitung berdasarkan tanggal pabrik `Asia/Jakarta`.
 4. Rekap dipisahkan per line, shift, operator, machine, dan kategori defect.
-5. Hasil ditulis ke `MASTER_RECAP`.
-6. Dashboard membaca `MASTER_RECAP`, bukan seluruh data mentah.
+5. Metadata `qcc_factor` dan `severity` dari `DEFECT_CATEGORIES` dipakai sebagai dasar Pareto defect dan prioritas improvement.
+6. Hasil ditulis ke `MASTER_RECAP`.
+7. Dashboard membaca `MASTER_RECAP`, bukan seluruh data mentah.
 
 ## 9. Dashboard Dan Monitoring
 
@@ -187,6 +190,7 @@ Backend quarantine routing:
 - Role menentukan data dan aksi yang boleh diakses.
 - Data setelah closing tidak boleh diubah langsung.
 - Reject wajib punya kategori defect jika `perolehan_reject > 0`.
+- Kategori defect untuk reject wajib aktif di `DEFECT_CATEGORIES`.
 - Kombinasi `operator_email + factory_date + line_id + shift_id + machine_id` dipakai sebagai sinyal duplicate detection tambahan.
 - Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.

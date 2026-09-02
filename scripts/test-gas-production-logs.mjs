@@ -263,6 +263,20 @@ if (!rejected) {
   throw new Error('Expected invalid transaction_id to be rejected before business logic.');
 }
 
+const invalidDefectRequest = structuredClone(baseRequest);
+invalidDefectRequest.metadata.transaction_id = '550e8400-e29b-41d4-a716-446655440004';
+invalidDefectRequest.payload.defect_category_id = 'DEF-NOT-ACTIVE';
+rejected = false;
+try {
+  vm.runInNewContext(`submitProductionReport(${JSON.stringify(invalidDefectRequest)})`, context);
+} catch {
+  rejected = true;
+}
+
+if (!rejected) {
+  throw new Error('Expected inactive or unknown defect category to be rejected before RAW_LOGS append.');
+}
+
 const auditLogs = spreadsheet.getSheetByName('AUDIT_LOGS');
 const auditHeader = context.OPTIFLOW_SHEET_SCHEMAS.AUDIT_LOGS;
 const actionIndex = auditHeader.indexOf('action');

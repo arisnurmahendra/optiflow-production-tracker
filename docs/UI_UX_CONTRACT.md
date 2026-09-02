@@ -46,6 +46,7 @@ Wajib:
 - Input angka besar dan mudah disentuh.
 - Status koneksi, draft, dan sync selalu terlihat.
 - Kategori defect muncul hanya ketika `perolehan_reject > 0`.
+- Saat kategori defect dipilih, UI menampilkan `qcc_factor`, `severity`, dan preview Pareto ringkas tanpa menambah langkah input operator.
 - Draft autosave tidak mengganggu input.
 - Tombol submit solid dan jelas.
 - Error validasi angka dan kategori defect tampil inline dekat field terkait.

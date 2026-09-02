@@ -14,6 +14,8 @@ import {
 import {
   defectOptions,
   formatNumber,
+  createParetoRejectSummary,
+  getDefectCategory,
   lineOptions,
   machineOptions,
   shiftOptions,
@@ -69,6 +71,16 @@ const activeComparisonRows = computed(() => {
     ['Defect', activeApprovalCase.value.current.defect_category_id || '-', activeApprovalCase.value.conflict_with?.defect_category_id || '-'],
   ];
 });
+const selectedDefectCategory = computed(() => getDefectCategory(form.value.defect_category_id));
+const paretoPreview = computed(() => createParetoRejectSummary([
+  {
+    payload: {
+      defect_category_id: form.value.defect_category_id,
+      perolehan_reject: form.value.perolehan_reject,
+    },
+  },
+  ...queueItems.value.map((item) => item.payload),
+]));
 
 const maintenanceProperties = ref([
   {
@@ -372,6 +384,21 @@ onBeforeUnmount(() => {
             <input v-model="form.defect_notes" aria-label="Catatan defect" maxlength="140" @input="clearFieldError('defect_notes')" />
             <small v-if="formErrors.defect_notes" class="field-error">{{ formErrors.defect_notes }}</small>
           </label>
+        </div>
+
+        <div v-if="shouldShowDefect" class="defect-insight" aria-label="Defect Pareto preview">
+          <div>
+            <span>Faktor QCC</span>
+            <strong>{{ selectedDefectCategory?.qcc_factor || '-' }}</strong>
+          </div>
+          <div>
+            <span>Severity</span>
+            <strong>{{ selectedDefectCategory?.severity || '-' }}</strong>
+          </div>
+          <div>
+            <span>Pareto Top</span>
+            <strong>{{ paretoPreview[0]?.defect_name || '-' }}</strong>
+          </div>
         </div>
 
         <div :class="['check-row', isTotalValid ? 'valid' : 'invalid']">

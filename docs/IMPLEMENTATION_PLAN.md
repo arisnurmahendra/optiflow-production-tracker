@@ -114,6 +114,7 @@ Deliverables:
 - `apiAdapter.js` production wrapper untuk semua callable GAS yang dipakai frontend.
 - `mock_gas.js` local development adapter dengan latency dan failure simulation.
 - Form input: line, shift, machine ID, target harian, tandon, OK, reject, dan kategori defect jika reject lebih dari 0.
+- Katalog defect MVP membawa `qcc_factor` dan `severity` untuk preview Pareto dan QCC Step 1 sejak input operator.
 - Validasi form operator memakai Zod dan menghasilkan error inline aman sebelum payload dibuat.
 - Submit pada tahap form membuat payload draft/queue lokal; persistensi IndexedDB dan endpoint GAS append-only tetap mengikuti issue lanjutan.
 - Autosave draft lokal sebelum submit.
@@ -139,6 +140,7 @@ Kriteria selesai:
 - Draft tidak hilang saat browser reload sebelum submit.
 - Queue transaksi tersimpan di IndexedDB sebagai `PENDING_SYNC` dan tidak dihapus sebelum success GAS pada issue sync berikutnya.
 - Reject dengan nilai lebih dari 0 meminta kategori defect.
+- Submit reject divalidasi terhadap kategori aktif `DEFECT_CATEGORIES` di frontend dan backend.
 - Komponen UI tidak memiliki direct access ke IndexedDB.
 
 ## 6. Fase 4 - Offline Queue Dan Sync
@@ -209,6 +211,7 @@ Deliverables:
 - Ringkasan per tanggal, operator, machine, dan kategori.
 - Ringkasan per line dan shift.
 - Dashboard Pareto defect dari `DEFECT_CATEGORIES`.
+- Pareto memakai agregasi `reject_total` per kategori defect aktif, dilengkapi `qcc_factor`, `severity`, dan persentase kontribusi.
 - Snapshot performa operator untuk target, OK, reject, defect rate, dan status submit.
 - Dashboard internal read-only atau sumber data Looker Studio.
 

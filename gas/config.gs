@@ -41,6 +41,37 @@ var OPTIFLOW_QUARANTINE_REASONS = Object.freeze({
   MACHINE_OPERATOR_TIME_COLLISION: 'MACHINE_OPERATOR_TIME_COLLISION',
 });
 
+var OPTIFLOW_DEFAULT_DEFECT_CATEGORIES = Object.freeze([
+  Object.freeze({
+    defect_category_id: 'DEF-SOLDER-THIN',
+    defect_name: 'Solder tipis',
+    qcc_factor: 'Method',
+    severity: 'MEDIUM',
+    status_aktif: true,
+  }),
+  Object.freeze({
+    defect_category_id: 'DEF-SOLDER-BRIDGE',
+    defect_name: 'Solder bridge',
+    qcc_factor: 'Machine',
+    severity: 'HIGH',
+    status_aktif: true,
+  }),
+  Object.freeze({
+    defect_category_id: 'DEF-COMPONENT-MISS',
+    defect_name: 'Komponen missing',
+    qcc_factor: 'Material',
+    severity: 'HIGH',
+    status_aktif: true,
+  }),
+  Object.freeze({
+    defect_category_id: 'DEF-VISUAL-SCRATCH',
+    defect_name: 'Visual scratch',
+    qcc_factor: 'Environment',
+    severity: 'LOW',
+    status_aktif: true,
+  }),
+]);
+
 var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   schema: Object.freeze(['bootstrap', 'read_health']),
   session: Object.freeze(['read']),

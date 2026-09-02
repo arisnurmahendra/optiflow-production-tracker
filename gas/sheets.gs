@@ -35,6 +35,10 @@ var OptiflowSheets = (function () {
         writeHeader(sheet, OPTIFLOW_SHEET_SCHEMAS[sheetName]);
         initializedHeaders.push(sheetName);
       }
+
+      if (sheetName === 'DEFECT_CATEGORIES' && sheet.getLastRow() === 1) {
+        seedDefaultDefectCategories(sheet);
+      }
     });
 
     return OptiflowResponse.success({
@@ -76,6 +80,28 @@ var OptiflowSheets = (function () {
       throw new Error('Missing required sheet ' + sheetName + '. Run bootstrapSheets first.');
     }
 
+    var headers = OPTIFLOW_SHEET_SCHEMAS[sheetName];
+    var row = headers.map(function (header) {
+      return record[header] === undefined ? '' : record[header];
+    });
+
+    sheet.appendRow(row);
+  }
+
+  function seedDefaultDefectCategories(sheet) {
+    OPTIFLOW_DEFAULT_DEFECT_CATEGORIES.forEach(function (category) {
+      appendRow(sheet, 'DEFECT_CATEGORIES', {
+        defect_category_id: category.defect_category_id,
+        defect_name: category.defect_name,
+        qcc_factor: category.qcc_factor,
+        severity: category.severity,
+        status_aktif: category.status_aktif,
+        updated_at: new Date().toISOString(),
+      });
+    });
+  }
+
+  function appendRow(sheet, sheetName, record) {
     var headers = OPTIFLOW_SHEET_SCHEMAS[sheetName];
     var row = headers.map(function (header) {
       return record[header] === undefined ? '' : record[header];

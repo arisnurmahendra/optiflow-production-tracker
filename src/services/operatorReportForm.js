@@ -1,6 +1,17 @@
 import { z } from 'zod';
+import {
+  createParetoRejectSummary,
+  defectOptions,
+  getDefectCategory,
+  isActiveDefectCategory,
+} from './defectCategories.js';
 
 export const CLIENT_VERSION = 'v0.1.0';
+export {
+  createParetoRejectSummary,
+  defectOptions,
+  getDefectCategory,
+};
 
 export const lineOptions = Object.freeze([
   { value: 'SMT-01', label: 'SMT-01' },
@@ -18,13 +29,6 @@ export const machineOptions = Object.freeze([
   { value: 'SLD-14', label: 'SLD-14' },
   { value: 'SLD-18', label: 'SLD-18' },
   { value: 'ASM-03', label: 'ASM-03' },
-]);
-
-export const defectOptions = Object.freeze([
-  { value: '', label: 'Tidak ada defect' },
-  { value: 'DEF-SOLDER-THIN', label: 'Solder tipis' },
-  { value: 'DEF-SOLDER-BRIDGE', label: 'Solder bridge' },
-  { value: 'DEF-COMPONENT-MISS', label: 'Komponen missing' },
 ]);
 
 export const initialOperatorReportForm = Object.freeze({
@@ -60,6 +64,14 @@ export const operatorReportSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ['defect_category_id'],
       message: 'Kategori defect wajib ketika Reject lebih dari 0.',
+    });
+  }
+
+  if (value.defect_category_id && !isActiveDefectCategory(value.defect_category_id)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['defect_category_id'],
+      message: 'Kategori defect tidak aktif atau tidak dikenal.',
     });
   }
 

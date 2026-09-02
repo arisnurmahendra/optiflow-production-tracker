@@ -57,6 +57,10 @@ class MockSheet {
     this.frozenRows = count;
   }
 
+  appendRow(row) {
+    this.rows.push(row);
+  }
+
   setCell(row, column, value) {
     while (this.rows.length < row) {
       this.rows.push([]);
@@ -138,6 +142,11 @@ if (bootstrap.data.created_sheets.length !== context.OPTIFLOW_REQUIRED_SHEETS.le
 
 if (!bootstrap.data.schema_health.valid) {
   throw new Error('Expected schema health to be valid after bootstrap.');
+}
+
+const defectCategories = spreadsheet.getSheetByName('DEFECT_CATEGORIES');
+if (defectCategories.getLastRow() < 2) {
+  throw new Error('Expected bootstrap to seed default defect categories.');
 }
 
 const rawLogs = spreadsheet.getSheetByName('RAW_LOGS');
