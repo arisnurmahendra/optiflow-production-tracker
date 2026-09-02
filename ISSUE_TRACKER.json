@@ -456,7 +456,7 @@
     {
       "id": "OPT-014",
       "title": "Implement CONFLICT_PENDING detection and quarantine routing",
-      "status": "Backlog",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -466,7 +466,16 @@
         "sync:github"
       ],
       "milestone": "M4 - Offline Sync & Conflict Control",
-      "github_issue": 14
+      "github_issue": 14,
+      "closed_at": "2026-09-02",
+      "verification": [
+        "GitHub issue #14 confirmed CLOSED with stateReason COMPLETED",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "npm audit --audit-level=moderate passed with 0 vulnerabilities",
+        "Conflict quarantine routing pushed in commit 2ea7f4d"
+      ]
     },
     {
       "id": "OPT-015",
