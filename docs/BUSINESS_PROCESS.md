@@ -78,14 +78,15 @@ Fase write:
 2. Global State menjalankan persist async di background untuk menyimpan draft terbaru ke IndexedDB.
 3. Persist background tidak boleh memblokir input operator.
 4. Jika persist gagal, Global State menandai status draft sebagai `FAILED` dan memberi opsi retry.
-5. Submit form menyimpan payload ke queue lokal `PENDING_SYNC`; pengiriman otomatis ke GAS tetap berada di tahap sync issue lanjutan.
+5. Submit form menyimpan payload ke queue lokal `PENDING_SYNC`; sync queue mengirim payload ke GAS melalui Global State tanpa akses IndexedDB langsung dari komponen UI.
 
 Fase sync:
 1. Saat device online, Global State membungkus data menjadi JSON payload sesuai `DATA_SCHEMA.md`.
 2. Payload dikirim ke GAS melalui `apiAdapter.js`.
 3. Status item berubah dari `PENDING_SYNC` menjadi `SYNCING`.
-4. Jika GAS mengembalikan success tervalidasi, Global State menghapus item dari queue IndexedDB dan menandai status `SYNCED`.
-5. Jika GAS mengembalikan conflict/error, item tetap berada di IndexedDB dengan status `CONFLICT` atau `FAILED`.
+4. Jika GAS mengembalikan status `ACCEPTED` atau response duplicate idempotent, Global State menghapus item dari queue IndexedDB.
+5. Jika GAS mengembalikan `CONFLICT_PENDING`, item tetap berada di IndexedDB dengan status `CONFLICT_PENDING` dan referensi `quarantine_id`.
+6. Jika GAS mengembalikan error transport/server, item tetap berada di IndexedDB dengan status `FAILED` untuk retry berikutnya.
 
 Kontrak adapter API:
 1. Komponen Vue memanggil composable/service, bukan `google.script.run` langsung.

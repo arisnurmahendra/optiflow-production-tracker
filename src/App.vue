@@ -26,6 +26,10 @@ const {
   shouldShowDefect,
   submitMessage,
   submitOperatorReport,
+  syncError,
+  syncQueue,
+  syncStatus,
+  isSyncing,
   totalOutput,
 } = operatorStore;
 
@@ -337,7 +341,17 @@ onBeforeUnmount(() => {
             <p class="eyebrow">Sync</p>
             <h2 id="queue-title">Antrean device</h2>
           </div>
-          <button class="icon-button" type="button" aria-label="Retry sync">R</button>
+          <button class="icon-button" type="button" aria-label="Retry sync" :disabled="isSyncing" @click="syncQueue">
+            R
+          </button>
+        </div>
+
+        <div class="sync-summary" role="status">
+          {{ syncStatus }}
+        </div>
+
+        <div v-if="syncError" class="inline-error" role="alert">
+          {{ syncError }}
         </div>
 
         <ul class="queue-list">

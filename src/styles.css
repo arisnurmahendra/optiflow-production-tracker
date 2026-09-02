@@ -396,6 +396,18 @@ input:focus,
   list-style: none;
 }
 
+.sync-summary {
+  min-height: 38px;
+  margin-bottom: 10px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .queue-list li {
   min-height: 58px;
   border: 1px solid #dbe3ea;

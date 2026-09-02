@@ -42,6 +42,32 @@ await api.setScriptProperty({
   value: '2026-12-31',
 });
 
+const submitResponse = await api.submitProductionReport({
+  session: { simulated_role: 'Operator' },
+  metadata: {
+    transaction_id: '550e8400-e29b-41d4-a716-446655440100',
+    device_timestamp: '2026-09-02T01:00:00.000Z',
+    sync_type: 'OFFLINE_QUEUE',
+    operator_email: 'operator@example.com',
+    client_version: 'v0.1.0',
+  },
+  payload: {
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    target_harian: 1200,
+    tandon: 80,
+    perolehan_ok: 1164,
+    perolehan_reject: 36,
+    defect_category_id: 'DEF-SOLDER-THIN',
+    defect_notes: 'Sampling akhir',
+  },
+});
+
+if (submitResponse.data.status !== 'ACCEPTED' || !submitResponse.data.appended) {
+  throw new Error('Expected mock GAS submitProductionReport to return accepted response.');
+}
+
 rejected = false;
 try {
   await api.setScriptProperty({

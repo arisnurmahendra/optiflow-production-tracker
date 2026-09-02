@@ -165,6 +165,7 @@ Kriteria selesai:
 - Konflik atau kegagalan tidak menghilangkan data user.
 - Queue IndexedDB hanya dihapus setelah GAS success tervalidasi.
 - Input operator tetap responsif saat persist IndexedDB berjalan di background.
+- Sync queue frontend hanya memproses status `PENDING_SYNC` dan `FAILED`; status `CONFLICT_PENDING` tetap tersimpan sampai Human-in-the-Loop menyelesaikan kasus.
 - Payload offline menyertakan UUID `transaction_id` dan `device_timestamp` aktual dari perangkat operator.
 
 ## 7. Fase 5 - Quarantine Dan Approval
