@@ -441,6 +441,118 @@ input:focus,
   overflow-x: auto;
 }
 
+.approval-summary,
+.approval-filters,
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.approval-summary,
+.approval-filters {
+  margin-bottom: 12px;
+}
+
+.approval-filters .field {
+  min-width: 180px;
+}
+
+.approval-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.85fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.approval-detail {
+  border-left: 4px solid #f59e0b;
+  padding-left: 14px;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.detail-head h3 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.approval-note {
+  margin-bottom: 12px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: minmax(86px, 0.65fr) repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #dbe3ea;
+}
+
+.comparison-grid > * {
+  min-height: 42px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.comparison-grid strong {
+  color: #0f766e;
+}
+
+.comparison-label {
+  color: #4b5563;
+}
+
+.approval-actions {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.danger-button {
+  border-color: #fca5a5;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.row-button {
+  min-height: 34px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-weight: 800;
+  text-align: left;
+}
+
+.active-row td {
+  background: #eff6ff;
+}
+
+.conflict-row td:first-child {
+  border-left: 4px solid #f59e0b;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -578,6 +690,26 @@ td:nth-child(4) {
   }
 
   .action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .approval-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .approval-detail {
+    border-top: 4px solid #f59e0b;
+    border-left: 0;
+    padding-top: 12px;
+    padding-left: 0;
+  }
+
+  .approval-filters .field,
+  .approval-actions {
+    width: 100%;
+  }
+
+  .approval-actions {
     grid-template-columns: 1fr;
   }
 

@@ -3,6 +3,15 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useOperatorReportStore } from './composables/useOperatorReportStore.js';
 import { ApiAdapterError, api } from './services/apiAdapter.js';
 import {
+  approvalLineOptions,
+  approvalStatusOptions,
+  filterApprovalCases,
+  findApprovalCase,
+  initialApprovalCases,
+  resolveApprovalCase,
+  summarizeApprovalCases,
+} from './services/approvalInbox.js';
+import {
   defectOptions,
   formatNumber,
   lineOptions,
@@ -33,11 +42,33 @@ const {
   totalOutput,
 } = operatorStore;
 
-const reviewRows = [
-  { machine: 'SLD-14', operator: 'Andi', ok: 420, reject: 8, status: 'SYNCED' },
-  { machine: 'SLD-14', operator: 'Rina', ok: 416, reject: 12, status: 'CONFLICT_PENDING' },
-  { machine: 'SLD-18', operator: 'Budi', ok: 328, reject: 5, status: 'PENDING_SYNC' },
-];
+const approvalCases = ref(initialApprovalCases.map((item) => ({ ...item })));
+const approvalStatusFilter = ref('ALL');
+const approvalLineFilter = ref('ALL');
+const activeApprovalId = ref(initialApprovalCases[0]?.id || '');
+const approvalMessage = ref('');
+
+const approvalSummary = computed(() => summarizeApprovalCases(approvalCases.value));
+const filteredApprovalCases = computed(() => filterApprovalCases(approvalCases.value, {
+  status: approvalStatusFilter.value,
+  line: approvalLineFilter.value,
+}));
+const activeApprovalCase = computed(() =>
+  findApprovalCase(approvalCases.value, activeApprovalId.value) || filteredApprovalCases.value[0] || null,
+);
+const activeComparisonRows = computed(() => {
+  if (!activeApprovalCase.value) {
+    return [];
+  }
+
+  return [
+    ['Operator', activeApprovalCase.value.current.operator_email_masked, activeApprovalCase.value.conflict_with?.operator_email_masked || '-'],
+    ['Waktu Device', formatDateTime(activeApprovalCase.value.current.device_timestamp), formatDateTime(activeApprovalCase.value.conflict_with?.device_timestamp)],
+    ['OK', formatNumber(activeApprovalCase.value.current.ok), formatNumber(activeApprovalCase.value.conflict_with?.ok)],
+    ['Reject', formatNumber(activeApprovalCase.value.current.reject), formatNumber(activeApprovalCase.value.conflict_with?.reject)],
+    ['Defect', activeApprovalCase.value.current.defect_category_id || '-', activeApprovalCase.value.conflict_with?.defect_category_id || '-'],
+  ];
+});
 
 const maintenanceProperties = ref([
   {
@@ -162,6 +193,34 @@ async function runMaintenanceAction(action) {
   } finally {
     isMaintenanceLoading.value = false;
   }
+}
+
+function setActiveApprovalCase(id) {
+  activeApprovalId.value = id;
+  approvalMessage.value = '';
+}
+
+function stageApprovalAction(action) {
+  if (!activeApprovalCase.value) {
+    return;
+  }
+
+  approvalCases.value = resolveApprovalCase(approvalCases.value, activeApprovalCase.value.id, action);
+  approvalMessage.value = `Keputusan ${action.replace(/_/g, ' ')} distage. Endpoint approval backend akan mengunci data pada issue berikutnya.`;
+}
+
+function formatDateTime(timestamp) {
+  if (!timestamp) {
+    return '-';
+  }
+
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(timestamp));
 }
 
 function getSafeErrorMessage(error) {
@@ -375,36 +434,111 @@ onBeforeUnmount(() => {
         <div class="section-title">
           <div>
             <p class="eyebrow">Mandor</p>
-            <h2 id="review-title">Review transaksi</h2>
+            <h2 id="review-title">Approval inbox</h2>
           </div>
-          <span class="badge conflict">1 konflik</span>
+          <span class="badge conflict">! {{ approvalSummary.conflict }} konflik</span>
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Machine</th>
-                <th>Operator</th>
-                <th>OK</th>
-                <th>Reject</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in reviewRows" :key="`${row.machine}-${row.operator}`">
-                <td>{{ row.machine }}</td>
-                <td>{{ row.operator }}</td>
-                <td>{{ row.ok }}</td>
-                <td>{{ row.reject }}</td>
-                <td>
-                  <span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : row.status === 'SYNCED' ? 'success' : 'warning']">
-                    {{ row.status }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="approval-summary" aria-label="Ringkasan approval">
+          <span class="status conflict">! Bentrok {{ approvalSummary.conflict }}</span>
+          <span class="status warning">Review {{ approvalSummary.pending }}</span>
+          <span class="status success">Selesai {{ approvalSummary.resolved }}</span>
+        </div>
+
+        <div class="approval-filters" aria-label="Filter approval">
+          <label class="field">
+            <span>Status</span>
+            <select v-model="approvalStatusFilter" aria-label="Filter status approval">
+              <option v-for="option in approvalStatusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Line</span>
+            <select v-model="approvalLineFilter" aria-label="Filter line approval">
+              <option v-for="option in approvalLineOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <div class="approval-layout">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Case</th>
+                  <th>Machine</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="row in filteredApprovalCases"
+                  :key="row.id"
+                  :class="{ 'active-row': activeApprovalCase && activeApprovalCase.id === row.id, 'conflict-row': row.status === 'CONFLICT_PENDING' }"
+                  @click="setActiveApprovalCase(row.id)"
+                >
+                  <td>
+                    <button class="row-button" type="button" @click.stop="setActiveApprovalCase(row.id)">
+                      {{ row.id }}
+                    </button>
+                  </td>
+                  <td>{{ row.machine_id }}</td>
+                  <td>{{ row.reason_code }}</td>
+                  <td>
+                    <span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : row.status === 'APPROVED' ? 'success' : 'warning']">
+                      {{ row.status === 'CONFLICT_PENDING' ? '! Bentrok Data' : row.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <aside v-if="activeApprovalCase" class="approval-detail" aria-label="Detail comparison approval">
+            <div class="detail-head">
+              <div>
+                <p class="eyebrow">{{ activeApprovalCase.line_id }} / {{ activeApprovalCase.shift_id }}</p>
+                <h3>{{ activeApprovalCase.machine_id }}</h3>
+              </div>
+              <span :class="['status', activeApprovalCase.status === 'CONFLICT_PENDING' ? 'conflict' : activeApprovalCase.status === 'APPROVED' ? 'success' : 'warning']">
+                {{ activeApprovalCase.status }}
+              </span>
+            </div>
+
+            <p class="approval-note">{{ activeApprovalCase.note }}</p>
+
+            <div class="comparison-grid">
+              <div class="comparison-label"></div>
+              <strong>Current</strong>
+              <strong>Conflict</strong>
+              <template v-for="row in activeComparisonRows" :key="row[0]">
+                <span class="comparison-label">{{ row[0] }}</span>
+                <span>{{ row[1] }}</span>
+                <span>{{ row[2] }}</span>
+              </template>
+            </div>
+
+            <div v-if="approvalMessage" class="inline-info" role="status">
+              {{ approvalMessage }}
+            </div>
+
+            <div class="approval-actions">
+              <button class="button primary" type="button" @click="stageApprovalAction('APPROVE_CURRENT')">
+                Approve current
+              </button>
+              <button class="button secondary" type="button" @click="stageApprovalAction('REQUEST_CORRECTION')">
+                Request correction
+              </button>
+              <button class="button danger-button" type="button" @click="stageApprovalAction('REJECT_BOTH')">
+                Reject both
+              </button>
+            </div>
+          </aside>
         </div>
       </section>
     </div>

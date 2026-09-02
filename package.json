@@ -10,6 +10,7 @@
     "verify:singlefile": "node scripts/verify-singlefile-build.mjs",
     "build:verify": "npm run build && npm run verify:singlefile",
     "test:frontend:api": "node scripts/test-frontend-api-adapter.mjs",
+    "test:frontend:approval": "node scripts/test-approval-inbox.mjs",
     "test:frontend:state": "node scripts/test-operator-report-store.mjs && node scripts/test-indexeddb-persistence.mjs",
     "test:frontend:operator-form": "node scripts/test-operator-report-form.mjs",
     "test:gas:sheets": "node scripts/test-gas-sheets.mjs",
@@ -19,7 +20,7 @@
     "test:gas:script-properties": "node scripts/test-gas-script-properties.mjs",
     "audit:gas:validation": "node scripts/audit-gas-validation.mjs",
     "test:gas": "npm run audit:gas:validation && npm run test:gas:sheets && npm run test:gas:auth && npm run test:gas:permissions && npm run test:gas:production-logs && npm run test:gas:script-properties",
-    "test": "npm run test:frontend:api && npm run test:frontend:operator-form && npm run test:frontend:state && npm run test:gas",
+    "test": "npm run test:frontend:api && npm run test:frontend:approval && npm run test:frontend:operator-form && npm run test:frontend:state && npm run test:gas",
     "prepare:gas": "node scripts/prepare-gas-deploy.mjs",
     "push:gas": "npm run build:verify && npm run prepare:gas && clasp push --force"
   },

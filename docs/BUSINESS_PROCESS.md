@@ -132,6 +132,13 @@ Prinsip Human-in-the-Loop:
 - Mandor memegang otorisasi untuk memilih data yang di-approve atau membatalkan data konflik melalui reject.
 - Data konflik, anomali, atau data yang terkena rule review hanya masuk rekap setelah Mandor/Supervisor menekan approve.
 
+Kontrak approval inbox Mandor:
+1. Inbox memprioritaskan `CONFLICT_PENDING` di urutan paling atas.
+2. Mandor dapat memfilter kasus berdasarkan status dan line tanpa kehilangan konteks detail aktif.
+3. Detail konflik wajib menampilkan perbandingan data current vs conflict-with: operator termasking, machine, OK, reject, defect, dan waktu perangkat.
+4. Tombol keputusan UI minimal mencakup `Approve current`, `Reject both`, dan `Request correction`.
+5. Selama endpoint approval backend belum tersedia, aksi UI hanya boleh distage di state frontend dan tidak boleh mengubah `MASTER_RECAP`.
+
 Backend quarantine routing:
 1. Endpoint submit produksi membentuk record `RAW_LOGS` terlebih dahulu tanpa menulis ke sheet.
 2. Modul quarantine backend mengevaluasi record tersebut terhadap `RAW_LOGS` existing.

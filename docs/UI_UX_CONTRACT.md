@@ -67,6 +67,8 @@ Wajib:
 - Aksi utama tersedia: `Approve`, `Reject`, `Reject Both`, `Request Correction`.
 - Tombol closing hanya aktif ketika kondisi line/shift memenuhi rule.
 - Notifikasi pending review terlihat tanpa membuka dashboard penuh.
+- Tombol keputusan konflik minimal 44px dan memakai teks eksplisit, bukan ikon saja.
+- Jika approval backend belum tersedia, UI wajib menandai keputusan sebagai staged agar tidak memberi kesan data sudah terkunci.
 
 ## 6. Desktop Supervisor
 
@@ -78,6 +80,8 @@ Wajib:
 - Table dengan server-side pagination.
 - Detail drawer untuk review tanpa kehilangan konteks tabel.
 - Timeline event sourcing untuk transaksi konflik.
+- Approval inbox desktop memakai tabel di kiri dan detail comparison drawer atau pane di kanan.
+- `CONFLICT_PENDING` harus memiliki highlight baris, badge teks, dan alasan konflik yang terlihat tanpa membuka detail.
 
 ## 7. Desktop Management
 
