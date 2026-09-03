@@ -330,15 +330,15 @@ Urutan stabilisasi produksi:
 
 ## 17. Spreadsheet Admin Toolbar
 
-Spreadsheet-bound Apps Script boleh menambahkan menu toolbar `OPTIFLOW Admin` untuk setup dan smoke check awal.
+Spreadsheet-bound Apps Script boleh menambahkan menu toolbar `⚙️ OPTIFLOW Admin` untuk setup dan smoke check awal.
 
 Menu yang tersedia:
-- `Bootstrap Sheets`: membuat sheet/header default secara non-destruktif.
-- `Set Default Script Properties`: mengisi property yang masih kosong saja, termasuk `AUTH_MODE=OFF`, `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE` untuk setup demo/trial, `SPREADSHEET_ID` dari active spreadsheet, `APP_ACTIVE_UNTIL`, dan `ENCRYPTION_SALT`.
-- `Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, dan shift dummy hanya ketika `AUTH_MODE` bukan `ON`.
-- `Run GAS Smoke Test`: menjalankan native test runner dan menampilkan ringkasan aman.
-- `Show Schema Health`: menampilkan status health schema.
-- `Open Project Links`: membuka dialog berisi link allowlisted ke Apps Script editor, web app dev, web app production, dan folder Drive proyek.
+- `🏗️ Bootstrap Sheets`: membuat sheet/header default secara non-destruktif.
+- `🔐 Set Default Script Properties`: mengisi property yang masih kosong saja, termasuk `AUTH_MODE=OFF`, `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE` untuk setup demo/trial, `SPREADSHEET_ID` dari active spreadsheet, `APP_ACTIVE_UNTIL`, dan `ENCRYPTION_SALT`.
+- `🧪 Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, dan shift dummy hanya ketika `AUTH_MODE` bukan `ON`.
+- `✅ Run GAS Smoke Test`: menjalankan native test runner dan menampilkan ringkasan aman.
+- `📋 Show Schema Health`: menampilkan status health schema.
+- `🔗 Open Project Links`: membuka dialog berisi link allowlisted ke Apps Script editor, web app dev, web app production, dan folder Drive proyek.
 
 Aturan:
 - Menu toolbar tidak boleh menghapus data produksi.

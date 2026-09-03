@@ -88,7 +88,7 @@ Yang sudah terimplementasi:
 - IndexedDB persistence untuk `drafts` dan `queue`; UI tidak membaca/menulis IndexedDB langsung.
 - GAS modular di `gas/*.gs` dengan `Code.js` sebagai entrypoint tipis.
 - Bootstrap dan health check semua sheet kontrak, termasuk seed awal `DEFECT_CATEGORIES`.
-- Toolbar spreadsheet `OPTIFLOW Admin` untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
+- Toolbar spreadsheet `⚙️ OPTIFLOW Admin` untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
 - `AUTH_MODE` session context, role simulation untuk development, dan production lookup via Google account.
 - RBAC exact match berbasis `ROLE_PERMISSIONS`; tidak ada implicit allow untuk `SuperAdmin`.
 - Input Validation & Sanitization pada callable wrapper sebelum auth, sheet access, atau business logic.
@@ -158,7 +158,7 @@ Initial setup di Apps Script:
 Setelah sheet foundational tersedia, `bootstrapSheets()` kembali wajib melewati auth/RBAC.
 
 Menu spreadsheet:
-- Saat project terhubung ke Google Sheets, `onOpen()` menambahkan menu `OPTIFLOW Admin`.
+- Saat project terhubung ke Google Sheets, `onOpen()` menambahkan menu `⚙️ OPTIFLOW Admin`.
 - Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, GAS smoke test, dan shortcut link proyek.
 - Dummy master data ditolak saat `AUTH_MODE=ON`, dan default Script Properties tidak menimpa nilai yang sudah ada.
 - Halaman akses ditolak menyediakan aksi ganti akun Google, kelola izin Google, dan reload aplikasi tanpa membocorkan detail internal.

@@ -219,7 +219,7 @@ for (const file of files) {
 }
 
 vm.runInNewContext('onOpen({})', context);
-if (menuCalls.length !== 1 || menuCalls[0].name !== 'OPTIFLOW Admin') {
+if (menuCalls.length !== 1 || menuCalls[0].name !== '⚙️ OPTIFLOW Admin') {
   throw new Error('Expected OPTIFLOW Admin spreadsheet menu.');
 }
 if (!menuCalls[0].items.some((item) => item.functionName === 'menuOpenProjectLinks')) {

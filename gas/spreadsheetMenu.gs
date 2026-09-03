@@ -1,5 +1,5 @@
 var OptiflowSpreadsheetMenu = (function () {
-  var MENU_NAME = 'OPTIFLOW Admin';
+  var MENU_NAME = '⚙️ OPTIFLOW Admin';
   var PROJECT_LINKS = Object.freeze([
     Object.freeze({
       label: 'Apps Script Editor',
@@ -23,15 +23,15 @@ var OptiflowSpreadsheetMenu = (function () {
     try {
       SpreadsheetApp.getUi()
         .createMenu(MENU_NAME)
-        .addItem('Bootstrap Sheets', 'menuBootstrapSheets')
-        .addItem('Set Default Script Properties', 'menuSetDefaultScriptProperties')
+        .addItem('🏗️ Bootstrap Sheets', 'menuBootstrapSheets')
+        .addItem('🔐 Set Default Script Properties', 'menuSetDefaultScriptProperties')
         .addSeparator()
-        .addItem('Seed Dummy Master Data (Dev Only)', 'menuSeedDummyMasterData')
+        .addItem('🧪 Seed Dummy Master Data (Dev Only)', 'menuSeedDummyMasterData')
         .addSeparator()
-        .addItem('Show Schema Health', 'menuShowSchemaHealth')
-        .addItem('Run GAS Smoke Test', 'menuRunGasSmokeTest')
+        .addItem('📋 Show Schema Health', 'menuShowSchemaHealth')
+        .addItem('✅ Run GAS Smoke Test', 'menuRunGasSmokeTest')
         .addSeparator()
-        .addItem('Open Project Links', 'menuOpenProjectLinks')
+        .addItem('🔗 Open Project Links', 'menuOpenProjectLinks')
         .addToUi();
     } catch (error) {
       console.warn('OPTIFLOW menu creation failed: ' + sanitizeMessage(error));
