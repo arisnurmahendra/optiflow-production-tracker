@@ -1198,6 +1198,7 @@ td:nth-child(4) {
     align-content: center;
     gap: 0;
     padding: 0 2px;
+    overflow: visible;
     background: transparent;
     box-shadow: none;
     text-align: center;
@@ -1231,7 +1232,9 @@ td:nth-child(4) {
     grid-template-rows: 1fr;
     justify-items: center;
     align-content: end;
+    z-index: 2;
     padding: 0;
+    overflow: visible;
     background: transparent;
     box-shadow: none;
     text-align: center;
