@@ -16,14 +16,15 @@ Komposisi visual wajib mengikuti rasio arah desain:
 Rasio ini adalah batas arah desain, bukan ukuran matematis per halaman. Jika ada konflik antara estetika dan keterbacaan operasional, keterbacaan, kontras, dan kecepatan input selalu menang.
 
 Status implementasi 2026-09-03:
-- Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
-- Scope M5 sudah menambahkan control center desktop, daily closing action, adjustment review, dan management dashboard read-only.
+- App shell multi-view, Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
+- Scope M5 sudah menambahkan control center desktop, daily closing action, adjustment review, dan management dashboard read-only sebagai view terpisah.
 - Scope M6/M7 menambahkan artefak readiness dan QCC; tidak menambah permukaan UI baru di luar hidden console, supervisor control center, dan dashboard yang sudah ada.
 
 ## 2. Prinsip Visual
 
 - Tampilan utama harus bersih, terang, dan kontras tinggi.
 - Minimalist Operational UI wajib menjadi fondasi mayoritas layar.
+- App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, dan Management dalam satu halaman panjang.
 - Tombol aksi utama wajib memakai warna solid.
 - Status kritis wajib terlihat dari kombinasi warna, teks, dan ikon.
 - Card/panel boleh memakai shadow lembut, tetapi tetap harus memiliki border atau pemisah yang jelas.
@@ -222,12 +223,13 @@ Breakpoint awal:
 
 Mobile:
 - Layout satu kolom.
+- Navigasi workflow boleh memakai horizontal scroll/tab bar agar ruang input operator tetap luas.
 - Bottom action bar boleh dipakai untuk submit/retry/sync.
 - Status sync harus tetap terlihat tanpa membuka menu.
 - Form utama harus selesai dalam alur input yang pendek.
 
 Desktop:
-- Gunakan sidebar tetap atau top-level tabs sesuai kepadatan fitur.
+- Gunakan sidebar tetap atau top-level tabs sesuai kepadatan fitur; modul besar harus dipisah sebagai view mandiri.
 - Tabel dan filter boleh berdampingan jika ruang cukup.
 - Detail transaksi dibuka di drawer kanan.
 - Dashboard management harus memprioritaskan metric dan pengecualian operasional, bukan dekorasi.

@@ -150,10 +150,65 @@ h2 {
   background: var(--warning);
 }
 
+.app-nav,
 .metric-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+}
+
+.app-nav {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(12px);
+}
+
+.nav-item {
+  min-height: 58px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 3px;
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.nav-item span {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.nav-item strong {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nav-item:hover {
+  background: var(--surface-soft);
+}
+
+.nav-item.active {
+  border-color: #bfdbfe;
+  background: var(--primary-soft);
+  box-shadow: var(--shadow-pressed);
+}
+
+.nav-item.active span {
+  color: var(--primary-dark);
+}
+
+.metric-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .metric,
@@ -215,10 +270,15 @@ h2 {
   grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
   grid-template-areas:
     "input queue"
-    "review review"
-    "supervisor supervisor"
-    "dashboard dashboard";
+    "input queue";
   gap: 14px;
+}
+
+.workspace.view-mandor,
+.workspace.view-supervisor,
+.workspace.view-management {
+  grid-template-columns: 1fr;
+  grid-template-areas: "main";
 }
 
 .input-panel {
@@ -231,15 +291,15 @@ h2 {
 }
 
 .review-panel {
-  grid-area: review;
+  grid-area: main;
 }
 
 .supervisor-panel {
-  grid-area: supervisor;
+  grid-area: main;
 }
 
 .dashboard-panel {
-  grid-area: dashboard;
+  grid-area: main;
 }
 
 .panel {
@@ -824,6 +884,18 @@ td:nth-child(4) {
     justify-content: center;
   }
 
+  .app-nav {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(138px, 1fr);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .nav-item {
+    min-height: 54px;
+  }
+
   .metric-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -832,10 +904,13 @@ td:nth-child(4) {
     grid-template-columns: 1fr;
     grid-template-areas:
       "input"
-      "queue"
-      "review"
-      "supervisor"
-      "dashboard";
+      "queue";
+  }
+
+  .workspace.view-mandor,
+  .workspace.view-supervisor,
+  .workspace.view-management {
+    grid-template-areas: "main";
   }
 
   .field-grid,

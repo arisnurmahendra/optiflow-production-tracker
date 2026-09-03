@@ -109,6 +109,40 @@ const paretoPreview = computed(() => createParetoRejectSummary([
   },
   ...queueItems.value.map((item) => item.payload),
 ]));
+const activeView = ref('operator');
+const appViews = computed(() => [
+  {
+    id: 'operator',
+    label: 'Operator',
+    title: 'Input produksi harian',
+    subtitle: 'Pelaporan cepat dengan draft lokal dan antrean sinkronisasi.',
+    badge: queueItems.value.length ? `${queueItems.value.length} queue` : draftStatus.value,
+  },
+  {
+    id: 'mandor',
+    label: 'Mandor',
+    title: 'Approval inbox',
+    subtitle: 'Review konflik, koreksi, dan keputusan Human-in-the-Loop.',
+    badge: approvalSummary.value.conflict ? `${approvalSummary.value.conflict} konflik` : 'Terkendali',
+  },
+  {
+    id: 'supervisor',
+    label: 'Supervisor',
+    title: 'Control center',
+    subtitle: 'Pantau transaksi, quarantine, closing, dan adjustment per line/shift.',
+    badge: supervisorLoading.value ? 'Memuat' : 'Live view',
+  },
+  {
+    id: 'management',
+    label: 'Management',
+    title: 'Read-only dashboard',
+    subtitle: 'KPI final berbasis MASTER_RECAP tanpa data konflik pending.',
+    badge: dashboardLoading.value ? 'Memuat' : 'MASTER_RECAP',
+  },
+]);
+const activeViewMeta = computed(() =>
+  appViews.value.find((view) => view.id === activeView.value) || appViews.value[0],
+);
 
 const maintenanceProperties = ref([
   {
@@ -134,6 +168,15 @@ const maintenanceProperties = ref([
     sensitivity: 'CONFIG',
     status: 'SET',
     value_preview: '2099-12-31',
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+  },
+  {
+    key: 'REQUIRE_REGISTERED_EMAIL_LOGIN',
+    sensitivity: 'CONFIG',
+    status: 'SET',
+    value_preview: 'FALSE',
     updatable: true,
     deletable: true,
     rotatable: false,
@@ -440,8 +483,8 @@ function compactFilter(filter) {
         <button class="brand-trigger" type="button" aria-label="OPTIFLOW maintenance trigger" @click="handleBrandTap">
           OPTIFLOW
         </button>
-        <h1>Input produksi harian</h1>
-        <p>Pelaporan operator, approval Mandor, dan dashboard operasional.</p>
+        <h1>{{ activeViewMeta.title }}</h1>
+        <p>{{ activeViewMeta.subtitle }}</p>
       </div>
       <div class="sync-pill" aria-label="Status sinkronisasi">
         <span class="dot"></span>
@@ -449,15 +492,29 @@ function compactFilter(filter) {
       </div>
     </header>
 
-    <section class="metric-strip" aria-label="Ringkasan produksi">
+    <nav class="app-nav" aria-label="Navigasi workflow">
+      <button
+        v-for="view in appViews"
+        :key="view.id"
+        type="button"
+        :class="['nav-item', { active: activeView === view.id }]"
+        :aria-current="activeView === view.id ? 'page' : undefined"
+        @click="activeView = view.id"
+      >
+        <span>{{ view.label }}</span>
+        <strong>{{ view.badge }}</strong>
+      </button>
+    </nav>
+
+    <section v-if="activeView === 'operator'" class="metric-strip" aria-label="Ringkasan produksi">
       <article v-for="metric in metrics" :key="metric.label" :class="['metric', metric.tone]">
         <span>{{ metric.label }}</span>
         <strong>{{ metric.value }}</strong>
       </article>
     </section>
 
-    <div class="workspace">
-      <section class="panel input-panel" aria-labelledby="form-title">
+    <div :class="['workspace', `view-${activeView}`]">
+      <section v-if="activeView === 'operator'" class="panel input-panel" aria-labelledby="form-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Operator</p>
@@ -571,7 +628,7 @@ function compactFilter(filter) {
         </div>
       </section>
 
-      <aside class="panel queue-panel" aria-labelledby="queue-title">
+      <aside v-if="activeView === 'operator'" class="panel queue-panel" aria-labelledby="queue-title">
         <div class="section-title compact">
           <div>
             <p class="eyebrow">Sync</p>
@@ -607,7 +664,7 @@ function compactFilter(filter) {
         </div>
       </aside>
 
-      <section class="panel review-panel" aria-labelledby="review-title">
+      <section v-if="activeView === 'mandor'" class="panel review-panel" aria-labelledby="review-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Mandor</p>
@@ -719,7 +776,7 @@ function compactFilter(filter) {
         </div>
       </section>
 
-      <section class="panel supervisor-panel" aria-labelledby="supervisor-title">
+      <section v-if="activeView === 'supervisor'" class="panel supervisor-panel" aria-labelledby="supervisor-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Supervisor</p>
@@ -826,7 +883,7 @@ function compactFilter(filter) {
         </div>
       </section>
 
-      <section class="panel dashboard-panel" aria-labelledby="dashboard-title">
+      <section v-if="activeView === 'management'" class="panel dashboard-panel" aria-labelledby="dashboard-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Management</p>
