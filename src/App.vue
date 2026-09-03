@@ -361,6 +361,36 @@ const operatorPerformanceCards = computed(() => [
     tone: 'danger',
   },
 ]);
+const operatorWeeklyHistory = computed(() => {
+  const target = Math.max(1, Number(form.value.target_harian || 0));
+  const ok = Math.max(0, Number(form.value.perolehan_ok || 0));
+  const labels = ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'Kemarin', 'Hari ini'];
+  const targetFactors = [0.92, 0.95, 0.98, 1, 0.97, 0.96, 1];
+  const outputFactors = [0.83, 0.88, 0.9, 0.93, 0.91, 0.94, 1];
+
+  return labels.map((label, index) => ({
+    label,
+    target: Math.round(target * targetFactors[index]),
+    actual: Math.round(ok * outputFactors[index]),
+  }));
+});
+const operatorWeeklyMax = computed(() =>
+  Math.max(1, ...operatorWeeklyHistory.value.flatMap((row) => [row.target, row.actual])),
+);
+const operatorTargetLinePoints = computed(() => buildLineChartPoints(
+  operatorWeeklyHistory.value.map((row) => row.target),
+  operatorWeeklyMax.value,
+));
+const operatorActualLinePoints = computed(() => buildLineChartPoints(
+  operatorWeeklyHistory.value.map((row) => row.actual),
+  operatorWeeklyMax.value,
+));
+const operatorWeeklyChartLabels = computed(() =>
+  operatorWeeklyHistory.value.map((row, index) => ({
+    label: row.label,
+    x: index * (300 / Math.max(1, operatorWeeklyHistory.value.length - 1)),
+  })),
+);
 const operatorTaskCards = computed(() => [
   {
     label: 'Draft device',
@@ -874,6 +904,21 @@ function formatDateTime(timestamp) {
   }).format(new Date(timestamp));
 }
 
+function buildLineChartPoints(values, maxValue) {
+  const safeMax = Math.max(1, Number(maxValue || 0));
+  const width = 300;
+  const height = 120;
+  const lastIndex = Math.max(1, values.length - 1);
+
+  return values
+    .map((value, index) => {
+      const x = Math.round((index / lastIndex) * width);
+      const y = Math.round(height - (Math.max(0, Number(value || 0)) / safeMax) * height);
+      return `${x},${y}`;
+    })
+    .join(' ');
+}
+
 function getSafeErrorMessage(error) {
   if (error instanceof ApiAdapterError) {
     return `${error.code}: ${error.message}`;
@@ -1228,6 +1273,29 @@ function persistVisibleRoles(roles) {
               <small>Kemarin</small>
             </div>
           </article>
+        </div>
+
+        <div class="line-chart-card" aria-label="History target dan realisasi satu minggu">
+          <div class="chart-head">
+            <div>
+              <span>History 1 minggu</span>
+              <strong>Target vs realisasi</strong>
+            </div>
+            <div class="chart-legend" aria-label="Legenda chart">
+              <span><i class="target-line"></i>Target</span>
+              <span><i class="actual-line"></i>Realisasi</span>
+            </div>
+          </div>
+          <svg class="line-chart" viewBox="0 0 300 150" role="img" aria-label="Line chart target dan realisasi per hari">
+            <line x1="0" y1="120" x2="300" y2="120" class="chart-axis" />
+            <line x1="0" y1="80" x2="300" y2="80" class="chart-grid-line" />
+            <line x1="0" y1="40" x2="300" y2="40" class="chart-grid-line" />
+            <polyline :points="operatorTargetLinePoints" class="chart-line target" />
+            <polyline :points="operatorActualLinePoints" class="chart-line actual" />
+            <g v-for="point in operatorWeeklyChartLabels" :key="point.label">
+              <text :x="point.x" y="145" text-anchor="middle" class="chart-label">{{ point.label }}</text>
+            </g>
+          </svg>
         </div>
 
         <div class="operator-progress">

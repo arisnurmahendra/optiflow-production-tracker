@@ -88,7 +88,7 @@ Dilarang:
 ## 4A. Role Workspace Ergonomics
 
 - Operator workspace wajib memprioritaskan form submit cepat, lalu draft/sync, lalu riwayat submit terbaru.
-- Operator Dashboard wajib menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject. Jika histori backend belum tersedia, UI wajib memberi label snapshot lokal/demo.
+- Operator Dashboard wajib menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject, plus line chart histori default 1 minggu untuk Target vs Realisasi. Jika histori backend belum tersedia, UI wajib memberi label snapshot lokal/demo.
 - Mandor workspace wajib action-first: pending approval, conflict, dan closing harus dipisah sebagai task surface yang mudah dipindai.
 - Supervisor workspace wajib alert-first: conflict, closing terbuka, adjustment pending, dan transaksi anomali tampil sebelum tabel mentah.
 - Management workspace wajib insight-first dan read-only: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data.

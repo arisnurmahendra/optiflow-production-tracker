@@ -193,7 +193,7 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Navigasi utama menampilkan menu fitur untuk workspace yang sedang aktif, bukan daftar role. Pemilihan workspace dilakukan melalui trigger/dropdown di area nav.
 - Semua workspace default ke menu `Dashboard` saat pertama dipilih.
 - Untuk `Operator`, navigasi fitur berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
-- Dashboard Operator menampilkan statistik performa pekerjaan hari ini vs kemarin untuk `Target`, `Tandon`, `OK`, dan `Reject`. Sampai endpoint histori operator tersedia, data kemarin di frontend hanya boleh ditandai sebagai snapshot lokal/demo.
+- Dashboard Operator menampilkan statistik performa pekerjaan hari ini vs kemarin untuk `Target`, `Tandon`, `OK`, dan `Reject`, serta diagram line histori default 1 minggu untuk `target` dan `realisasi`. Sampai endpoint histori operator tersedia, data histori di frontend hanya boleh ditandai sebagai snapshot lokal/demo.
 - Header shift aktif Operator berisi line, shift, mesin, dan operator; header ini wajib tampil di semua menu fitur Operator.
 - Menu `Defect` menjadi permukaan khusus untuk kategori reject, QCC factor, severity, dan Pareto mini agar informasi cacat tidak bercampur dengan form input.
 - `Mandor`: fokus pada pending approval, conflict queue, dan daily closing. Default Mandor harus menonjolkan item yang membutuhkan keputusan Human-in-the-Loop.

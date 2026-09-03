@@ -1361,6 +1361,103 @@ td:nth-child(4) {
   border-left: 4px solid var(--danger);
 }
 
+.line-chart-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  background: rgba(248, 250, 252, 0.94);
+}
+
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chart-head div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.chart-head span,
+.chart-legend span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.chart-head strong {
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: none;
+}
+
+.chart-legend i {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+}
+
+.target-line {
+  background: var(--primary);
+}
+
+.actual-line {
+  background: var(--success);
+}
+
+.line-chart {
+  width: 100%;
+  min-height: 190px;
+  overflow: visible;
+}
+
+.chart-axis,
+.chart-grid-line {
+  stroke: #dbeafe;
+  stroke-width: 1;
+}
+
+.chart-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.chart-line.target {
+  stroke: var(--primary);
+}
+
+.chart-line.actual {
+  stroke: var(--success);
+}
+
+.chart-label {
+  fill: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+}
+
 .operator-progress > div:first-child {
   display: flex;
   align-items: center;

@@ -115,7 +115,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Workflow besar dipisah sebagai view aplikasi: Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan; hidden SuperAdmin console tetap tidak muncul di navigasi normal.
 - Workflow role sekarang memakai pola production workspace: Overview, Work Queue, dan Detail/Action agar setiap role melihat tugas relevan, bukan satu halaman berisi semua fitur.
 - Nav utama menampilkan menu fitur untuk workspace aktif di desktop dan mobile; pemilihan workspace pindah ke dropdown nav. Semua workspace default ke Dashboard, dan Operator memakai Dashboard, Input, Riwayat, Defect, dan Status.
-- Dashboard Operator menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject; histori kemarin saat ini diberi label snapshot lokal/demo sampai endpoint backend khusus tersedia.
+- Dashboard Operator menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject, serta line chart histori default 1 minggu untuk Target vs Realisasi; histori saat ini diberi label snapshot lokal/demo sampai endpoint backend khusus tersedia.
 - Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Mobile bottom nav menampilkan icon besar untuk semua menu; teks penuh hanya muncul pada menu aktif.
 - View Pengaturan dibuka dari top floating button dan menyediakan Try Role instan/multi-select untuk demo/trial saat `AUTH_MODE=OFF`, sehingga tester tidak perlu berganti email dan bisa menentukan menu workflow yang tampil.
