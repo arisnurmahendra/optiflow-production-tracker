@@ -804,7 +804,7 @@
     {
       "id": "OPT-028",
       "title": "Redesign role workspaces into production-ready task flows",
-      "status": "Ready",
+      "status": "Review",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -827,12 +827,19 @@
         "No primary role page stacks all available features in one long mixed page.",
         "Mobile and desktop layouts remain responsive and performant.",
         "Relevant verification completed before close."
+      ],
+      "verification": [
+        "docs/BUSINESS_PROCESS.md and docs/UI_UX_CONTRACT.md updated before frontend implementation",
+        "src/App.vue refactored to add production workspace task cards and role-specific task surfaces",
+        "npm run build:verify passed",
+        "npm test passed",
+        "npm run prepare:gas passed"
       ]
     },
     {
       "id": "OPT-029",
       "title": "Split Operator workspace into input, draft, and recent submissions",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -853,12 +860,19 @@
         "Operator does not see approval, management recap, or backend maintenance surfaces.",
         "Submit, autosave, queue, and recent submissions remain visible without long scrolling.",
         "Offline-tolerant state behavior remains unchanged."
+      ],
+      "verification": [
+        "Operator view now prioritizes input, draft state, sync queue, and validation readiness",
+        "IndexedDB/offline-tolerant state services were not changed",
+        "npm run build:verify passed",
+        "npm test passed",
+        "npm run prepare:gas passed"
       ]
     },
     {
       "id": "OPT-030",
       "title": "Split Mandor workspace into approval inbox, conflict queue, and closing",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -879,12 +893,19 @@
         "Default Mandor view prioritizes items requiring action.",
         "CONFLICT_PENDING data is visually isolated from normal approval.",
         "Closing flow is discoverable without mixing with operator input."
+      ],
+      "verification": [
+        "Mandor view now starts with action cards for pending approval, conflict queue, and closing",
+        "Approval table is labeled as Work Queue and detail/action panel remains separate",
+        "npm run build:verify passed",
+        "npm test passed",
+        "npm run prepare:gas passed"
       ]
     },
     {
       "id": "OPT-031",
       "title": "Build Supervisor control center with alert-first layout",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -905,12 +926,19 @@
         "Supervisor first sees alerts and production control status.",
         "Heavy API data is not loaded during Operator startup.",
         "Adjustment and closing signals are clear."
+      ],
+      "verification": [
+        "Supervisor view now starts with alert-first cards for quarantine, closing, and adjustment",
+        "Existing lazy-load behavior in switchView remains unchanged",
+        "npm run build:verify passed",
+        "npm test passed",
+        "npm run prepare:gas passed"
       ]
     },
     {
       "id": "OPT-032",
       "title": "Build Management read-only KPI dashboard task flow",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P2",
       "labels": [
         "type:feature",
@@ -931,12 +959,19 @@
         "Management view only uses approved/final recap data.",
         "CONFLICT_PENDING data is excluded from final KPI views.",
         "No write actions appear except allowed export/filter/report actions."
+      ],
+      "verification": [
+        "Management view now starts with read-only insight cards from dashboard summary data",
+        "Existing MASTER_RECAP dashboard source remains unchanged",
+        "npm run build:verify passed",
+        "npm test passed",
+        "npm run prepare:gas passed"
       ]
     },
     {
       "id": "OPT-033",
       "title": "Build HRD user access and role audit workspace",
-      "status": "Backlog",
+      "status": "Review",
       "priority": "P2",
       "labels": [
         "type:feature",
@@ -958,6 +993,13 @@
         "HRD workspace does not expose raw PII unless explicitly authorized by backend role permission.",
         "User role state is understandable without opening Script Properties.",
         "Security and audit constraints remain visible and enforceable."
+      ],
+      "verification": [
+        "HRD placeholder replaced with user access, PII policy, and audit readiness workspace",
+        "No raw PII, secrets, or Script Properties values are exposed",
+        "npm run build:verify passed",
+        "npm test passed",
+        "npm run prepare:gas passed"
       ]
     }
   ]

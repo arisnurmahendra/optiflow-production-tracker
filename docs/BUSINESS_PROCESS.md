@@ -185,6 +185,17 @@ Backend quarantine routing:
 - Supervisor control center memakai filter dan pagination backend untuk `RAW_LOGS`, `QUARANTINE`, `DAILY_CLOSING`, dan `ADJUSTMENT_LOGS`.
 - Management dashboard bersifat read-only dan hanya membaca `MASTER_RECAP` plus ringkasan status pending, bukan seluruh transaksi mentah.
 
+## 9A. Kontrak Workspace Per Role
+
+UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Setiap role wajib memakai pola `Overview -> Work Queue -> Detail/Action` agar user melihat pekerjaan yang relevan dengan proses bisnisnya.
+
+- `Operator`: fokus pada input produksi cepat, draft lokal, status sync, dan submit terakhir. Operator tidak boleh melihat approval, management recap, atau maintenance backend.
+- `Mandor`: fokus pada pending approval, conflict queue, dan daily closing. Default Mandor harus menonjolkan item yang membutuhkan keputusan Human-in-the-Loop.
+- `Supervisor`: fokus pada alert-first control center: conflict, closing terbuka, raw log anomali, dan adjustment. Data berat tetap lazy-load saat view dibuka.
+- `Management`: fokus pada read-only insight dari `MASTER_RECAP`, Pareto defect, trend/KPI, dan export/report. Tidak boleh ada aksi mutasi produksi.
+- `HRD`: fokus pada user access readiness, role audit, dan PII masking. HRD tidak boleh membuka secret atau Script Properties dari workspace normal.
+- `SuperAdmin`: tetap memakai hidden maintenance console terpisah dari 5 menu utama.
+
 ## 10. Pilot Rollout
 
 - Rollout dimulai dari 1 line, 1 shift, dan 1 Mandor.

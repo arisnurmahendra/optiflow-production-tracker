@@ -26,6 +26,7 @@ Status implementasi 2026-09-03:
 - Minimalist Operational UI wajib menjadi fondasi mayoritas layar.
 - Latar boleh memakai app-like blue depth background dengan radial/linear gradient ringan seperti referensi mobile banking, selama konten operasional tetap berada di surface putih/terang yang mudah dibaca.
 - App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan dalam satu halaman panjang.
+- Setiap workflow role wajib memakai pola production workspace: `Overview`, `Work Queue`, dan `Detail/Action`. Hindari layout yang menampilkan semua fitur sekaligus tanpa prioritas tugas.
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Desktop nav item wajib memakai pola icon kiri dan text-stack kanan. Tinggi icon harus setara dengan gabungan tinggi label dan badge, dan setiap row nav harus memiliki tinggi tetap agar active state tidak membuat button meloncat.
 - Pengaturan sesi wajib tersedia sebagai top floating button yang benar-benar mengambang di area kanan atas, bukan sebagai item bottom nav mobile.
@@ -79,6 +80,14 @@ Dilarang:
 - Tabel besar di layar operator.
 - Status penting hanya berupa warna tanpa teks.
 - UI yang membutuhkan banyak scroll untuk input harian utama.
+
+## 4A. Role Workspace Ergonomics
+
+- Operator workspace wajib memprioritaskan form submit cepat, lalu draft/sync, lalu riwayat submit terbaru.
+- Mandor workspace wajib action-first: pending approval, conflict, dan closing harus dipisah sebagai task surface yang mudah dipindai.
+- Supervisor workspace wajib alert-first: conflict, closing terbuka, adjustment pending, dan transaksi anomali tampil sebelum tabel mentah.
+- Management workspace wajib insight-first dan read-only: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data.
+- HRD workspace wajib privacy-first: user access, role assignment, dan audit readiness tampil dengan PII masked dan tanpa akses secret.
 
 ## 5. Mobile Mandor
 

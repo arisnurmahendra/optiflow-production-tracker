@@ -17,11 +17,11 @@ This file does not replace the contracts. It tells the agent which contract to r
 - Bootstrap rule: `bootstrapSheets()` may bypass session/RBAC only during first-run foundational sheet creation.
 - Data rule: operator sync is append-only event sourcing into `RAW_LOGS`; conflicts become `CONFLICT_PENDING`.
 - Implemented scope: `OPT-001` through `OPT-027`.
-- Current next roadmap item: production pilot execution evidence after M6/M7 artifact closure.
+- Current next roadmap item: review and GitHub sync for OPT-028 through OPT-033, then production pilot execution evidence after M6/M7 artifact closure.
 
 ## Implemented Runtime Features
 
-- Frontend: Vue 3 operator form, autosave draft, sync queue controls, Pareto defect preview, Mandor approval inbox UI, and hidden SuperAdmin maintenance console.
+- Frontend: Vue 3 production workspaces per role, operator form, autosave draft, sync queue controls, Pareto defect preview, Mandor approval inbox UI, Supervisor control center, Management dashboard, HRD access/audit surface, and hidden SuperAdmin maintenance console.
 - Services: API adapter allowlist/timeout/safe response, mock GAS, IndexedDB persistence, operator report store, approval helpers, and defect/Pareto helpers.
 - Backend: access gate for expiry, registered-user render access, demo/trial email-gate bypass, audit, auth/session, RBAC permissions, sheet bootstrap/health, spreadsheet admin toolbar with project links, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, Script Properties maintenance, native test runner, and validation.
 - Tests: frontend API/approval/defect/M5/operator/state tests, GAS validation/sheets/auth/permissions/production logs/M5/script properties/test-runner/spreadsheet-menu tests, single-file build verification, and GAS deploy preparation.

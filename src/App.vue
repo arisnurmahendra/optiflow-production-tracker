@@ -200,6 +200,106 @@ const navViews = computed(() => appViews.value
     ...view,
     icon: workflowIconMap[view.id] || view.icon,
   })));
+const operatorTaskCards = computed(() => [
+  {
+    label: 'Draft device',
+    value: draftStatus.value,
+    hint: persistenceError.value || 'Aman tersimpan lokal saat koneksi putus.',
+    tone: persistenceError.value ? 'danger' : 'success',
+  },
+  {
+    label: 'Queue sync',
+    value: queueItems.value.length,
+    hint: syncStatus.value,
+    tone: queueItems.value.length ? 'warning' : 'success',
+  },
+  {
+    label: 'Validasi input',
+    value: isTotalValid.value ? 'Siap' : 'Cek angka',
+    hint: isTotalValid.value ? 'OK + Reject masih dalam batas.' : 'Total melebihi Target + Tandon.',
+    tone: isTotalValid.value ? 'success' : 'danger',
+  },
+]);
+const mandorTaskCards = computed(() => [
+  {
+    label: 'Butuh keputusan',
+    value: approvalSummary.value.pending,
+    hint: 'Pending approval dari operator.',
+    tone: approvalSummary.value.pending ? 'warning' : 'success',
+  },
+  {
+    label: 'Conflict queue',
+    value: approvalSummary.value.conflict,
+    hint: 'Wajib diselesaikan sebelum masuk recap.',
+    tone: approvalSummary.value.conflict ? 'conflict' : 'success',
+  },
+  {
+    label: 'Closing harian',
+    value: 'Ready',
+    hint: 'Jalankan setelah review line/shift lengkap.',
+    tone: 'warning',
+  },
+]);
+const supervisorAlertCards = computed(() => [
+  {
+    label: 'Open alerts',
+    value: supervisorTiles.value.find((tile) => tile.label === 'Quarantine')?.value || 0,
+    hint: 'Prioritas kontrol sebelum membaca raw logs.',
+    tone: 'conflict',
+  },
+  {
+    label: 'Closing status',
+    value: supervisorTiles.value.find((tile) => tile.label === 'Closing')?.value || 0,
+    hint: 'Pantau line/shift yang belum selesai.',
+    tone: 'warning',
+  },
+  {
+    label: 'Adjustment',
+    value: supervisorTiles.value.find((tile) => tile.label === 'Adjustment')?.value || 0,
+    hint: 'Koreksi setelah closing perlu jejak audit.',
+    tone: 'success',
+  },
+]);
+const managementInsightCards = computed(() => [
+  {
+    label: 'Final output',
+    value: dashboardTiles.value.find((tile) => tile.label === 'OK')?.value || 0,
+    hint: 'Bersumber dari MASTER_RECAP approved.',
+    tone: 'success',
+  },
+  {
+    label: 'Reject risk',
+    value: dashboardTiles.value.find((tile) => tile.label === 'Reject')?.value || 0,
+    hint: 'Gunakan Pareto untuk improvement.',
+    tone: 'danger',
+  },
+  {
+    label: 'Pending exclude',
+    value: dashboardData.value?.summary?.pending_quarantine || 0,
+    hint: 'Tidak dihitung dalam KPI final.',
+    tone: 'warning',
+  },
+]);
+const hrdAccessCards = computed(() => [
+  {
+    label: 'Role source',
+    value: 'USER_ROLES',
+    hint: 'Role truth tetap dari backend, bukan dari UI.',
+    tone: 'success',
+  },
+  {
+    label: 'PII policy',
+    value: 'Masked',
+    hint: 'Workspace normal tidak membuka PII mentah.',
+    tone: 'warning',
+  },
+  {
+    label: 'Audit access',
+    value: 'AUDIT_LOGS',
+    hint: 'Akses dan perubahan role harus terlacak.',
+    tone: 'success',
+  },
+]);
 const currentSessionLabel = computed(() => {
   if (sessionContext.value?.auth_mode === 'ON') {
     return `${sessionContext.value.role || 'Unknown'} dari Google Account`;
@@ -722,13 +822,27 @@ function persistVisibleRoles(roles) {
     </section>
 
     <div :class="['workspace', `view-${activeView}`]">
-      <section v-if="activeView === 'operator'" class="panel input-panel" aria-labelledby="form-title">
+      <section v-if="activeView === 'operator'" class="panel input-panel role-workspace" aria-labelledby="form-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Operator</p>
             <h2 id="form-title">Laporan cepat</h2>
           </div>
           <span class="badge">{{ draftStatus }}</span>
+        </div>
+
+        <div class="task-strip" aria-label="Prioritas kerja operator">
+          <article v-for="card in operatorTaskCards" :key="card.label" :class="['task-card', card.tone]">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.hint }}</p>
+          </article>
+        </div>
+
+        <div class="task-kicker">
+          <span>1</span>
+          <strong>Input produksi</strong>
+          <small>Isi angka utama, cek total, lalu submit.</small>
         </div>
 
         <div class="field-grid">
@@ -836,7 +950,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <aside v-if="activeView === 'operator'" class="panel queue-panel" aria-labelledby="queue-title">
+      <aside v-if="activeView === 'operator'" class="panel queue-panel role-workspace" aria-labelledby="queue-title">
         <div class="section-title compact">
           <div>
             <p class="eyebrow">Sync</p>
@@ -849,6 +963,12 @@ function persistVisibleRoles(roles) {
 
         <div class="sync-summary" role="status">
           {{ syncStatus }}
+        </div>
+
+        <div class="task-kicker compact-flow">
+          <span>2</span>
+          <strong>Draft dan retry</strong>
+          <small>Periksa antrean hanya saat ada pending sync.</small>
         </div>
 
         <div v-if="syncError" class="inline-error" role="alert">
@@ -872,13 +992,21 @@ function persistVisibleRoles(roles) {
         </div>
       </aside>
 
-      <section v-if="activeView === 'mandor'" class="panel review-panel" aria-labelledby="review-title">
+      <section v-if="activeView === 'mandor'" class="panel review-panel role-workspace" aria-labelledby="review-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Mandor</p>
             <h2 id="review-title">Approval inbox</h2>
           </div>
           <span class="badge conflict">! {{ approvalSummary.conflict }} konflik</span>
+        </div>
+
+        <div class="task-strip" aria-label="Prioritas kerja Mandor">
+          <article v-for="card in mandorTaskCards" :key="card.label" :class="['task-card', card.tone]">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.hint }}</p>
+          </article>
         </div>
 
         <div class="approval-summary" aria-label="Ringkasan approval">
@@ -908,6 +1036,12 @@ function persistVisibleRoles(roles) {
 
         <div class="approval-layout">
           <div class="table-wrap">
+            <div class="table-heading">
+              <div>
+                <span>Work Queue</span>
+                <strong>Approval dan conflict</strong>
+              </div>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -984,13 +1118,21 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'supervisor'" class="panel supervisor-panel" aria-labelledby="supervisor-title">
+      <section v-if="activeView === 'supervisor'" class="panel supervisor-panel role-workspace" aria-labelledby="supervisor-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Supervisor</p>
             <h2 id="supervisor-title">Control center</h2>
           </div>
           <span class="badge">{{ supervisorLoading ? 'Memuat' : 'Server-side view' }}</span>
+        </div>
+
+        <div class="task-strip" aria-label="Prioritas kontrol Supervisor">
+          <article v-for="card in supervisorAlertCards" :key="card.label" :class="['task-card', card.tone]">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.hint }}</p>
+          </article>
         </div>
 
         <div class="control-filters" aria-label="Filter supervisor">
@@ -1038,7 +1180,12 @@ function persistVisibleRoles(roles) {
 
         <div class="split-tables">
           <div class="table-wrap">
-            <h3>Raw logs</h3>
+            <div class="table-heading">
+              <div>
+                <span>Work Queue</span>
+                <strong>Raw logs</strong>
+              </div>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -1065,7 +1212,12 @@ function persistVisibleRoles(roles) {
           </div>
 
           <div class="table-wrap">
-            <h3>Quarantine</h3>
+            <div class="table-heading">
+              <div>
+                <span>Exception Queue</span>
+                <strong>Quarantine</strong>
+              </div>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -1091,13 +1243,21 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'management'" class="panel dashboard-panel" aria-labelledby="dashboard-title">
+      <section v-if="activeView === 'management'" class="panel dashboard-panel role-workspace" aria-labelledby="dashboard-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Management</p>
             <h2 id="dashboard-title">Read-only dashboard</h2>
           </div>
           <span class="badge">{{ dashboardLoading ? 'Memuat' : 'MASTER_RECAP' }}</span>
+        </div>
+
+        <div class="task-strip" aria-label="Insight utama Management">
+          <article v-for="card in managementInsightCards" :key="card.label" :class="['task-card', card.tone]">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.hint }}</p>
+          </article>
         </div>
 
         <div class="control-filters" aria-label="Filter dashboard">
@@ -1144,7 +1304,12 @@ function persistVisibleRoles(roles) {
 
         <div class="split-tables">
           <div class="table-wrap">
-            <h3>Recap rows</h3>
+            <div class="table-heading">
+              <div>
+                <span>Final KPI</span>
+                <strong>Recap rows</strong>
+              </div>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -1171,7 +1336,12 @@ function persistVisibleRoles(roles) {
           </div>
 
           <div class="table-wrap">
-            <h3>Pareto defect</h3>
+            <div class="table-heading">
+              <div>
+                <span>Improvement</span>
+                <strong>Pareto defect</strong>
+              </div>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -1195,30 +1365,49 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'hrd'" class="panel hrd-panel" aria-labelledby="hrd-title">
+      <section v-if="activeView === 'hrd'" class="panel hrd-panel role-workspace" aria-labelledby="hrd-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">HRD</p>
-            <h2 id="hrd-title">User privacy readiness</h2>
+            <h2 id="hrd-title">User access audit</h2>
           </div>
           <span class="badge">PII guarded</span>
         </div>
 
-        <div class="settings-grid">
-          <article class="settings-card">
-            <span>Akses user</span>
-            <strong>USER_ROLES</strong>
-            <p>Role truth tetap dari sheet backend; UI tidak menyimpan daftar email atau role.</p>
-          </article>
-          <article class="settings-card">
-            <span>Data sensitif</span>
-            <strong>Masked only</strong>
-            <p>PII mentah tidak ditampilkan pada workflow umum dan tetap dijaga oleh backend.</p>
+        <div class="task-strip" aria-label="Prioritas HRD">
+          <article v-for="card in hrdAccessCards" :key="card.label" :class="['task-card', card.tone]">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.hint }}</p>
           </article>
         </div>
 
-        <div class="hint-box">
-          View HRD disiapkan sebagai permukaan scalable untuk review user dan PII masking tanpa membuka secret atau data mentah.
+        <div class="hrd-workflow">
+          <article class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Work Queue</span>
+                <strong>Role readiness</strong>
+              </div>
+            </div>
+            <ul class="readiness-list">
+              <li><span class="status success">Ready</span><strong>USER_ROLES menjadi sumber role utama.</strong></li>
+              <li><span class="status warning">Guarded</span><strong>Email dan PII hanya tampil dalam bentuk masked.</strong></li>
+              <li><span class="status success">Audited</span><strong>Perubahan role wajib tercatat di AUDIT_LOGS.</strong></li>
+            </ul>
+          </article>
+
+          <article class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Detail/Action</span>
+                <strong>HRD boundary</strong>
+              </div>
+            </div>
+            <div class="hint-box">
+              Workspace HRD disiapkan untuk review user dan role audit tanpa membuka secret, Script Properties, atau PII mentah dari UI normal.
+            </div>
+          </article>
         </div>
       </section>
 
