@@ -111,6 +111,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 
 - UI hanya berbicara dengan Global State/composable; IndexedDB hanya diakses oleh persistence service.
 - Arah desain UI adalah 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, dan 10% Claymorphism / Glass accent.
+- Latar memakai app-like blue depth background dan shell translucent agar terasa modern, sementara form, tabel, dan status tetap memakai surface terang yang mudah dibaca.
 - Workflow besar dipisah sebagai view aplikasi: Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan; hidden SuperAdmin console tetap tidak muncul di navigasi normal.
 - Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Mobile bottom nav menampilkan icon besar untuk semua menu; teks penuh hanya muncul pada menu aktif.

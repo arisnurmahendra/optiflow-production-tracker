@@ -24,6 +24,7 @@ Status implementasi 2026-09-03:
 
 - Tampilan utama harus bersih, terang, dan kontras tinggi.
 - Minimalist Operational UI wajib menjadi fondasi mayoritas layar.
+- Latar boleh memakai app-like blue depth background dengan radial/linear gradient ringan seperti referensi mobile banking, selama konten operasional tetap berada di surface putih/terang yang mudah dibaca.
 - App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan dalam satu halaman panjang.
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Pengaturan sesi wajib tersedia sebagai top floating button yang benar-benar mengambang di area kanan atas, bukan sebagai item bottom nav mobile.
@@ -46,6 +47,7 @@ Token warna awal:
 | `background` | `#F4F7F9` | Latar aplikasi. |
 | `surface` | `#FFFFFF` | Panel, form, table container. |
 | `surface-soft` | `#EEF3F6` | Area sekunder dan empty state. |
+| `shell-tint` | `rgba(255, 255, 255, 0.74)` | Lapisan app shell di atas latar biru. |
 | `text-primary` | `#111827` | Teks utama. |
 | `text-secondary` | `#4B5563` | Teks pendukung. |
 | `primary` | `#2563EB` | Tombol utama, link aktif. |
