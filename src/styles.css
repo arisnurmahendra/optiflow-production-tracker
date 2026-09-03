@@ -93,6 +93,12 @@ p {
   line-height: 1.4;
 }
 
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .brand-trigger,
 .eyebrow {
   color: var(--teal);
@@ -143,6 +149,42 @@ h2 {
   box-shadow: var(--shadow-pressed);
 }
 
+.session-fab {
+  min-height: 48px;
+  border: 1px solid #fed7aa;
+  border-radius: 999px;
+  padding: 6px 12px 6px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #f97316;
+  box-shadow: var(--shadow-raised);
+}
+
+.session-fab span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff7ed;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.session-fab strong {
+  color: #9a3412;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.session-fab.active {
+  border-color: #fb923c;
+  box-shadow: var(--shadow-pressed);
+}
+
 .dot {
   width: 9px;
   height: 9px;
@@ -157,7 +199,7 @@ h2 {
 }
 
 .app-nav {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   position: sticky;
   top: 0;
   z-index: 10;
@@ -406,6 +448,7 @@ input:focus,
 .button:focus,
 .icon-button:focus,
 .role-button:focus,
+.session-fab:focus,
 .row-button:focus,
 .brand-trigger:focus {
   border-color: var(--primary);
@@ -974,8 +1017,23 @@ td:nth-child(4) {
   }
 
   .sync-pill {
-    width: 100%;
+    flex: 1;
     justify-content: center;
+  }
+
+  .top-actions {
+    width: 100%;
+  }
+
+  .session-fab {
+    min-width: 58px;
+    min-height: 48px;
+    padding: 6px;
+    justify-content: center;
+  }
+
+  .session-fab strong {
+    display: none;
   }
 
   .app-nav {
@@ -984,7 +1042,7 @@ td:nth-child(4) {
     bottom: 16px;
     left: 16px;
     top: auto;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-auto-flow: column;
     grid-auto-columns: auto;
     min-height: 66px;

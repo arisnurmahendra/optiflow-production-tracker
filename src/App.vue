@@ -161,6 +161,7 @@ const appViews = computed(() => [
 const activeViewMeta = computed(() =>
   appViews.value.find((view) => view.id === activeView.value) || appViews.value[0],
 );
+const navViews = computed(() => appViews.value.filter((view) => view.id !== 'settings'));
 const currentSessionLabel = computed(() => {
   if (sessionContext.value?.auth_mode === 'ON') {
     return `${sessionContext.value.role || 'Unknown'} dari Google Account`;
@@ -474,7 +475,9 @@ async function setTryRole(role) {
 
   selectedRole.value = role;
   persistPreferredRole(role);
-  await refreshSessionContext();
+  sessionError.value = '';
+  sessionMessage.value = `Role demo langsung aktif sebagai ${role}.`;
+  void refreshSessionContext();
 }
 
 async function switchView(viewId) {
@@ -594,15 +597,26 @@ function persistPreferredRole(role) {
         <h1>{{ activeViewMeta.title }}</h1>
         <p>{{ activeViewMeta.subtitle }}</p>
       </div>
-      <div class="sync-pill" aria-label="Status sinkronisasi">
-        <span class="dot"></span>
-        {{ syncStatus }}
+      <div class="top-actions">
+        <div class="sync-pill" aria-label="Status sinkronisasi">
+          <span class="dot"></span>
+          {{ syncStatus }}
+        </div>
+        <button
+          :class="['session-fab', { active: activeView === 'settings' }]"
+          type="button"
+          aria-label="Buka pengaturan sesi"
+          @click="switchView('settings')"
+        >
+          <span aria-hidden="true">⚙️</span>
+          <strong>{{ selectedRole }}</strong>
+        </button>
       </div>
     </header>
 
     <nav class="app-nav" aria-label="Navigasi workflow">
       <button
-        v-for="view in appViews"
+        v-for="view in navViews"
         :key="view.id"
         type="button"
         :class="['nav-item', { active: activeView === view.id }]"

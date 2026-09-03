@@ -114,7 +114,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Workflow besar dipisah sebagai view aplikasi: Operator, Mandor, Supervisor, Management, dan Pengaturan; hidden SuperAdmin console tetap tidak muncul di navigasi normal.
 - Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Mobile bottom nav menampilkan icon besar untuk semua menu; teks penuh hanya muncul pada menu aktif.
-- View Pengaturan menyediakan Try Role untuk demo/trial saat `AUTH_MODE=OFF`, sehingga tester tidak perlu berganti email.
+- View Pengaturan dibuka dari top floating button dan menyediakan Try Role instan untuk demo/trial saat `AUTH_MODE=OFF`, sehingga tester tidak perlu berganti email.
 - View Supervisor dan Management dimuat lazy-load saat dibuka agar startup Operator tetap ringan.
 - Frontend tidak boleh memanggil `google.script.run` langsung; semua call melewati `apiAdapter.js`.
 - Setiap payload submit membawa `transaction_id` UUID, `device_timestamp` UTC dari device, `client_version`, dan data produksi sesuai schema.

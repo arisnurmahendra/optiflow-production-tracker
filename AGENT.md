@@ -35,7 +35,7 @@ Current implementation baseline as of 2026-09-03:
 - Large frontend workflows must be separated into scalable app views/tabs; do not stack Operator, Mandor, Supervisor, Management, and Settings as one long page.
 - Use top workflow navigation on desktop and bottom nav buttons on mobile.
 - Mobile bottom nav inactive items should show large icons only; the active item shows icon, label, and compact badge.
-- User Settings may expose Try Role only for `AUTH_MODE=OFF`; backend must still ignore `simulated_role` when `AUTH_MODE=ON`.
+- User Settings should open from the top floating session button, not from mobile bottom nav. Try Role must update the UI instantly for `AUTH_MODE=OFF`; backend must still ignore `simulated_role` when `AUTH_MODE=ON`.
 - Heavy workflow views such as Supervisor and Management should lazy-load their API data when opened.
 - Primary actions must use solid high-contrast buttons; critical statuses need color, text, and icon treatment.
 - State is handled with composables, not Vuex or Pinia.
