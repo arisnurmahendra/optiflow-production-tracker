@@ -235,6 +235,7 @@ Mobile:
 - Layout satu kolom.
 - Navigasi workflow mobile wajib menjadi bottom nav button sticky dengan target sentuh minimal 44px, tetap berada dalam flow layout, dan active bubble tidak boleh terpotong oleh dock maupun item parent.
 - Mobile dock wajib berbentuk pill putih rendah; item aktif memakai circular bubble yang naik di atas dock dengan label oranye di bawahnya, sedangkan item nonaktif hanya icon abu-abu.
+- Mobile dock wajib memberi ruang lebih besar untuk item aktif. Item nonaktif boleh dirapatkan agar label item aktif tetap terbaca, termasuk saat ada lima workflow menu.
 - Item navigasi mobile yang tidak aktif hanya menampilkan icon; item aktif menampilkan icon dan label ringkas tanpa badge agar tinggi dock tidak meloncat.
 - Item navigasi mobile aktif boleh memakai floating circular button di atas bar dengan aksen solid; bar tetap harus kontras tinggi dan tidak menutup submit/retry.
 - Tombol Pengaturan sesi di area atas boleh menampilkan icon dan role aktif; proses Try Role harus optimistik/instan di UI, dengan refresh session backend berjalan setelahnya.
