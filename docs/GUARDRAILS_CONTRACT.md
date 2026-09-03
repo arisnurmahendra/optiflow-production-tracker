@@ -38,7 +38,8 @@
 
 ## 3. Frontend Dan API
 
-- OPTIFLOW memakai gaya Industrial Soft UI: Neumorphism dan Claymorphism hanya boleh dipakai sebagai aksen visual, bukan sebagai satu-satunya indikator affordance atau status.
+- OPTIFLOW memakai gaya Industrial Soft UI dengan rasio arah desain 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, dan 10% Claymorphism / Glass accent.
+- Neumorphism dan Claymorphism hanya boleh dipakai sebagai aksen visual, bukan sebagai satu-satunya indikator affordance atau status.
 - Tombol aksi utama wajib memakai warna solid dan kontras tinggi.
 - Status kritis seperti `FAILED`, `CONFLICT_PENDING`, `REJECTED`, dan `CLOSED` wajib memakai kombinasi warna, teks, dan ikon.
 - UI mobile wajib mengutamakan input cepat, target sentuh minimal 44px, dan keterbacaan di layar redup.

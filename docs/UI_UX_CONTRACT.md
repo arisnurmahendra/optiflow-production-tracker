@@ -8,6 +8,13 @@ OPTIFLOW memakai gaya Industrial Soft UI.
 
 Neumorphism dan Claymorphism boleh dipakai sebagai aksen visual, tetapi tidak boleh menjadi satu-satunya indikator affordance, status, atau prioritas aksi. Sistem harus tetap terasa utilitarian, cepat dibaca, dan cocok untuk operator produksi, Mandor, Supervisor, HRD, SuperAdmin, dan Management.
 
+Komposisi visual wajib mengikuti rasio arah desain:
+- 70% Minimalist Operational UI sebagai fondasi layout, form, tabel, dashboard, dan navigasi.
+- 20% Neumorphism / Soft UI untuk card ringkasan, panel input, segmented control, dan tombol besar operator.
+- 10% Claymorphism / Glass accent untuk modal, empty state, hidden maintenance console, dan highlight demo/trial.
+
+Rasio ini adalah batas arah desain, bukan ukuran matematis per halaman. Jika ada konflik antara estetika dan keterbacaan operasional, keterbacaan, kontras, dan kecepatan input selalu menang.
+
 Status implementasi 2026-09-03:
 - Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
 - Scope M5 sudah menambahkan control center desktop, daily closing action, adjustment review, dan management dashboard read-only.
@@ -16,12 +23,14 @@ Status implementasi 2026-09-03:
 ## 2. Prinsip Visual
 
 - Tampilan utama harus bersih, terang, dan kontras tinggi.
+- Minimalist Operational UI wajib menjadi fondasi mayoritas layar.
 - Tombol aksi utama wajib memakai warna solid.
 - Status kritis wajib terlihat dari kombinasi warna, teks, dan ikon.
 - Card/panel boleh memakai shadow lembut, tetapi tetap harus memiliki border atau pemisah yang jelas.
 - Border radius default maksimal 8px untuk card, input, table container, dan tombol.
 - Jangan memakai Neumorphism murni yang membuat tombol terlihat seperti dekorasi.
 - Jangan memakai Claymorphism berlebihan untuk tabel, form padat, atau dashboard operasional.
+- Jangan memakai Glass accent pada konten yang membutuhkan pembacaan angka cepat atau status kritis.
 
 ## 3. Palette
 

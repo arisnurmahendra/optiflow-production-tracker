@@ -80,7 +80,7 @@ Upgrade proses setelah MVP:
 Repo sudah melewati implementasi `OPT-001` sampai `OPT-027`. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, daily closing, adjustment, recap, dashboard, hidden SuperAdmin maintenance console, native GAS test runner, dan artefak production readiness sudah tersedia.
 
 Yang sudah terimplementasi:
-- Vue 3 operator UI dengan Industrial Soft UI, form produksi mobile-friendly, autosave draft, queue status, dan preview Pareto defect.
+- Vue 3 operator UI dengan Industrial Soft UI 70/20/10, form produksi mobile-friendly, autosave draft, queue status, dan preview Pareto defect.
 - Vite single-file build dengan `vite-plugin-singlefile`; `/dist` hanya boleh menghasilkan `Index.html`.
 - `apiAdapter.js` sebagai satu-satunya jalur frontend ke GAS, dengan allowlist callable, timeout, safe structured response, dan safe error.
 - `mock_gas.js` untuk development lokal dengan latency, failure simulation, idempotency, dan conflict simulation.
@@ -110,6 +110,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 ## Rule Logika Aplikasi
 
 - UI hanya berbicara dengan Global State/composable; IndexedDB hanya diakses oleh persistence service.
+- Arah desain UI adalah 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, dan 10% Claymorphism / Glass accent.
 - Frontend tidak boleh memanggil `google.script.run` langsung; semua call melewati `apiAdapter.js`.
 - Setiap payload submit membawa `transaction_id` UUID, `device_timestamp` UTC dari device, `client_version`, dan data produksi sesuai schema.
 - `perolehan_ok + perolehan_reject` tidak boleh melebihi `target_harian + tandon`.

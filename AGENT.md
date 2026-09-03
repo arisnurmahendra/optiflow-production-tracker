@@ -31,7 +31,7 @@ Current implementation baseline as of 2026-09-03:
 ## 3. Stack Boundaries
 
 - Frontend uses Vue 3 Composition API.
-- UI follows `docs/UI_UX_CONTRACT.md`: Industrial Soft UI with controlled Neumorphism/Claymorphism accents.
+- UI follows `docs/UI_UX_CONTRACT.md`: Industrial Soft UI with 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, and 10% Claymorphism / Glass accent.
 - Primary actions must use solid high-contrast buttons; critical statuses need color, text, and icon treatment.
 - State is handled with composables, not Vuex or Pinia.
 - UI components must not read from or write to IndexedDB directly.
