@@ -29,7 +29,7 @@ Status implementasi 2026-09-03:
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Desktop nav item wajib memakai pola icon kiri dan text-stack kanan. Tinggi icon harus setara dengan gabungan tinggi label dan badge agar scan visual rapi.
 - Pengaturan sesi wajib tersedia sebagai top floating button yang benar-benar mengambang di area kanan atas, bukan sebagai item bottom nav mobile.
-- Mobile bottom nav wajib menampilkan icon besar untuk semua item, tetapi label teks penuh hanya untuk menu aktif agar hemat ruang.
+- Mobile bottom nav wajib menampilkan icon besar untuk semua item, tetapi label teks penuh hanya untuk menu aktif agar hemat ruang; badge workflow disembunyikan di mobile dock agar tinggi nav stabil.
 - View berat seperti Supervisor dan Management wajib lazy-load ketika dibuka, bukan otomatis memanggil semua API saat startup Operator.
 - Tombol aksi utama wajib memakai warna solid.
 - Status kritis wajib terlihat dari kombinasi warna, teks, dan ikon.
@@ -234,7 +234,7 @@ Breakpoint awal:
 Mobile:
 - Layout satu kolom.
 - Navigasi workflow wajib menjadi bottom nav button fixed/sticky dengan target sentuh minimal 44px.
-- Item navigasi mobile yang tidak aktif hanya menampilkan icon; item aktif menampilkan icon, label, dan badge ringkas.
+- Item navigasi mobile yang tidak aktif hanya menampilkan icon; item aktif menampilkan icon dan label ringkas tanpa badge agar tinggi dock tidak meloncat.
 - Item navigasi mobile aktif boleh memakai floating circular button di atas bar dengan aksen solid; bar tetap harus kontras tinggi dan tidak menutup submit/retry.
 - Tombol Pengaturan sesi di area atas boleh menampilkan icon dan role aktif; proses Try Role harus optimistik/instan di UI, dengan refresh session backend berjalan setelahnya.
 - Role button di Pengaturan wajib mendukung multi-select untuk menentukan workflow menu yang dirender. Role yang aktif langsung menampilkan menu terkait; role yang nonaktif langsung menyembunyikan menu terkait.

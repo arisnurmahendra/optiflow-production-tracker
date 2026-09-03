@@ -1158,6 +1158,7 @@ td:nth-child(4) {
     grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
     grid-auto-flow: column;
     grid-auto-columns: auto;
+    height: 66px;
     min-height: 66px;
     align-items: center;
     padding: 0 12px;
@@ -1240,18 +1241,7 @@ td:nth-child(4) {
   }
 
   .nav-item.active .nav-badge {
-    display: block;
-  }
-
-  .nav-item.active .nav-badge {
-    grid-column: auto;
-    align-self: start;
-    max-width: 100%;
-    overflow: hidden;
-    font-size: 10px;
-    line-height: 1.1;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .metric-strip {
