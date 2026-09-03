@@ -118,8 +118,17 @@ const workflowIconMap = Object.freeze({
 });
 const operatorFeatureViews = Object.freeze([
   {
+    id: 'operator-dashboard',
+    type: 'role-feature',
+    icon: '📊',
+    label: 'Dashboard',
+    title: 'Dashboard operator',
+    subtitle: 'Target, OK, Reject, dan Tandon hari ini.',
+    badge: 'Shift',
+  },
+  {
     id: 'operator-input',
-    type: 'operator-feature',
+    type: 'role-feature',
     icon: '📝',
     label: 'Input',
     title: 'Input produksi harian',
@@ -128,7 +137,7 @@ const operatorFeatureViews = Object.freeze([
   },
   {
     id: 'operator-history',
-    type: 'operator-feature',
+    type: 'role-feature',
     icon: '🕘',
     label: 'Riwayat',
     title: 'Riwayat submit',
@@ -136,17 +145,8 @@ const operatorFeatureViews = Object.freeze([
     badge: 'Hari ini',
   },
   {
-    id: 'operator-dashboard',
-    type: 'operator-feature',
-    icon: '📊',
-    label: 'Dashboard',
-    title: 'Dashboard operator',
-    subtitle: 'Target, OK, Reject, dan Tandon hari ini.',
-    badge: 'Shift',
-  },
-  {
     id: 'operator-defect',
-    type: 'operator-feature',
+    type: 'role-feature',
     icon: '🧩',
     label: 'Defect',
     title: 'Defect insight',
@@ -155,7 +155,7 @@ const operatorFeatureViews = Object.freeze([
   },
   {
     id: 'operator-status',
-    type: 'operator-feature',
+    type: 'role-feature',
     icon: '📡',
     label: 'Status',
     title: 'Status sinkronisasi',
@@ -163,6 +163,35 @@ const operatorFeatureViews = Object.freeze([
     badge: 'Sync',
   },
 ]);
+const roleFeatureViews = Object.freeze({
+  operator: operatorFeatureViews,
+  mandor: Object.freeze([
+    { id: 'mandor-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Dashboard Mandor', subtitle: 'Ringkasan approval, conflict, dan closing harian.', badge: 'Live' },
+    { id: 'mandor-approval', type: 'role-feature', icon: '✅', label: 'Approval', title: 'Approval inbox', subtitle: 'Review submit operator yang membutuhkan keputusan.', badge: 'Inbox' },
+    { id: 'mandor-conflict', type: 'role-feature', icon: '⚠️', label: 'Conflict', title: 'Conflict queue', subtitle: 'Isolasi data CONFLICT_PENDING sebelum recap.', badge: 'HITL' },
+    { id: 'mandor-closing', type: 'role-feature', icon: '🔒', label: 'Closing', title: 'Daily closing', subtitle: 'Tutup line/shift setelah review selesai.', badge: 'Shift' },
+  ]),
+  supervisor: Object.freeze([
+    { id: 'supervisor-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Supervisor dashboard', subtitle: 'Alert-first control center per line dan shift.', badge: 'Live' },
+    { id: 'supervisor-alerts', type: 'role-feature', icon: '🚨', label: 'Alerts', title: 'Production alerts', subtitle: 'Conflict, closing terbuka, dan adjustment pending.', badge: 'Prioritas' },
+    { id: 'supervisor-raw', type: 'role-feature', icon: '📋', label: 'Raw Logs', title: 'Raw logs', subtitle: 'Transaksi produksi terfilter dari backend.', badge: 'Data' },
+    { id: 'supervisor-quarantine', type: 'role-feature', icon: '🧯', label: 'Quarantine', title: 'Quarantine', subtitle: 'Anomali dan conflict yang perlu pengawasan.', badge: 'Control' },
+    { id: 'supervisor-adjustment', type: 'role-feature', icon: '🛠️', label: 'Adjustment', title: 'Adjustment', subtitle: 'Koreksi pasca closing dengan audit trail.', badge: 'Audit' },
+  ]),
+  management: Object.freeze([
+    { id: 'management-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Read-only dashboard', subtitle: 'KPI final berbasis MASTER_RECAP.', badge: 'Final' },
+    { id: 'management-recap', type: 'role-feature', icon: '📈', label: 'Recap', title: 'Recap rows', subtitle: 'Rekap final approved per line/shift/mesin.', badge: 'MASTER' },
+    { id: 'management-pareto', type: 'role-feature', icon: '🧩', label: 'Pareto', title: 'Pareto defect', subtitle: 'Prioritas improvement berdasarkan reject.', badge: 'QCC' },
+    { id: 'management-pending', type: 'role-feature', icon: '⏳', label: 'Pending', title: 'Pending status', subtitle: 'Quarantine dan closing yang dikecualikan dari KPI.', badge: 'Guard' },
+  ]),
+  hrd: Object.freeze([
+    { id: 'hrd-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'HRD dashboard', subtitle: 'Ringkasan akses user dan audit readiness.', badge: 'PII' },
+    { id: 'hrd-users', type: 'role-feature', icon: '👤', label: 'Users', title: 'User access', subtitle: 'Kesiapan USER_ROLES tanpa membuka PII mentah.', badge: 'Masked' },
+    { id: 'hrd-roles', type: 'role-feature', icon: '🔐', label: 'Roles', title: 'Role audit', subtitle: 'Role assignment dan permission boundary.', badge: 'RBAC' },
+    { id: 'hrd-audit', type: 'role-feature', icon: '🧾', label: 'Audit', title: 'Access audit', subtitle: 'Jejak akses dan perubahan role.', badge: 'Logs' },
+    { id: 'hrd-privacy', type: 'role-feature', icon: '🛡️', label: 'Privacy', title: 'PII boundary', subtitle: 'Batas informasi sensitif di UI normal.', badge: 'Safe' },
+  ]),
+});
 const selectedRole = ref(readPreferredRole());
 const visibleRoles = ref(readVisibleRoles());
 const navRoleMenuOpen = ref(false);
@@ -186,7 +215,13 @@ const paretoPreview = computed(() => createParetoRejectSummary([
   ...queueItems.value.map((item) => item.payload),
 ]));
 const activeView = ref('operator');
-const activeOperatorFeature = ref('operator-input');
+const activeRoleFeatures = ref({
+  operator: 'operator-dashboard',
+  mandor: 'mandor-dashboard',
+  supervisor: 'supervisor-dashboard',
+  management: 'management-dashboard',
+  hrd: 'hrd-dashboard',
+});
 const appViews = computed(() => [
   {
     id: 'operator',
@@ -249,18 +284,26 @@ const navViews = computed(() => appViews.value
     ...view,
     icon: workflowIconMap[view.id] || view.icon,
   })));
-const isSingleOperatorMode = computed(() =>
-  visibleRoles.value.length === 1 && visibleRoles.value[0] === 'Operator',
-);
-const navModeLabel = computed(() => (isSingleOperatorMode.value ? 'Menu Operator' : 'Pilih Role / Workspace'));
-const navItems = computed(() => (isSingleOperatorMode.value ? operatorFeatureViews : navViews.value));
-const activeNavId = computed(() => (isSingleOperatorMode.value ? activeOperatorFeature.value : activeView.value));
-const currentOperatorFeatureMeta = computed(() =>
-  operatorFeatureViews.find((view) => view.id === activeOperatorFeature.value) || operatorFeatureViews[0],
+const navModeLabel = computed(() => {
+  const current = navViews.value.find((view) => view.id === activeView.value);
+  return current ? `Menu ${current.label}` : 'Pilih Role / Workspace';
+});
+const navItems = computed(() => roleFeatureViews[activeView.value] || navViews.value);
+const activeFeatureId = computed(() => activeRoleFeatures.value[activeView.value] || `${activeView.value}-dashboard`);
+const activeNavId = computed(() => activeFeatureId.value);
+const displayedApprovalCases = computed(() => {
+  if (activeFeatureId.value === 'mandor-conflict') {
+    return filteredApprovalCases.value.filter((row) => row.status === 'CONFLICT_PENDING');
+  }
+
+  return filteredApprovalCases.value;
+});
+const currentRoleFeatureMeta = computed(() =>
+  navItems.value.find((view) => view.id === activeFeatureId.value) || navItems.value[0],
 );
 const activeShellMeta = computed(() => {
-  if (activeView.value === 'operator' && isSingleOperatorMode.value) {
-    return currentOperatorFeatureMeta.value;
+  if (roleFeatureViews[activeView.value]) {
+    return currentRoleFeatureMeta.value;
   }
 
   return activeViewMeta.value;
@@ -716,9 +759,19 @@ async function setTryRole(role) {
   void refreshSessionContext();
 }
 
-async function selectRoleFromNav(role) {
-  await setTryRole(role);
+async function selectWorkspaceFromNav(viewId) {
+  if (!navViews.value.some((view) => view.id === viewId)) {
+    return;
+  }
+
   navRoleMenuOpen.value = false;
+  activeRoleFeatures.value = {
+    ...activeRoleFeatures.value,
+    [viewId]: `${viewId}-dashboard`,
+  };
+  await switchView(viewId);
+  sessionError.value = '';
+  sessionMessage.value = `Workspace aktif: ${viewId}.`;
 }
 
 function toggleNavRoleMenu() {
@@ -748,9 +801,11 @@ async function switchView(viewId) {
 async function switchNavigationItem(item) {
   navRoleMenuOpen.value = false;
 
-  if (item.type === 'operator-feature') {
-    activeView.value = 'operator';
-    activeOperatorFeature.value = item.id;
+  if (item.type === 'role-feature') {
+    activeRoleFeatures.value = {
+      ...activeRoleFeatures.value,
+      [activeView.value]: item.id,
+    };
     return;
   }
 
@@ -763,9 +818,6 @@ function ensureVisibleActiveView() {
   }
 
   activeView.value = navViews.value[0]?.id || 'settings';
-  if (activeView.value === 'operator') {
-    activeOperatorFeature.value = 'operator-input';
-  }
 }
 
 function buildSessionPayload() {
@@ -920,16 +972,15 @@ function persistVisibleRoles(roles) {
         </button>
         <div v-if="navRoleMenuOpen" class="nav-role-menu" role="menu" aria-label="Pilih role atau workspace">
           <button
-            v-for="role in roleOptions"
-            :key="role"
+            v-for="view in navViews"
+            :key="view.id"
             type="button"
-            role="menuitemcheckbox"
-            :aria-checked="visibleRoles.includes(role)"
-            :class="['nav-role-option', { active: visibleRoles.includes(role), selected: selectedRole === role }]"
-            @click="selectRoleFromNav(role)"
+            role="menuitem"
+            :class="['nav-role-option', { active: activeView === view.id, selected: activeView === view.id }]"
+            @click="selectWorkspaceFromNav(view.id)"
           >
-            <span>{{ roleIcons[role] }}</span>
-            <strong>{{ role }}</strong>
+            <span>{{ view.icon }}</span>
+            <strong>{{ view.label }}</strong>
           </button>
         </div>
       </div>
@@ -947,14 +998,14 @@ function persistVisibleRoles(roles) {
       </button>
     </nav>
 
-    <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-dashboard'" class="metric-strip" aria-label="Ringkasan produksi">
+    <section v-if="activeView === 'operator' && activeFeatureId === 'operator-dashboard'" class="metric-strip" aria-label="Ringkasan produksi">
       <article v-for="metric in metrics" :key="metric.label" :class="['metric', metric.tone]">
         <span>{{ metric.label }}</span>
         <strong>{{ metric.value }}</strong>
       </article>
     </section>
 
-    <div :class="['workspace', `view-${activeView}`, activeView === 'operator' ? `operator-${activeOperatorFeature}` : '']">
+    <div :class="['workspace', `view-${activeView}`, activeView === 'operator' ? `operator-${activeFeatureId}` : '']">
       <section v-if="activeView === 'operator'" class="panel operator-context-panel" aria-label="Header shift aktif">
         <div class="operator-context-grid">
           <article v-for="item in operatorContextItems" :key="item.label">
@@ -964,7 +1015,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-input'" class="panel input-panel role-workspace" aria-labelledby="form-title">
+      <section v-if="activeView === 'operator' && activeFeatureId === 'operator-input'" class="panel input-panel role-workspace" aria-labelledby="form-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Operator</p>
@@ -1092,7 +1143,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-history'" class="panel operator-history-panel role-workspace" aria-labelledby="history-title">
+      <section v-if="activeView === 'operator' && activeFeatureId === 'operator-history'" class="panel operator-history-panel role-workspace" aria-labelledby="history-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Riwayat</p>
@@ -1122,7 +1173,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-dashboard'" class="panel operator-dashboard-panel role-workspace" aria-labelledby="operator-dashboard-title">
+      <section v-if="activeView === 'operator' && activeFeatureId === 'operator-dashboard'" class="panel operator-dashboard-panel role-workspace" aria-labelledby="operator-dashboard-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Dashboard</p>
@@ -1155,7 +1206,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-defect'" class="panel operator-defect-panel role-workspace" aria-labelledby="operator-defect-title">
+      <section v-if="activeView === 'operator' && activeFeatureId === 'operator-defect'" class="panel operator-defect-panel role-workspace" aria-labelledby="operator-defect-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Defect</p>
@@ -1205,7 +1256,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <aside v-if="activeView === 'operator' && activeOperatorFeature === 'operator-status'" class="panel queue-panel role-workspace" aria-labelledby="queue-title">
+      <aside v-if="activeView === 'operator' && activeFeatureId === 'operator-status'" class="panel queue-panel role-workspace" aria-labelledby="queue-title">
         <div class="section-title compact">
           <div>
             <p class="eyebrow">Sync</p>
@@ -1256,7 +1307,7 @@ function persistVisibleRoles(roles) {
           <span class="badge conflict">! {{ approvalSummary.conflict }} konflik</span>
         </div>
 
-        <div class="task-strip" aria-label="Prioritas kerja Mandor">
+        <div v-if="activeFeatureId === 'mandor-dashboard'" class="task-strip" aria-label="Prioritas kerja Mandor">
           <article v-for="card in mandorTaskCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1264,13 +1315,13 @@ function persistVisibleRoles(roles) {
           </article>
         </div>
 
-        <div class="approval-summary" aria-label="Ringkasan approval">
+        <div v-if="activeFeatureId === 'mandor-dashboard'" class="approval-summary" aria-label="Ringkasan approval">
           <span class="status conflict">! Bentrok {{ approvalSummary.conflict }}</span>
           <span class="status warning">Review {{ approvalSummary.pending }}</span>
           <span class="status success">Selesai {{ approvalSummary.resolved }}</span>
         </div>
 
-        <div class="approval-filters" aria-label="Filter approval">
+        <div v-if="activeFeatureId === 'mandor-approval' || activeFeatureId === 'mandor-conflict'" class="approval-filters" aria-label="Filter approval">
           <label class="field">
             <span>Status</span>
             <select v-model="approvalStatusFilter" aria-label="Filter status approval">
@@ -1289,7 +1340,7 @@ function persistVisibleRoles(roles) {
           </label>
         </div>
 
-        <div class="approval-layout">
+        <div v-if="activeFeatureId === 'mandor-approval' || activeFeatureId === 'mandor-conflict'" class="approval-layout">
           <div class="table-wrap">
             <div class="table-heading">
               <div>
@@ -1308,7 +1359,7 @@ function persistVisibleRoles(roles) {
               </thead>
               <tbody>
                 <tr
-                  v-for="row in filteredApprovalCases"
+                  v-for="row in displayedApprovalCases"
                   :key="row.id"
                   :class="{ 'active-row': activeApprovalCase && activeApprovalCase.id === row.id, 'conflict-row': row.status === 'CONFLICT_PENDING' }"
                   @click="setActiveApprovalCase(row.id)"
@@ -1371,6 +1422,18 @@ function persistVisibleRoles(roles) {
             </div>
           </aside>
         </div>
+
+        <div v-if="activeFeatureId === 'mandor-closing'" class="task-panel">
+          <div class="table-heading">
+            <div>
+              <span>Detail/Action</span>
+              <strong>Daily closing readiness</strong>
+            </div>
+          </div>
+          <div class="hint-box">
+            Jalankan closing setelah pending approval dan conflict queue selesai. Closing aktual tetap memakai permission backend dan audit trail.
+          </div>
+        </div>
       </section>
 
       <section v-if="activeView === 'supervisor'" class="panel supervisor-panel role-workspace" aria-labelledby="supervisor-title">
@@ -1382,7 +1445,7 @@ function persistVisibleRoles(roles) {
           <span class="badge">{{ supervisorLoading ? 'Memuat' : 'Server-side view' }}</span>
         </div>
 
-        <div class="task-strip" aria-label="Prioritas kontrol Supervisor">
+        <div v-if="activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-alerts'" class="task-strip" aria-label="Prioritas kontrol Supervisor">
           <article v-for="card in supervisorAlertCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1414,7 +1477,7 @@ function persistVisibleRoles(roles) {
           <button class="button secondary" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
         </div>
 
-        <div class="mini-metrics" aria-label="Ringkasan control center">
+        <div v-if="activeFeatureId === 'supervisor-dashboard'" class="mini-metrics" aria-label="Ringkasan control center">
           <article v-for="tile in supervisorTiles" :key="tile.label" :class="['mini-metric', tile.tone]">
             <span>{{ tile.label }}</span>
             <strong>{{ tile.value }}</strong>
@@ -1428,13 +1491,13 @@ function persistVisibleRoles(roles) {
           {{ supervisorMessage }}
         </div>
 
-        <div class="control-actions">
+        <div v-if="activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-adjustment'" class="control-actions">
           <button class="button primary" type="button" @click="closeCurrentScope">Close line/shift</button>
           <button class="button secondary" type="button" @click="createAdjustmentFromFirstRow">Create adjustment</button>
         </div>
 
-        <div class="split-tables">
-          <div class="table-wrap">
+        <div v-if="activeFeatureId === 'supervisor-raw' || activeFeatureId === 'supervisor-quarantine'" class="split-tables single-surface">
+          <div v-if="activeFeatureId === 'supervisor-raw'" class="table-wrap">
             <div class="table-heading">
               <div>
                 <span>Work Queue</span>
@@ -1466,7 +1529,7 @@ function persistVisibleRoles(roles) {
             </table>
           </div>
 
-          <div class="table-wrap">
+          <div v-if="activeFeatureId === 'supervisor-quarantine'" class="table-wrap">
             <div class="table-heading">
               <div>
                 <span>Exception Queue</span>
@@ -1496,6 +1559,18 @@ function persistVisibleRoles(roles) {
             </table>
           </div>
         </div>
+
+        <div v-if="activeFeatureId === 'supervisor-adjustment'" class="task-panel">
+          <div class="table-heading">
+            <div>
+              <span>Detail/Action</span>
+              <strong>Adjustment control</strong>
+            </div>
+          </div>
+          <div class="hint-box">
+            Adjustment dibuat sebagai event terpisah setelah closing dan tidak mengubah transaksi asal secara langsung.
+          </div>
+        </div>
       </section>
 
       <section v-if="activeView === 'management'" class="panel dashboard-panel role-workspace" aria-labelledby="dashboard-title">
@@ -1507,7 +1582,7 @@ function persistVisibleRoles(roles) {
           <span class="badge">{{ dashboardLoading ? 'Memuat' : 'MASTER_RECAP' }}</span>
         </div>
 
-        <div class="task-strip" aria-label="Insight utama Management">
+        <div v-if="activeFeatureId === 'management-dashboard'" class="task-strip" aria-label="Insight utama Management">
           <article v-for="card in managementInsightCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1548,7 +1623,7 @@ function persistVisibleRoles(roles) {
           </article>
         </div>
 
-        <div class="approval-summary" aria-label="Status dashboard">
+        <div v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-pending'" class="approval-summary" aria-label="Status dashboard">
           <span class="status warning">Quarantine {{ dashboardData?.summary?.pending_quarantine || 0 }}</span>
           <span class="status warning">Open closing {{ dashboardData?.summary?.open_closing || 0 }}</span>
         </div>
@@ -1557,8 +1632,8 @@ function persistVisibleRoles(roles) {
           {{ dashboardError }}
         </div>
 
-        <div class="split-tables">
-          <div class="table-wrap">
+        <div v-if="activeFeatureId === 'management-recap' || activeFeatureId === 'management-pareto'" class="split-tables single-surface">
+          <div v-if="activeFeatureId === 'management-recap'" class="table-wrap">
             <div class="table-heading">
               <div>
                 <span>Final KPI</span>
@@ -1590,7 +1665,7 @@ function persistVisibleRoles(roles) {
             </table>
           </div>
 
-          <div class="table-wrap">
+          <div v-if="activeFeatureId === 'management-pareto'" class="table-wrap">
             <div class="table-heading">
               <div>
                 <span>Improvement</span>
@@ -1618,6 +1693,18 @@ function persistVisibleRoles(roles) {
             </table>
           </div>
         </div>
+
+        <div v-if="activeFeatureId === 'management-pending'" class="task-panel">
+          <div class="table-heading">
+            <div>
+              <span>Guardrail</span>
+              <strong>Data yang belum final</strong>
+            </div>
+          </div>
+          <div class="hint-box">
+            Data quarantine dan closing terbuka tidak dihitung ke KPI final sampai proses approval/closing selesai.
+          </div>
+        </div>
       </section>
 
       <section v-if="activeView === 'hrd'" class="panel hrd-panel role-workspace" aria-labelledby="hrd-title">
@@ -1629,7 +1716,7 @@ function persistVisibleRoles(roles) {
           <span class="badge">PII guarded</span>
         </div>
 
-        <div class="task-strip" aria-label="Prioritas HRD">
+        <div v-if="activeFeatureId === 'hrd-dashboard'" class="task-strip" aria-label="Prioritas HRD">
           <article v-for="card in hrdAccessCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1637,8 +1724,8 @@ function persistVisibleRoles(roles) {
           </article>
         </div>
 
-        <div class="hrd-workflow">
-          <article class="task-panel">
+        <div v-if="activeFeatureId !== 'hrd-dashboard'" class="hrd-workflow">
+          <article v-if="activeFeatureId === 'hrd-users' || activeFeatureId === 'hrd-roles' || activeFeatureId === 'hrd-audit'" class="task-panel">
             <div class="table-heading">
               <div>
                 <span>Work Queue</span>
@@ -1652,7 +1739,7 @@ function persistVisibleRoles(roles) {
             </ul>
           </article>
 
-          <article class="task-panel">
+          <article v-if="activeFeatureId === 'hrd-privacy' || activeFeatureId === 'hrd-roles' || activeFeatureId === 'hrd-audit'" class="task-panel">
             <div class="table-heading">
               <div>
                 <span>Detail/Action</span>

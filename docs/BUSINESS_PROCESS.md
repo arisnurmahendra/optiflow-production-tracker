@@ -190,7 +190,9 @@ Backend quarantine routing:
 UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Setiap role wajib memakai pola `Overview -> Work Queue -> Detail/Action` agar user melihat pekerjaan yang relevan dengan proses bisnisnya.
 
 - `Operator`: fokus pada input produksi cepat, draft lokal, status sync, dan submit terakhir. Operator tidak boleh melihat approval, management recap, atau maintenance backend.
-- Saat hanya `Operator` yang aktif, navigasi utama berubah menjadi menu fitur Operator: `Input`, `Riwayat`, `Dashboard`, `Defect`, dan `Status`.
+- Navigasi utama menampilkan menu fitur untuk workspace yang sedang aktif, bukan daftar role. Pemilihan workspace dilakukan melalui trigger/dropdown di area nav.
+- Semua workspace default ke menu `Dashboard` saat pertama dipilih.
+- Untuk `Operator`, navigasi fitur berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
 - Header shift aktif Operator berisi line, shift, mesin, dan operator; header ini wajib tampil di semua menu fitur Operator.
 - Menu `Defect` menjadi permukaan khusus untuk kategori reject, QCC factor, severity, dan Pareto mini agar informasi cacat tidak bercampur dengan form input.
 - `Mandor`: fokus pada pending approval, conflict queue, dan daily closing. Default Mandor harus menonjolkan item yang membutuhkan keputusan Human-in-the-Loop.

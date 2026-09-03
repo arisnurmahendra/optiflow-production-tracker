@@ -27,8 +27,9 @@ Status implementasi 2026-09-03:
 - Latar boleh memakai app-like blue depth background dengan radial/linear gradient ringan seperti referensi mobile banking, selama konten operasional tetap berada di surface putih/terang yang mudah dibaca.
 - App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan dalam satu halaman panjang.
 - Setiap workflow role wajib memakai pola production workspace: `Overview`, `Work Queue`, dan `Detail/Action`. Hindari layout yang menampilkan semua fitur sekaligus tanpa prioritas tugas.
-- Jika hanya satu role aktif, nav utama boleh berubah menjadi feature nav untuk role tersebut. Untuk Operator, feature nav wajib berisi `Input`, `Riwayat`, `Dashboard`, `Defect`, dan `Status`.
-- Pilihan mode nav seperti `Menu Operator` atau `Pilih Role / Workspace` harus memakai trigger/dropdown nyata di dalam `.app-nav`, bukan hanya pseudo-element `::before`, agar tetap accessible. Saat tertutup, trigger hanya menampilkan label mode; pilihan role/workspace muncul setelah diklik.
+- Nav utama wajib menjadi feature nav untuk workspace yang sedang aktif, baik desktop maupun mobile. Pilihan workspace dipindahkan ke trigger/dropdown nyata di dalam `.app-nav`, bukan pseudo-element `::before`.
+- Semua workspace default ke menu `Dashboard` saat pertama dipilih. Untuk Operator, feature nav wajib berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
+- Trigger/dropdown `.app-nav` saat tertutup hanya menampilkan label mode seperti `Menu Operator`; pilihan workspace muncul setelah diklik.
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Desktop nav item wajib memakai pola icon kiri dan text-stack kanan. Tinggi icon harus setara dengan gabungan tinggi label dan badge, dan setiap row nav harus memiliki tinggi tetap agar active state tidak membuat button meloncat.
 - Pengaturan sesi wajib tersedia sebagai top floating button yang benar-benar mengambang di area kanan atas, bukan sebagai item bottom nav mobile.

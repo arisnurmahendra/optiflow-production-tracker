@@ -1043,6 +1043,10 @@ input:focus,
   gap: 14px;
 }
 
+.split-tables.single-surface {
+  grid-template-columns: 1fr;
+}
+
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
