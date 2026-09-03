@@ -24,8 +24,10 @@ Status implementasi 2026-09-03:
 
 - Tampilan utama harus bersih, terang, dan kontras tinggi.
 - Minimalist Operational UI wajib menjadi fondasi mayoritas layar.
-- App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, dan Management dalam satu halaman panjang.
+- App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, Management, dan Pengaturan dalam satu halaman panjang.
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
+- Mobile bottom nav wajib menampilkan icon besar untuk semua item, tetapi label teks penuh hanya untuk menu aktif agar hemat ruang.
+- View berat seperti Supervisor dan Management wajib lazy-load ketika dibuka, bukan otomatis memanggil semua API saat startup Operator.
 - Tombol aksi utama wajib memakai warna solid.
 - Status kritis wajib terlihat dari kombinasi warna, teks, dan ikon.
 - Card/panel boleh memakai shadow lembut, tetapi tetap harus memiliki border atau pemisah yang jelas.
@@ -225,6 +227,7 @@ Breakpoint awal:
 Mobile:
 - Layout satu kolom.
 - Navigasi workflow wajib menjadi bottom nav button fixed/sticky dengan target sentuh minimal 44px.
+- Item navigasi mobile yang tidak aktif hanya menampilkan icon; item aktif menampilkan icon, label, dan badge ringkas.
 - Bottom action bar boleh dipakai untuk submit/retry/sync.
 - Status sync harus tetap terlihat tanpa membuka menu.
 - Form utama harus selesai dalam alur input yang pendek.

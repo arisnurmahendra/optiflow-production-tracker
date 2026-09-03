@@ -224,6 +224,7 @@ Mode `AUTH_MODE=OFF`:
 - Jika frontend belum memilih role simulasi, response mengembalikan `requires_role_selection=TRUE` dan daftar role yang boleh disimulasikan.
 - Jika frontend mengirim `simulated_role`, backend wajib memvalidasi role terhadap allowlist.
 - Role simulasi tidak boleh ditulis ke `USER_ROLES`.
+- Frontend boleh menyediakan `Try Role` pada pengaturan user untuk memilih role simulasi tanpa berganti email. Pilihan ini hanya boleh dipakai sebagai payload `simulated_role` ketika `AUTH_MODE=OFF`.
 
 Session context yang dikirim ke frontend tidak boleh memuat PII mentah atau secret. Minimal field yang boleh dikirim:
 - `auth_mode`
@@ -235,6 +236,14 @@ Session context yang dikirim ke frontend tidak boleh memuat PII mentah atau secr
 - `allowed_simulated_roles` hanya ketika `AUTH_MODE=OFF`
 
 Setiap session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata yang aman.
+
+Alur pengaturan user:
+1. User membuka view Pengaturan.
+2. Frontend memanggil `getSessionContext` melalui `apiAdapter.js`.
+3. Jika `AUTH_MODE=OFF`, user boleh memilih role dari allowlist `Operator`, `Mandor`, `Management`, `HRD`, atau `SuperAdmin`.
+4. Role pilihan boleh disimpan lokal sebagai preferensi demo/trial, tetapi tidak boleh ditulis ke Sheet atau Script Properties.
+5. Semua aksi frontend berikutnya mengirim `session.simulated_role` sesuai role pilihan.
+6. Jika `AUTH_MODE=ON`, backend mengabaikan simulated role dan tetap memakai email Google aktif.
 
 ## 13. Alur Hidden Maintenance Console SuperAdmin
 

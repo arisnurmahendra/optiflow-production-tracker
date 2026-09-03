@@ -23,6 +23,16 @@ const DEFAULT_PROPERTIES = [
     value_preview: '2099-12-31',
   },
   {
+    key: 'REQUIRE_REGISTERED_EMAIL_LOGIN',
+    sensitivity: 'CONFIG',
+    status: 'SET',
+    readable: true,
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+    value_preview: 'FALSE',
+  },
+  {
     key: 'SPREADSHEET_ID',
     sensitivity: 'CONFIG',
     status: 'SET',
@@ -354,6 +364,10 @@ function validatePropertyValue(key, value) {
     throw new Error('AUTH_MODE must be ON or OFF.');
   }
 
+  if (key === 'REQUIRE_REGISTERED_EMAIL_LOGIN' && !['TRUE', 'FALSE'].includes(text.toUpperCase())) {
+    throw new Error('REQUIRE_REGISTERED_EMAIL_LOGIN must be TRUE or FALSE.');
+  }
+
   if (key === 'APP_ACTIVE_UNTIL' && !/^\d{4}-\d{2}-\d{2}$/.test(text)) {
     throw new Error('APP_ACTIVE_UNTIL must use YYYY-MM-DD format.');
   }
@@ -366,7 +380,7 @@ function validatePropertyValue(key, value) {
 function maskPreview(key, value) {
   const text = String(value || '').trim();
 
-  if (key === 'AUTH_MODE' || key === 'APP_ACTIVE_UNTIL') {
+  if (key === 'AUTH_MODE' || key === 'APP_ACTIVE_UNTIL' || key === 'REQUIRE_REGISTERED_EMAIL_LOGIN') {
     return text;
   }
 

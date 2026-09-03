@@ -88,12 +88,18 @@ const supervisorData = ref(null);
 const supervisorLoading = ref(false);
 const supervisorError = ref('');
 const supervisorMessage = ref('');
+const supervisorLoaded = ref(false);
 const dashboardFilters = ref({ ...defaultDashboardFilters });
 const dashboardData = ref(null);
 const dashboardLoading = ref(false);
 const dashboardError = ref('');
-const m5Session = { simulated_role: 'Mandor' };
-const managementSession = { simulated_role: 'Management' };
+const dashboardLoaded = ref(false);
+const roleOptions = Object.freeze(['Operator', 'Mandor', 'Management', 'HRD', 'SuperAdmin']);
+const selectedRole = ref(readPreferredRole());
+const sessionContext = ref(null);
+const sessionLoading = ref(false);
+const sessionError = ref('');
+const sessionMessage = ref('');
 const supervisorTiles = computed(() => summarizeControlCenter(supervisorData.value || {}));
 const dashboardTiles = computed(() => buildDashboardTiles(dashboardData.value || {}));
 const supervisorRawRows = computed(() => getFirstPageItems(supervisorData.value?.raw_logs));
@@ -113,6 +119,7 @@ const activeView = ref('operator');
 const appViews = computed(() => [
   {
     id: 'operator',
+    icon: '📝',
     label: 'Operator',
     title: 'Input produksi harian',
     subtitle: 'Pelaporan cepat dengan draft lokal dan antrean sinkronisasi.',
@@ -120,6 +127,7 @@ const appViews = computed(() => [
   },
   {
     id: 'mandor',
+    icon: '✅',
     label: 'Mandor',
     title: 'Approval inbox',
     subtitle: 'Review konflik, koreksi, dan keputusan Human-in-the-Loop.',
@@ -127,6 +135,7 @@ const appViews = computed(() => [
   },
   {
     id: 'supervisor',
+    icon: '📊',
     label: 'Supervisor',
     title: 'Control center',
     subtitle: 'Pantau transaksi, quarantine, closing, dan adjustment per line/shift.',
@@ -134,14 +143,33 @@ const appViews = computed(() => [
   },
   {
     id: 'management',
+    icon: '📈',
     label: 'Management',
     title: 'Read-only dashboard',
     subtitle: 'KPI final berbasis MASTER_RECAP tanpa data konflik pending.',
     badge: dashboardLoading.value ? 'Memuat' : 'MASTER_RECAP',
   },
+  {
+    id: 'settings',
+    icon: '⚙️',
+    label: 'Pengaturan',
+    title: 'Pengaturan user',
+    subtitle: 'Try role untuk demo/trial tanpa berganti akun email.',
+    badge: selectedRole.value,
+  },
 ]);
 const activeViewMeta = computed(() =>
   appViews.value.find((view) => view.id === activeView.value) || appViews.value[0],
+);
+const currentSessionLabel = computed(() => {
+  if (sessionContext.value?.auth_mode === 'ON') {
+    return `${sessionContext.value.role || 'Unknown'} dari Google Account`;
+  }
+
+  return `Try as ${selectedRole.value}`;
+});
+const sessionModeLabel = computed(() =>
+  sessionContext.value?.auth_mode === 'ON' ? 'Email login aktif' : 'Demo role aktif',
 );
 
 const maintenanceProperties = ref([
@@ -197,7 +225,6 @@ const isMaintenanceLoading = ref(false);
 const maintenanceError = ref('');
 const tapCount = ref(0);
 let keyBuffer = '';
-const maintenanceSession = { simulated_role: 'SuperAdmin' };
 
 const maintenanceSummary = computed(() => {
   const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
@@ -219,7 +246,7 @@ async function refreshMaintenanceProperties() {
   maintenanceError.value = '';
 
   try {
-    const response = await api.getScriptPropertiesStatus({ session: maintenanceSession });
+    const response = await api.getScriptPropertiesStatus({ session: buildSessionPayload() });
     maintenanceProperties.value = response.data.properties || [];
   } catch (error) {
     maintenanceError.value = getSafeErrorMessage(error);
@@ -236,7 +263,7 @@ async function updateMaintenanceProperty(property) {
   }
 
   await runMaintenanceAction(() => api.setScriptProperty({
-    session: maintenanceSession,
+    session: buildSessionPayload(),
     key: property.key,
     value: nextValue,
   }));
@@ -248,7 +275,7 @@ async function deleteMaintenanceProperty(property) {
   }
 
   await runMaintenanceAction(() => api.deleteScriptProperty({
-    session: maintenanceSession,
+    session: buildSessionPayload(),
     key: property.key,
   }));
 }
@@ -259,7 +286,7 @@ async function rotateMaintenanceProperty(property) {
   }
 
   await runMaintenanceAction(() => api.rotateSecretProperty({
-    session: maintenanceSession,
+    session: buildSessionPayload(),
     key: property.key,
   }));
 }
@@ -296,7 +323,7 @@ async function stageApprovalAction(action) {
 
   try {
     await decisionMap[action]({
-      session: m5Session,
+      session: buildSessionPayload(),
       quarantine_id: activeApprovalCase.value.id,
       notes: action.replace(/_/g, ' '),
     });
@@ -315,12 +342,13 @@ async function refreshSupervisorControlCenter() {
 
   try {
     const response = await api.getSupervisorControlCenter({
-      session: m5Session,
+      session: buildSessionPayload(),
       filter: compactFilter(supervisorFilters.value),
       page: 1,
       page_size: 8,
     });
     supervisorData.value = response.data;
+    supervisorLoaded.value = true;
   } catch (error) {
     supervisorError.value = getSafeErrorMessage(error);
   } finally {
@@ -336,7 +364,7 @@ async function closeCurrentScope() {
   supervisorMessage.value = '';
   try {
     await api.closeDailyClosing({
-      session: m5Session,
+      session: buildSessionPayload(),
       ...createClosingPayload(supervisorFilters.value, 'Closed from supervisor control center.'),
     });
     supervisorMessage.value = 'Closing tersimpan.';
@@ -360,7 +388,7 @@ async function createAdjustmentFromFirstRow() {
 
   try {
     await api.createAdjustment({
-      session: m5Session,
+      session: buildSessionPayload(),
       ...createAdjustmentPayload(firstRow.transaction_id, { perolehan_ok: 0 }, 'No-op verification adjustment.'),
     });
     supervisorMessage.value = 'Adjustment draft dibuat.';
@@ -376,7 +404,7 @@ async function runRecapAndDashboard() {
 
   try {
     await api.runMasterRecap({
-      session: managementSession,
+      session: buildSessionPayload(),
       filter: compactFilter(dashboardFilters.value),
       page: 1,
       page_size: 8,
@@ -394,17 +422,81 @@ async function refreshManagementDashboard() {
 
   try {
     const response = await api.getManagementDashboard({
-      session: managementSession,
+      session: buildSessionPayload(),
       filter: compactFilter(dashboardFilters.value),
       page: 1,
       page_size: 8,
     });
     dashboardData.value = response.data;
+    dashboardLoaded.value = true;
   } catch (error) {
     dashboardError.value = getSafeErrorMessage(error);
   } finally {
     dashboardLoading.value = false;
   }
+}
+
+async function submitOperatorReportWithSession() {
+  return submitOperatorReport({
+    session: buildSessionPayload(),
+    simulatedRole: selectedRole.value,
+  });
+}
+
+async function syncQueueWithSession() {
+  return syncQueue({
+    session: buildSessionPayload(),
+    simulatedRole: selectedRole.value,
+  });
+}
+
+async function refreshSessionContext() {
+  sessionLoading.value = true;
+  sessionError.value = '';
+
+  try {
+    const response = await api.getSessionContext(buildSessionPayload());
+    sessionContext.value = response.data;
+    sessionMessage.value = sessionContext.value?.requires_role_selection
+      ? 'Pilih role untuk demo/trial.'
+      : `Session aktif sebagai ${sessionContext.value?.role || selectedRole.value}.`;
+  } catch (error) {
+    sessionError.value = getSafeErrorMessage(error);
+  } finally {
+    sessionLoading.value = false;
+  }
+}
+
+async function setTryRole(role) {
+  if (!roleOptions.includes(role)) {
+    return;
+  }
+
+  selectedRole.value = role;
+  persistPreferredRole(role);
+  await refreshSessionContext();
+}
+
+async function switchView(viewId) {
+  activeView.value = viewId;
+
+  if (viewId === 'supervisor' && !supervisorLoaded.value) {
+    await refreshSupervisorControlCenter();
+  }
+
+  if (viewId === 'management' && !dashboardLoaded.value) {
+    await refreshManagementDashboard();
+  }
+
+  if (viewId === 'settings') {
+    await refreshSessionContext();
+  }
+}
+
+function buildSessionPayload() {
+  return {
+    simulated_role: selectedRole.value,
+  };
 }
 
 function formatDateTime(timestamp) {
@@ -461,8 +553,7 @@ function handleKeydown(event) {
 
 onMounted(() => {
   hydrate();
-  refreshSupervisorControlCenter();
-  refreshManagementDashboard();
+  refreshSessionContext();
   window.addEventListener('keydown', handleKeydown);
 });
 
@@ -473,6 +564,23 @@ onBeforeUnmount(() => {
 
 function compactFilter(filter) {
   return Object.fromEntries(Object.entries(filter).filter(([, value]) => value !== ''));
+}
+
+function readPreferredRole() {
+  try {
+    const storedRole = window.localStorage.getItem('optiflow.try_role');
+    return roleOptions.includes(storedRole) ? storedRole : 'Operator';
+  } catch {
+    return 'Operator';
+  }
+}
+
+function persistPreferredRole(role) {
+  try {
+    window.localStorage.setItem('optiflow.try_role', role);
+  } catch {
+    // localStorage is optional; selected role still works for this session.
+  }
 }
 </script>
 
@@ -499,10 +607,11 @@ function compactFilter(filter) {
         type="button"
         :class="['nav-item', { active: activeView === view.id }]"
         :aria-current="activeView === view.id ? 'page' : undefined"
-        @click="activeView = view.id"
+        @click="switchView(view.id)"
       >
-        <span>{{ view.label }}</span>
-        <strong>{{ view.badge }}</strong>
+        <span class="nav-icon" aria-hidden="true">{{ view.icon }}</span>
+        <span class="nav-label">{{ view.label }}</span>
+        <strong class="nav-badge">{{ view.badge }}</strong>
       </button>
     </nav>
 
@@ -624,7 +733,7 @@ function compactFilter(filter) {
 
         <div class="action-row">
           <button class="button secondary" type="button" @click="saveDraft">Simpan Draft</button>
-          <button class="button primary" type="button" @click="submitOperatorReport">Submit</button>
+          <button class="button primary" type="button" @click="submitOperatorReportWithSession">Submit</button>
         </div>
       </section>
 
@@ -634,7 +743,7 @@ function compactFilter(filter) {
             <p class="eyebrow">Sync</p>
             <h2 id="queue-title">Antrean device</h2>
           </div>
-          <button class="icon-button" type="button" aria-label="Retry sync" :disabled="isSyncing" @click="syncQueue">
+          <button class="icon-button" type="button" aria-label="Retry sync" :disabled="isSyncing" @click="syncQueueWithSession">
             Retry
           </button>
         </div>
@@ -984,6 +1093,56 @@ function compactFilter(filter) {
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <section v-if="activeView === 'settings'" class="panel settings-panel" aria-labelledby="settings-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">User</p>
+            <h2 id="settings-title">Pengaturan sesi</h2>
+          </div>
+          <span class="badge">{{ sessionModeLabel }}</span>
+        </div>
+
+        <div class="settings-grid">
+          <article class="settings-card">
+            <span>Session aktif</span>
+            <strong>{{ currentSessionLabel }}</strong>
+            <p>{{ sessionContext?.email || 'Demo role tidak membutuhkan pergantian email.' }}</p>
+          </article>
+          <article class="settings-card">
+            <span>Status auth</span>
+            <strong>{{ sessionContext?.auth_mode || 'OFF' }}</strong>
+            <p>{{ sessionContext?.is_simulated ? 'Simulasi role aktif untuk demo/trial.' : 'Menggunakan akun Google aktif.' }}</p>
+          </article>
+        </div>
+
+        <div class="role-switcher" aria-label="Try role">
+          <button
+            v-for="role in roleOptions"
+            :key="role"
+            type="button"
+            :class="['role-button', { active: selectedRole === role }]"
+            @click="setTryRole(role)"
+          >
+            <span>{{ role === 'Operator' ? '📝' : role === 'Mandor' ? '✅' : role === 'Management' ? '📈' : role === 'HRD' ? '👤' : '🔐' }}</span>
+            <strong>{{ role }}</strong>
+          </button>
+        </div>
+
+        <div v-if="sessionLoading" class="inline-info" role="status">
+          Memuat session context.
+        </div>
+        <div v-if="sessionMessage" class="inline-info" role="status">
+          {{ sessionMessage }}
+        </div>
+        <div v-if="sessionError" class="inline-error" role="alert">
+          {{ sessionError }}
+        </div>
+
+        <div class="hint-box">
+          Try role hanya berlaku ketika backend memakai `AUTH_MODE=OFF`. Saat production `AUTH_MODE=ON`, backend tetap memakai email Google aktif.
         </div>
       </section>
     </div>
