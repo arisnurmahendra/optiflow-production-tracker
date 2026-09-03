@@ -327,6 +327,40 @@ const operatorDonutStyle = computed(() => {
     background: `radial-gradient(circle, #ffffff 0 52%, transparent 53%), conic-gradient(#16a34a 0 ${okPercent}%, #dc2626 ${okPercent}% 100%)`,
   };
 });
+const operatorYesterdaySnapshot = computed(() => {
+  const target = Math.max(0, Math.round(Number(form.value.target_harian || 0) * 0.96));
+  const tandon = Math.max(0, Math.round(Number(form.value.tandon || 0) * 0.9));
+  const ok = Math.max(0, Math.round(Number(form.value.perolehan_ok || 0) * 0.94));
+  const reject = Math.max(0, Math.round(Number(form.value.perolehan_reject || 0) * 1.08));
+
+  return { target, tandon, ok, reject };
+});
+const operatorPerformanceCards = computed(() => [
+  {
+    label: 'Target',
+    today: form.value.target_harian,
+    yesterday: operatorYesterdaySnapshot.value.target,
+    tone: 'neutral',
+  },
+  {
+    label: 'Tandon',
+    today: form.value.tandon,
+    yesterday: operatorYesterdaySnapshot.value.tandon,
+    tone: 'warning',
+  },
+  {
+    label: 'OK',
+    today: form.value.perolehan_ok,
+    yesterday: operatorYesterdaySnapshot.value.ok,
+    tone: 'success',
+  },
+  {
+    label: 'Reject',
+    today: form.value.perolehan_reject,
+    yesterday: operatorYesterdaySnapshot.value.reject,
+    tone: 'danger',
+  },
+]);
 const operatorTaskCards = computed(() => [
   {
     label: 'Draft device',
@@ -1179,7 +1213,21 @@ function persistVisibleRoles(roles) {
             <p class="eyebrow">Dashboard</p>
             <h2 id="operator-dashboard-title">Target dan realisasi</h2>
           </div>
-          <span class="badge">Hari ini</span>
+          <span class="badge">Hari ini vs kemarin</span>
+        </div>
+
+        <div class="performance-grid" aria-label="Performa hari ini dan kemarin">
+          <article v-for="item in operatorPerformanceCards" :key="item.label" :class="['performance-card', item.tone]">
+            <span>{{ item.label }}</span>
+            <div>
+              <strong>{{ formatNumber(item.today) }}</strong>
+              <small>Hari ini</small>
+            </div>
+            <div>
+              <strong>{{ formatNumber(item.yesterday) }}</strong>
+              <small>Kemarin</small>
+            </div>
+          </article>
         </div>
 
         <div class="operator-progress">
@@ -1201,8 +1249,12 @@ function persistVisibleRoles(roles) {
           <article class="chart-card">
             <span>Tandon</span>
             <strong>{{ formatNumber(form.tandon) }}</strong>
-            <p>Cadangan yang ikut dihitung dalam batas perolehan.</p>
+            <p>Kemarin {{ formatNumber(operatorYesterdaySnapshot.tandon) }}. Cadangan ikut dihitung dalam batas perolehan.</p>
           </article>
+        </div>
+
+        <div class="hint-box">
+          Data kemarin memakai snapshot lokal/demo sampai endpoint histori operator tersedia.
         </div>
       </section>
 

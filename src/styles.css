@@ -1305,6 +1305,62 @@ td:nth-child(4) {
   background: var(--primary-soft);
 }
 
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.performance-card {
+  min-height: 118px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  background: rgba(248, 250, 252, 0.94);
+}
+
+.performance-card > span {
+  grid-column: 1 / -1;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.performance-card div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.performance-card strong {
+  color: var(--text-primary);
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-card small {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.performance-card.success {
+  border-left: 4px solid var(--success);
+}
+
+.performance-card.warning {
+  border-left: 4px solid var(--warning);
+}
+
+.performance-card.danger {
+  border-left: 4px solid var(--danger);
+}
+
 .operator-progress > div:first-child {
   display: flex;
   align-items: center;
@@ -1567,7 +1623,7 @@ td:nth-child(4) {
     height: 62px;
     min-height: 62px;
     align-items: center;
-    margin: 84px 6px 0;
+    margin: 44px 6px 0;
     padding: 0 18px;
     border-color: rgba(255, 255, 255, 0.78);
     border-radius: 18px;
@@ -1602,7 +1658,7 @@ td:nth-child(4) {
   }
 
   .nav-context {
-    top: -82px;
+    top: -34px;
     right: 0;
     left: 0;
     margin: 0 auto;
@@ -1710,9 +1766,13 @@ td:nth-child(4) {
   .task-strip,
   .hrd-workflow,
   .operator-context-grid,
-  .operator-chart-grid,
   .number-grid {
     grid-template-columns: 1fr;
+  }
+
+  .performance-grid,
+  .operator-chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .panel {

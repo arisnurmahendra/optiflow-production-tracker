@@ -30,6 +30,7 @@ Status implementasi 2026-09-03:
 - Nav utama wajib menjadi feature nav untuk workspace yang sedang aktif, baik desktop maupun mobile. Pilihan workspace dipindahkan ke trigger/dropdown nyata di dalam `.app-nav`, bukan pseudo-element `::before`.
 - Semua workspace default ke menu `Dashboard` saat pertama dipilih. Untuk Operator, feature nav wajib berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
 - Trigger/dropdown `.app-nav` saat tertutup hanya menampilkan label mode seperti `Menu Operator`; pilihan workspace muncul setelah diklik.
+- Pada mobile, trigger/dropdown `.nav-context` tetap berada tepat di atas `.app-nav` seperti desktop, bukan berpindah jauh ke area lain.
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Desktop nav item wajib memakai pola icon kiri dan text-stack kanan. Tinggi icon harus setara dengan gabungan tinggi label dan badge, dan setiap row nav harus memiliki tinggi tetap agar active state tidak membuat button meloncat.
 - Pengaturan sesi wajib tersedia sebagai top floating button yang benar-benar mengambang di area kanan atas, bukan sebagai item bottom nav mobile.
@@ -87,6 +88,7 @@ Dilarang:
 ## 4A. Role Workspace Ergonomics
 
 - Operator workspace wajib memprioritaskan form submit cepat, lalu draft/sync, lalu riwayat submit terbaru.
+- Operator Dashboard wajib menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject. Jika histori backend belum tersedia, UI wajib memberi label snapshot lokal/demo.
 - Mandor workspace wajib action-first: pending approval, conflict, dan closing harus dipisah sebagai task surface yang mudah dipindai.
 - Supervisor workspace wajib alert-first: conflict, closing terbuka, adjustment pending, dan transaksi anomali tampil sebelum tabel mentah.
 - Management workspace wajib insight-first dan read-only: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data.
