@@ -169,6 +169,16 @@ h2 {
   backdrop-filter: blur(12px);
 }
 
+.app-nav::before {
+  content: "Workflow";
+  position: absolute;
+  top: -22px;
+  left: 2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .nav-item {
   min-height: 58px;
   border: 1px solid transparent;
@@ -866,7 +876,7 @@ td:nth-child(4) {
 
 @media (max-width: 860px) {
   .app-shell {
-    padding: 12px;
+    padding: 12px 12px 100px;
   }
 
   .topbar {
@@ -885,15 +895,42 @@ td:nth-child(4) {
   }
 
   .app-nav {
-    grid-template-columns: none;
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    top: auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-auto-flow: column;
-    grid-auto-columns: minmax(138px, 1fr);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
+    grid-auto-columns: auto;
+    padding: 8px;
+    border-color: rgba(203, 213, 225, 0.92);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.2);
   }
 
   .nav-item {
-    min-height: 54px;
+    min-width: 0;
+    min-height: 58px;
+    justify-items: center;
+    align-content: center;
+    padding: 7px 5px;
+    text-align: center;
+  }
+
+  .app-nav::before {
+    content: none;
+  }
+
+  .nav-item span {
+    font-size: 12px;
+  }
+
+  .nav-item strong {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
   }
 
   .metric-strip {
@@ -926,7 +963,7 @@ td:nth-child(4) {
 
   .action-row {
     position: sticky;
-    bottom: 0;
+    bottom: 86px;
     z-index: 5;
     grid-template-columns: 1fr;
     margin-right: -14px;

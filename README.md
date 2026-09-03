@@ -112,6 +112,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - UI hanya berbicara dengan Global State/composable; IndexedDB hanya diakses oleh persistence service.
 - Arah desain UI adalah 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, dan 10% Claymorphism / Glass accent.
 - Workflow besar dipisah sebagai view aplikasi: Operator, Mandor, Supervisor, dan Management; hidden SuperAdmin console tetap tidak muncul di navigasi normal.
+- Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Frontend tidak boleh memanggil `google.script.run` langsung; semua call melewati `apiAdapter.js`.
 - Setiap payload submit membawa `transaction_id` UUID, `device_timestamp` UTC dari device, `client_version`, dan data produksi sesuai schema.
 - `perolehan_ok + perolehan_reject` tidak boleh melebihi `target_harian + tandon`.

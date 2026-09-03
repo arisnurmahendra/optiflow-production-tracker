@@ -25,6 +25,7 @@ Status implementasi 2026-09-03:
 - Tampilan utama harus bersih, terang, dan kontras tinggi.
 - Minimalist Operational UI wajib menjadi fondasi mayoritas layar.
 - App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, dan Management dalam satu halaman panjang.
+- Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Tombol aksi utama wajib memakai warna solid.
 - Status kritis wajib terlihat dari kombinasi warna, teks, dan ikon.
 - Card/panel boleh memakai shadow lembut, tetapi tetap harus memiliki border atau pemisah yang jelas.
@@ -223,13 +224,13 @@ Breakpoint awal:
 
 Mobile:
 - Layout satu kolom.
-- Navigasi workflow boleh memakai horizontal scroll/tab bar agar ruang input operator tetap luas.
+- Navigasi workflow wajib menjadi bottom nav button fixed/sticky dengan target sentuh minimal 44px.
 - Bottom action bar boleh dipakai untuk submit/retry/sync.
 - Status sync harus tetap terlihat tanpa membuka menu.
 - Form utama harus selesai dalam alur input yang pendek.
 
 Desktop:
-- Gunakan sidebar tetap atau top-level tabs sesuai kepadatan fitur; modul besar harus dipisah sebagai view mandiri.
+- Gunakan top navigation untuk workflow utama atau sidebar tetap jika kepadatan fitur bertambah; modul besar harus dipisah sebagai view mandiri.
 - Tabel dan filter boleh berdampingan jika ruang cukup.
 - Detail transaksi dibuka di drawer kanan.
 - Dashboard management harus memprioritaskan metric dan pengecualian operasional, bukan dekorasi.
