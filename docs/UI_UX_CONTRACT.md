@@ -228,6 +228,7 @@ Mobile:
 - Layout satu kolom.
 - Navigasi workflow wajib menjadi bottom nav button fixed/sticky dengan target sentuh minimal 44px.
 - Item navigasi mobile yang tidak aktif hanya menampilkan icon; item aktif menampilkan icon, label, dan badge ringkas.
+- Item navigasi mobile aktif boleh memakai floating circular button di atas bar dengan aksen solid; bar tetap harus kontras tinggi dan tidak menutup submit/retry.
 - Bottom action bar boleh dipakai untuk submit/retry/sync.
 - Status sync harus tetap terlihat tanpa membuka menu.
 - Form utama harus selesai dalam alur input yang pendek.
