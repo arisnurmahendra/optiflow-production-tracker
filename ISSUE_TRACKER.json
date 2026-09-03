@@ -800,6 +800,165 @@
         "Implementation pushed in commit ea83d9a",
         "GitHub issue #27 closed as completed"
       ]
+    },
+    {
+      "id": "OPT-028",
+      "title": "Redesign role workspaces into production-ready task flows",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": null,
+      "scope": [
+        "Refactor UI mental model from feature stacking into role-specific task flows.",
+        "Define overview, work queue, and detail/action panel pattern for each primary role.",
+        "Ensure SuperAdmin hidden console stays outside normal navigation."
+      ],
+      "acceptance_criteria": [
+        "Contract docs updated before implementation.",
+        "Each role sees only role-relevant work surfaces.",
+        "No primary role page stacks all available features in one long mixed page.",
+        "Mobile and desktop layouts remain responsive and performant.",
+        "Relevant verification completed before close."
+      ]
+    },
+    {
+      "id": "OPT-029",
+      "title": "Split Operator workspace into input, draft, and recent submissions",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M3 - Operator Mobile MVP",
+      "github_issue": null,
+      "scope": [
+        "Make Operator workspace focused on fast production input.",
+        "Separate draft/sync status and recent submissions from the main form without clutter.",
+        "Keep mobile operator flow short and one-hand friendly."
+      ],
+      "acceptance_criteria": [
+        "Operator does not see approval, management recap, or backend maintenance surfaces.",
+        "Submit, autosave, queue, and recent submissions remain visible without long scrolling.",
+        "Offline-tolerant state behavior remains unchanged."
+      ]
+    },
+    {
+      "id": "OPT-030",
+      "title": "Split Mandor workspace into approval inbox, conflict queue, and closing",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": null,
+      "scope": [
+        "Make Mandor workspace action-first.",
+        "Separate pending approval, conflict review, and daily closing into clear task surfaces.",
+        "Preserve Human-in-the-Loop approval controls."
+      ],
+      "acceptance_criteria": [
+        "Default Mandor view prioritizes items requiring action.",
+        "CONFLICT_PENDING data is visually isolated from normal approval.",
+        "Closing flow is discoverable without mixing with operator input."
+      ]
+    },
+    {
+      "id": "OPT-031",
+      "title": "Build Supervisor control center with alert-first layout",
+      "status": "Backlog",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": null,
+      "scope": [
+        "Prioritize anomalies, bottlenecks, missing closing, and reject spikes.",
+        "Group line/shift control data into dashboard cards and focused work queues.",
+        "Lazy-load heavy control data only when Supervisor workspace opens."
+      ],
+      "acceptance_criteria": [
+        "Supervisor first sees alerts and production control status.",
+        "Heavy API data is not loaded during Operator startup.",
+        "Adjustment and closing signals are clear."
+      ]
+    },
+    {
+      "id": "OPT-032",
+      "title": "Build Management read-only KPI dashboard task flow",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": null,
+      "scope": [
+        "Make Management workspace read-only and insight-focused.",
+        "Prioritize MASTER_RECAP KPI, trends, Pareto defect, and export/report surfaces.",
+        "Hide operational mutation controls."
+      ],
+      "acceptance_criteria": [
+        "Management view only uses approved/final recap data.",
+        "CONFLICT_PENDING data is excluded from final KPI views.",
+        "No write actions appear except allowed export/filter/report actions."
+      ]
+    },
+    {
+      "id": "OPT-033",
+      "title": "Build HRD user access and role audit workspace",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "type:security",
+        "area:frontend",
+        "area:ui-ux",
+        "area:process",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M6 - Security, Testing & Deployment",
+      "github_issue": null,
+      "scope": [
+        "Replace HRD placeholder with user access and role audit workspace.",
+        "Show masked user information, role assignment status, and access audit readiness.",
+        "Keep PII and secrets protected by backend permissions."
+      ],
+      "acceptance_criteria": [
+        "HRD workspace does not expose raw PII unless explicitly authorized by backend role permission.",
+        "User role state is understandable without opening Script Properties.",
+        "Security and audit constraints remain visible and enforceable."
+      ]
     }
   ]
 }

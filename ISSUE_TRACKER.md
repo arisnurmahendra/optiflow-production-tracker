@@ -57,7 +57,7 @@ Status:
 
 ## 4. Issue Backlog
 
-Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Eksekusi berikutnya membutuhkan issue roadmap baru atau eksekusi pilot lapangan.
+Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Roadmap berikutnya berfokus pada pemisahan workspace per role agar UI lebih production-ready dan tidak terasa seperti satu halaman berisi semua fitur.
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -88,6 +88,12 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-025` | Execute 1 line / 1 shift pilot rollout | Closed | P2 | `type:feature`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #25 |
 | `OPT-026` | Produce QCC Step 1-8 report package | Closed | P2 | `type:docs`, `area:process`, `priority:p2`, `sync:github` | `M7 - QCC Report & Rollout` | #26 |
 | `OPT-027` | Build SuperAdmin hidden maintenance console for safe Script Properties management | Closed | P1 | `type:feature`, `type:security`, `area:backend`, `area:frontend`, `priority:p1`, `sync:github` | `M6 - Security, Testing & Deployment` | #27 |
+| `OPT-028` | Redesign role workspaces into production-ready task flows | Ready | P0 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p0`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-029` | Split Operator workspace into input, draft, and recent submissions | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | TBD |
+| `OPT-030` | Split Mandor workspace into approval inbox, conflict queue, and closing | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-031` | Build Supervisor control center with alert-first layout | Backlog | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-032` | Build Management read-only KPI dashboard task flow | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-033` | Build HRD user access and role audit workspace | Backlog | P2 | `type:feature`, `type:security`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
 
 ## 5. Closed Issue Log
 
