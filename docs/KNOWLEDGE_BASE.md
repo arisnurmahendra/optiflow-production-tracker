@@ -54,7 +54,7 @@ Ringkasan langkah:
 
 Per 2026-09-03, implementasi sudah mencakup:
 - Frontend Vue 3 mobile operator dengan autosave draft, IndexedDB queue, sync status, dan preview Pareto defect.
-- Backend GAS modular untuk health check, sheet bootstrap, auth/session, RBAC, validation, audit, production logs, quarantine, daily closing, adjustment, recap, dashboard, access gate, Script Properties maintenance, dan native test runner.
+- Backend GAS modular untuk health check, sheet bootstrap, spreadsheet admin toolbar, auth/session, RBAC, validation, audit, production logs, quarantine, daily closing, adjustment, recap, dashboard, access gate, Script Properties maintenance, dan native test runner.
 - Append-only `RAW_LOGS` dengan idempotency `transaction_id`.
 - Conflict detection untuk mesin sama/operator berbeda/waktu berdekatan ke `CONFLICT_PENDING`.
 - Default `DEFECT_CATEGORIES` untuk Pareto awal: solder tipis, solder bridge, komponen missing, dan visual scratch.

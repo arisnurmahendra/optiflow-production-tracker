@@ -20,6 +20,48 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+function onOpen(e) {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertDoGetEvent(arguments, 'onOpen');
+
+  return OptiflowSpreadsheetMenu.create();
+}
+
+function menuBootstrapSheets() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuBootstrapSheets');
+
+  return OptiflowSpreadsheetMenu.bootstrapSheetsFromMenu();
+}
+
+function menuSetDefaultScriptProperties() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuSetDefaultScriptProperties');
+
+  return OptiflowSpreadsheetMenu.setDefaultScriptPropertiesFromMenu();
+}
+
+function menuSeedDummyMasterData() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuSeedDummyMasterData');
+
+  return OptiflowSpreadsheetMenu.seedDummyMasterDataFromMenu();
+}
+
+function menuShowSchemaHealth() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuShowSchemaHealth');
+
+  return OptiflowSpreadsheetMenu.showSchemaHealthFromMenu();
+}
+
+function menuRunGasSmokeTest() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuRunGasSmokeTest');
+
+  return OptiflowSpreadsheetMenu.runGasSmokeTestFromMenu();
+}
+
 function getHealthCheck() {
   // Input Validation & Sanitization
   OptiflowValidation.assertNoInput(arguments, 'getHealthCheck');

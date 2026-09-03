@@ -16,7 +16,7 @@ Before code changes, use the Low-Token Context Protocol:
 
 Current implementation baseline as of 2026-09-03:
 - Completed runtime scope: `OPT-001` through `OPT-027`.
-- Implemented: Vite single-file frontend, safe deploy staging, modular GAS, sheet bootstrap/health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator mobile form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, backend quarantine approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch, supervisor control center, management read-only dashboard, Pareto-ready defect capture, hidden Script Properties console, `APP_ACTIVE_UNTIL` access gate, native `test_runner.gs`, production hardening checklist, deployment checklist, pilot rollout plan, and QCC report package template.
+- Implemented: Vite single-file frontend, safe deploy staging, modular GAS, sheet bootstrap/health, spreadsheet admin toolbar, auth/session, RBAC, validation audit, API adapter, mock GAS, operator mobile form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, backend quarantine approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch, supervisor control center, management read-only dashboard, Pareto-ready defect capture, hidden Script Properties console, `APP_ACTIVE_UNTIL` access gate, native `test_runner.gs`, production hardening checklist, deployment checklist, pilot rollout plan, and QCC report package template.
 - Not yet complete: production pilot execution and actual QCC benefit validation from pilot evidence.
 
 ## 2. Core Principles
@@ -53,7 +53,7 @@ Current implementation baseline as of 2026-09-03:
 - `Code.js` must stay thin as the public entrypoint for `doGet()` and externally callable wrappers.
 - Scalable backend logic belongs in modular `.gs` files under `gas/`.
 - GAS modules share global scope; use namespace objects such as `OptiflowHealth`, `OptiflowResponse`, and future `OptiflowValidation` instead of unscoped helper function names.
-- Keep module boundaries clear: config/constants, response helpers, validation, auth/RBAC, sheet access, audit, production logs, quarantine, recap, and test runner.
+- Keep module boundaries clear: config/constants, response helpers, validation, auth/RBAC, sheet access, spreadsheet menu, audit, production logs, quarantine, recap, and test runner.
 
 ## 4. Required Server Configuration
 

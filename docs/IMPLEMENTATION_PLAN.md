@@ -261,6 +261,7 @@ Deliverables:
 - Dokumentasi deploy via Clasp.
 - Checklist Script Properties.
 - Hidden maintenance console SuperAdmin untuk status/update/delete/rotate Script Properties berbasis allowlist.
+- Spreadsheet toolbar admin untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
 - Expiry gate berbasis `APP_ACTIVE_UNTIL` yang menampilkan halaman akses ditolak saat aplikasi sudah melewati masa aktif.
 - Production API wrapper memakai `google.script.run.withSuccessHandler().withFailureHandler()`.
 - Artefak checklist:

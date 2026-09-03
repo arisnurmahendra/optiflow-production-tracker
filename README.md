@@ -88,6 +88,7 @@ Yang sudah terimplementasi:
 - IndexedDB persistence untuk `drafts` dan `queue`; UI tidak membaca/menulis IndexedDB langsung.
 - GAS modular di `gas/*.gs` dengan `Code.js` sebagai entrypoint tipis.
 - Bootstrap dan health check semua sheet kontrak, termasuk seed awal `DEFECT_CATEGORIES`.
+- Toolbar spreadsheet `OPTIFLOW Admin` untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
 - `AUTH_MODE` session context, role simulation untuk development, dan production lookup via Google account.
 - RBAC exact match berbasis `ROLE_PERMISSIONS`; tidak ada implicit allow untuk `SuperAdmin`.
 - Input Validation & Sanitization pada callable wrapper sebelum auth, sheet access, atau business logic.
@@ -153,6 +154,11 @@ Initial setup di Apps Script:
 
 Setelah sheet foundational tersedia, `bootstrapSheets()` kembali wajib melewati auth/RBAC.
 
+Menu spreadsheet:
+- Saat project terhubung ke Google Sheets, `onOpen()` menambahkan menu `OPTIFLOW Admin`.
+- Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, dan GAS smoke test.
+- Dummy master data ditolak saat `AUTH_MODE=ON`, dan default Script Properties tidak menimpa nilai yang sudah ada.
+
 Alur push yang aman:
 
 ```powershell
@@ -192,6 +198,7 @@ gas/
 |-- response.gs
 |-- scriptProperties.gs
 |-- sheets.gs
+|-- spreadsheetMenu.gs
 |-- test_runner.gs
 `-- validation.gs
 ```
@@ -206,7 +213,7 @@ Validasi backend:
 npm run test:gas
 ```
 
-Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, test permission matrix, test production logs/quarantine, test Script Properties, dan test native GAS runner.
+Command tersebut menjalankan audit `Input Validation & Sanitization` untuk callable wrapper di `Code.js`, test bootstrap sheet, test auth/session, test permission matrix, test production logs/quarantine, test Script Properties, test native GAS runner, dan test spreadsheet toolbar menu.
 
 Native runner untuk Apps Script target:
 

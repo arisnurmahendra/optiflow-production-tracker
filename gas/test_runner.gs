@@ -91,6 +91,7 @@ var OptiflowTestRunner = (function () {
       'OptiflowResponse',
       'OptiflowScriptProperties',
       'OptiflowSheets',
+      'OptiflowSpreadsheetMenu',
       'OptiflowValidation',
     ];
 

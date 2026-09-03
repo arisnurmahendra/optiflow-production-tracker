@@ -71,7 +71,7 @@ class MockSheet {
 
 class MockSpreadsheet {
   constructor() {
-    this.id = 'mock-spreadsheet-id';
+    this.id = 'mock-spreadsheet-id-1234567890';
     this.sheets = new Map();
   }
 
@@ -90,13 +90,35 @@ class MockSpreadsheet {
   }
 }
 
-const properties = {
-  AUTH_MODE: 'OFF',
-  APP_ACTIVE_UNTIL: '2099-12-31',
-  ENCRYPTION_SALT: 'super-secret-salt',
-};
+const properties = {};
 const spreadsheet = new MockSpreadsheet();
 let uuidCounter = 0;
+const menuCalls = [];
+const alerts = [];
+const ui = {
+  ButtonSet: { OK: 'OK' },
+  createMenu(name) {
+    const menu = {
+      name,
+      items: [],
+      addItem(label, functionName) {
+        this.items.push({ label, functionName });
+        return this;
+      },
+      addSeparator() {
+        this.items.push({ separator: true });
+        return this;
+      },
+      addToUi() {
+        menuCalls.push(this);
+      },
+    };
+    return menu;
+  },
+  alert(title, message) {
+    alerts.push({ title, message });
+  },
+};
 const context = {
   console,
   Date,
@@ -125,6 +147,9 @@ const context = {
         getProperty(key) {
           return properties[key] || '';
         },
+        setProperty(key, value) {
+          properties[key] = value;
+        },
       };
     },
   },
@@ -139,6 +164,9 @@ const context = {
     },
     openById() {
       return spreadsheet;
+    },
+    getUi() {
+      return ui;
     },
   },
 };
@@ -169,71 +197,53 @@ for (const file of files) {
   vm.runInNewContext(await readFile(file, 'utf8'), context, { filename: file });
 }
 
-vm.runInNewContext('OptiflowSheets.bootstrap()', context);
-
-appendPermission('SuperAdmin', 'test_runner', 'run', true);
-
-const result = vm.runInNewContext(
-  "runGasTestRunner({ session: { simulated_role: 'SuperAdmin' }, mode: 'SMOKE' })",
-  context,
-);
-
-if (!result.ok || result.data.status !== 'PASS' || result.data.summary.failed !== 0) {
-  throw new Error('Expected GAS test runner to return PASS.');
+vm.runInNewContext('onOpen({})', context);
+if (menuCalls.length !== 1 || menuCalls[0].name !== 'OPTIFLOW Admin') {
+  throw new Error('Expected OPTIFLOW Admin spreadsheet menu.');
 }
 
-if (JSON.stringify(result).includes('super-secret-salt')) {
-  throw new Error('Test runner response must not expose secret values.');
+vm.runInNewContext('menuBootstrapSheets()', context);
+if (spreadsheet.sheets.size !== context.OPTIFLOW_REQUIRED_SHEETS.length) {
+  throw new Error('Expected menu bootstrap to create required sheets.');
 }
 
+vm.runInNewContext('menuSetDefaultScriptProperties()', context);
+if (properties.AUTH_MODE !== 'OFF' || properties.SPREADSHEET_ID !== spreadsheet.id || !properties.ENCRYPTION_SALT) {
+  throw new Error('Expected default Script Properties to be set when empty.');
+}
+const originalSalt = properties.ENCRYPTION_SALT;
+vm.runInNewContext('menuSetDefaultScriptProperties()', context);
+if (properties.ENCRYPTION_SALT !== originalSalt) {
+  throw new Error('Expected default Script Properties to keep existing secrets.');
+}
+
+vm.runInNewContext('menuSeedDummyMasterData()', context);
+const userRows = context.OptiflowSheets.getRows('USER_ROLES');
+const permissionRows = context.OptiflowSheets.getRows('ROLE_PERMISSIONS');
+if (!userRows.some((row) => row.email === 'superadmin@example.com')) {
+  throw new Error('Expected dummy SuperAdmin user.');
+}
+if (!permissionRows.some((row) => row.permission_id === 'SuperAdmin.test_runner.run')) {
+  throw new Error('Expected dummy test_runner permission.');
+}
+
+vm.runInNewContext('menuRunGasSmokeTest()', context);
+if (!alerts.some((alert) => alert.title === 'GAS Smoke Test' && alert.message.includes('Status: PASS'))) {
+  throw new Error('Expected menu smoke test PASS alert.');
+}
+if (JSON.stringify(alerts).includes(originalSalt)) {
+  throw new Error('Spreadsheet menu alerts must not expose secret values.');
+}
+
+properties.AUTH_MODE = 'ON';
 let rejected = false;
 try {
-  vm.runInNewContext(
-    "runGasTestRunner({ session: { simulated_role: 'Operator' }, mode: 'SMOKE' })",
-    context,
-  );
+  vm.runInNewContext('menuSeedDummyMasterData()', context);
 } catch {
   rejected = true;
 }
-
 if (!rejected) {
-  throw new Error('Expected unauthorized test runner access to be rejected.');
+  throw new Error('Expected dummy seed to be rejected when AUTH_MODE=ON.');
 }
 
-rejected = false;
-try {
-  vm.runInNewContext(
-    "runGasTestRunner({ session: { simulated_role: 'SuperAdmin' }, mode: 'FULL' })",
-    context,
-  );
-} catch {
-  rejected = true;
-}
-
-if (!rejected) {
-  throw new Error('Expected unsupported test runner mode to be rejected.');
-}
-
-const auditLogs = spreadsheet.getSheetByName('AUDIT_LOGS').rows;
-const auditHeader = context.OPTIFLOW_SHEET_SCHEMAS.AUDIT_LOGS;
-const actionIndex = auditHeader.indexOf('action');
-const auditActions = auditLogs.slice(1).map((row) => row[actionIndex]);
-
-if (!auditActions.includes('TEST_RUNNER_EXECUTED')) {
-  throw new Error('Expected TEST_RUNNER_EXECUTED audit event.');
-}
-
-console.log('gas test runner test ok');
-
-function appendPermission(role, resource, action, isAllowed) {
-  const permissions = spreadsheet.getSheetByName('ROLE_PERMISSIONS');
-  const headers = context.OPTIFLOW_SHEET_SCHEMAS.ROLE_PERMISSIONS;
-  permissions.appendRow(headers.map((header) => ({
-    permission_id: `${role}-${resource}-${action}`,
-    role,
-    resource,
-    action,
-    is_allowed: isAllowed,
-    updated_at: '2026-09-02T00:00:00.000Z',
-  }[header] ?? '')));
-}
+console.log('gas spreadsheet menu test ok');

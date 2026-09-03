@@ -317,3 +317,20 @@ Urutan stabilisasi produksi:
 3. Deployment production mengikuti `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`; push GAS wajib lewat `npm run push:gas`.
 4. Pilot memakai `docs/PILOT_ROLLOUT_PLAN.md` untuk 1 line, 1 shift, dan 1 Mandor sebelum rollout lebih luas.
 5. Paket laporan QCC memakai `docs/QCC_REPORT_PACKAGE.md`; hasil pilot menjadi sumber aktual Step 5 dan Step 6.
+
+## 17. Spreadsheet Admin Toolbar
+
+Spreadsheet-bound Apps Script boleh menambahkan menu toolbar `OPTIFLOW Admin` untuk setup dan smoke check awal.
+
+Menu yang tersedia:
+- `Bootstrap Sheets`: membuat sheet/header default secara non-destruktif.
+- `Set Default Script Properties`: mengisi property yang masih kosong saja, termasuk `AUTH_MODE=OFF`, `SPREADSHEET_ID` dari active spreadsheet, `APP_ACTIVE_UNTIL`, dan `ENCRYPTION_SALT`.
+- `Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, dan shift dummy hanya ketika `AUTH_MODE` bukan `ON`.
+- `Run GAS Smoke Test`: menjalankan native test runner dan menampilkan ringkasan aman.
+- `Show Schema Health`: menampilkan status health schema.
+
+Aturan:
+- Menu toolbar tidak boleh menghapus data produksi.
+- Default Script Properties tidak boleh menimpa nilai yang sudah ada.
+- Dummy data wajib ditolak jika `AUTH_MODE=ON`.
+- Secret tidak boleh ditampilkan di alert, log, atau response menu.

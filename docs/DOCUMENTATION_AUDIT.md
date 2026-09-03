@@ -64,14 +64,14 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 - Management dashboard isolation is consistent: dashboard reads `MASTER_RECAP`, not `RAW_LOGS`, and excludes unapproved conflict data.
 - Security baseline is consistent with Google Workspace identity: `AUTH_MODE` is an environment toggle, while role truth remains in `USER_ROLES`.
 - UI/UX contract is aligned with operational needs: mobile prioritizes fast input, desktop prioritizes scan/review/dashboard control.
-- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, safe Script Properties maintenance, native GAS test runner, and production readiness artifacts.
+- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, safe Script Properties maintenance, spreadsheet admin toolbar, native GAS test runner, and production readiness artifacts.
 
 ## 4A. Current Code Alignment Snapshot
 
 Implemented and verified modules:
 - Frontend: `src/App.vue`, `src/composables/useOperatorReportStore.js`, `src/services/apiAdapter.js`, `src/services/mock_gas.js`, `src/services/indexedDbPersistence.js`, `src/services/operatorReportForm.js`, `src/services/approvalInbox.js`, `src/services/defectCategories.js`, `src/services/supervisorControlCenter.js`, and `src/services/managementDashboard.js`.
-- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, `gas/test_runner.gs`, and `gas/validation.gs`.
-- Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties/test-runner tests, singlefile build verification, and GAS deploy preparation.
+- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, `gas/spreadsheetMenu.gs`, `gas/test_runner.gs`, and `gas/validation.gs`.
+- Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties/test-runner/spreadsheet-menu tests, singlefile build verification, and GAS deploy preparation.
 
 Known remaining evidence gaps:
 - Target Apps Script smoke result, real pilot execution data, and actual QCC benefit values remain dependent on field execution outside the repository.

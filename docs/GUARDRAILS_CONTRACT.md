@@ -62,6 +62,7 @@
 - Dilarang keras menghasilkan file `.js` atau `.css` terpisah di direktori `/dist`.
 - Seluruh komponen Vue 3, styling, dan aset base64 wajib ter-bundle 100% ke dalam satu file tunggal `Index.html` agar dapat dieksekusi oleh engine Google Apps Script HTML Service.
 - Hidden maintenance console boleh ada untuk `SuperAdmin`, tetapi harus tersembunyi dari navigasi normal, tidak boleh menampilkan secret, dan semua aksi wajib melewati `apiAdapter.js` menuju endpoint GAS tervalidasi.
+- Spreadsheet toolbar menu boleh ada untuk setup admin container-bound, tetapi wajib non-destruktif, tidak boleh menampilkan secret, tidak boleh menimpa Script Properties yang sudah ada, dan dummy seed wajib ditolak ketika `AUTH_MODE=ON`.
 
 ## 4. Data Integrity
 

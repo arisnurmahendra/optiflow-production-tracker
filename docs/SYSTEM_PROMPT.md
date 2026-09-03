@@ -47,7 +47,7 @@ Primary contracts:
 Current implementation baseline:
 - Completed runtime scope covers `OPT-001` through `OPT-027`.
 - Existing frontend modules include API adapter, mock GAS, IndexedDB persistence, operator report store, operator report form, approval inbox UI helpers, defect/Pareto helpers, supervisor control center helpers, and management dashboard helpers.
-- Existing GAS modules include access gate, adjustments, audit, auth, config, daily closing, dashboard, health, permissions, production logs, quarantine, recap, response, script properties, sheets, test runner, and validation.
+- Existing GAS modules include access gate, adjustments, audit, auth, config, daily closing, dashboard, health, permissions, production logs, quarantine, recap, response, script properties, sheets, spreadsheet menu, test runner, and validation.
 - Do not claim production pilot results or final QCC benefits are actual until pilot evidence exists.
 - Native `test_runner.gs`, production hardening checklist, deployment checklist, pilot plan, and QCC package template are implementation artifacts; target-environment execution evidence must still be recorded during rollout.
 
