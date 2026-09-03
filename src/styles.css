@@ -255,6 +255,8 @@ h2 {
 
 .app-nav {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-auto-rows: 58px;
+  align-items: stretch;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -269,15 +271,24 @@ h2 {
 .app-nav::before {
   content: "Workflow";
   position: absolute;
-  top: -22px;
-  left: 2px;
-  color: var(--text-secondary);
+  top: -28px;
+  left: 8px;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(14, 165, 233, 0.16);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #075985;
   font-size: 12px;
   font-weight: 800;
+  backdrop-filter: blur(10px);
 }
 
 .nav-item {
-  min-height: 58px;
+  min-height: 0;
+  height: 58px;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 10px 12px;
@@ -287,6 +298,8 @@ h2 {
   column-gap: 10px;
   row-gap: 3px;
   align-items: center;
+  align-content: center;
+  overflow: hidden;
   background: transparent;
   color: var(--text-secondary);
   text-align: left;
