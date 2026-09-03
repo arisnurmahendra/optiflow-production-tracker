@@ -30,6 +30,11 @@ function getHealthCheck() {
 function bootstrapSheets() {
   // Input Validation & Sanitization
   var payload = OptiflowValidation.validateOptionalSessionRequest(arguments, arguments[0], 'bootstrapSheets');
+
+  if (OptiflowSheets.isFirstRunBootstrapRequired()) {
+    return OptiflowSheets.bootstrap();
+  }
+
   var session = OptiflowAuth.requireSession(payload, {
     resource: 'schema',
     action: 'bootstrap',

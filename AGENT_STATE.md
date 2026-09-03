@@ -14,6 +14,7 @@ This file does not replace the contracts. It tells the agent which contract to r
 - State rule: UI talks to Global State/composables only; UI must not read or write IndexedDB directly.
 - Backend rule: `Code.js` stays thin; scalable GAS logic belongs in modular `gas/*.gs` files.
 - Security rule: every external GAS input path starts with `Input Validation & Sanitization`.
+- Bootstrap rule: `bootstrapSheets()` may bypass session/RBAC only during first-run foundational sheet creation.
 - Data rule: operator sync is append-only event sourcing into `RAW_LOGS`; conflicts become `CONFLICT_PENDING`.
 - Implemented scope: `OPT-001` through `OPT-027`.
 - Current next roadmap item: production pilot execution evidence after M6/M7 artifact closure.

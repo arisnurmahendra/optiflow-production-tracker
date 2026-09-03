@@ -83,6 +83,7 @@ Kriteria selesai:
 - Backend dapat mendeteksi sheet hilang atau kolom tidak cocok.
 - Tidak ada formula di `RAW_LOGS`.
 - Backend dapat membuat sheet wajib dan header awal tanpa menghapus data yang sudah ada.
+- `bootstrapSheets()` memutus circular dependency first-run: jika sheet foundational auth/RBAC/audit belum ada, schema bootstrap boleh berjalan tanpa session; setelah foundational sheet ada, endpoint kembali wajib RBAC `schema:bootstrap`.
 
 ## 4. Fase 2 - Auth, RBAC, Dan Session Bootstrap
 

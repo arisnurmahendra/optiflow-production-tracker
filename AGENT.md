@@ -47,6 +47,7 @@ Current implementation baseline as of 2026-09-03:
 - Backend runs on Google Apps Script V8.
 - Data storage uses Google Sheets multi-sheet architecture.
 - Frontend calls backend only through `apiAdapter.js`.
+- `bootstrapSheets()` has a narrow first-run exception: when `USER_ROLES`, `ROLE_PERMISSIONS`, or `AUDIT_LOGS` do not exist yet, it may create schema/header without session/RBAC; after those foundational sheets exist, it must require `schema:bootstrap`.
 - Local development uses `mock_gas.js` with latency and failure simulation.
 - Hidden maintenance console actions must still call GAS endpoints through `apiAdapter.js`; the hidden trigger is not a security boundary.
 - `Code.js` must stay thin as the public entrypoint for `doGet()` and externally callable wrappers.

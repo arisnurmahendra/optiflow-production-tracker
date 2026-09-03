@@ -98,7 +98,15 @@ const spreadsheet = new MockSpreadsheet();
 const context = {
   console,
   Date,
+  JSON,
   Object,
+  String,
+  Array,
+  Utilities: {
+    getUuid() {
+      return '00000000-0000-4000-8000-000000000001';
+    },
+  },
   PropertiesService: {
     getScriptProperties() {
       return {
@@ -123,14 +131,18 @@ const files = [
   'gas/response.gs',
   'gas/validation.gs',
   'gas/sheets.gs',
+  'gas/audit.gs',
+  'gas/permissions.gs',
+  'gas/auth.gs',
   'gas/health.gs',
+  'Code.js',
 ];
 
 for (const file of files) {
   vm.runInNewContext(await readFile(file, 'utf8'), context, { filename: file });
 }
 
-const bootstrap = vm.runInNewContext('OptiflowSheets.bootstrap()', context);
+const bootstrap = vm.runInNewContext('bootstrapSheets()', context);
 
 if (!bootstrap.ok) {
   throw new Error('Expected bootstrap response to be ok.');
@@ -147,6 +159,17 @@ if (!bootstrap.data.schema_health.valid) {
 const defectCategories = spreadsheet.getSheetByName('DEFECT_CATEGORIES');
 if (defectCategories.getLastRow() < 2) {
   throw new Error('Expected bootstrap to seed default defect categories.');
+}
+
+let rejected = false;
+try {
+  vm.runInNewContext('bootstrapSheets()', context);
+} catch (error) {
+  rejected = error.message.includes('Invalid AUTH_MODE configuration');
+}
+
+if (!rejected) {
+  throw new Error('Expected bootstrapSheets to require auth after foundational sheets exist.');
 }
 
 const rawLogs = spreadsheet.getSheetByName('RAW_LOGS');

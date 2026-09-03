@@ -53,6 +53,16 @@ var OptiflowSheets = (function () {
     return OptiflowResponse.success(buildHealthReport(getSpreadsheet()));
   }
 
+  function isFirstRunBootstrapRequired() {
+    var spreadsheet = getSpreadsheet();
+    var foundationalSheets = ['USER_ROLES', 'ROLE_PERMISSIONS', 'AUDIT_LOGS'];
+
+    return foundationalSheets.some(function (sheetName) {
+      var sheet = spreadsheet.getSheetByName(sheetName);
+      return !sheet || sheet.getLastRow() === 0;
+    });
+  }
+
   function getRows(sheetName) {
     var sheet = getSpreadsheet().getSheetByName(sheetName);
 
@@ -257,6 +267,7 @@ var OptiflowSheets = (function () {
     appendRecord: appendRecord,
     getRows: getRows,
     healthCheck: healthCheck,
+    isFirstRunBootstrapRequired: isFirstRunBootstrapRequired,
     replaceDataRows: replaceDataRows,
   });
 })();

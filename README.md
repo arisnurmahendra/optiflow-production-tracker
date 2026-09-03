@@ -143,6 +143,16 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 
 Clasp memakai `.clasp.json` lokal dengan `"rootDir": "deploy"`. Folder `deploy/` adalah artifact lokal dan tidak di-commit ke Git.
 
+Initial setup di Apps Script:
+
+1. Set `SPREADSHEET_ID` di Script Properties jika project GAS standalone.
+2. Jalankan `bootstrapSheets()` sekali untuk membuat sheet/header awal. Pemanggilan pertama boleh berjalan walaupun `AUTH_MODE`, `USER_ROLES`, `ROLE_PERMISSIONS`, dan `AUDIT_LOGS` belum siap.
+3. Isi minimal `USER_ROLES` dan `ROLE_PERMISSIONS`, termasuk permission `schema:bootstrap` untuk admin yang berwenang.
+4. Set `AUTH_MODE` ke `OFF` untuk development atau `ON` untuk production.
+5. Set `APP_ACTIVE_UNTIL` bila aplikasi perlu masa aktif terbatas.
+
+Setelah sheet foundational tersedia, `bootstrapSheets()` kembali wajib melewati auth/RBAC.
+
 Alur push yang aman:
 
 ```powershell

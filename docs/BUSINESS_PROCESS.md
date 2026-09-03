@@ -296,6 +296,11 @@ Baseline resource/action:
 | `script_property` | `read_status`, `update`, `delete`, `rotate_secret` |
 | `test_runner` | `run` |
 
+Catatan bootstrap pertama:
+- `bootstrapSheets()` boleh berjalan tanpa session/RBAC hanya ketika sheet foundational `USER_ROLES`, `ROLE_PERMISSIONS`, atau `AUDIT_LOGS` belum ada.
+- Tujuannya hanya membuat sheet/header awal agar auth, RBAC, dan audit bisa mulai bekerja.
+- Setelah sheet foundational ada, pemanggilan berikutnya wajib memiliki permission `schema:bootstrap`.
+
 ## 15. Standardisasi QCC
 
 Hasil implementasi yang terbukti efektif harus dikunci melalui:
