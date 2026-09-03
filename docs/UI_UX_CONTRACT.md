@@ -233,7 +233,7 @@ Breakpoint awal:
 
 Mobile:
 - Layout satu kolom.
-- Navigasi workflow wajib menjadi bottom nav button fixed/sticky dengan target sentuh minimal 44px.
+- Navigasi workflow mobile wajib menjadi bottom nav button sticky dengan target sentuh minimal 44px, tetap berada dalam flow layout, dan active bubble tidak boleh terpotong.
 - Item navigasi mobile yang tidak aktif hanya menampilkan icon; item aktif menampilkan icon dan label ringkas tanpa badge agar tinggi dock tidak meloncat.
 - Item navigasi mobile aktif boleh memakai floating circular button di atas bar dengan aksen solid; bar tetap harus kontras tinggi dan tidak menutup submit/retry.
 - Tombol Pengaturan sesi di area atas boleh menampilkan icon dan role aktif; proses Try Role harus optimistik/instan di UI, dengan refresh session backend berjalan setelahnya.
