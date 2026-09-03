@@ -116,6 +116,53 @@ const workflowIconMap = Object.freeze({
   management: roleIcons.Management,
   hrd: roleIcons.HRD,
 });
+const operatorFeatureViews = Object.freeze([
+  {
+    id: 'operator-input',
+    type: 'operator-feature',
+    icon: '📝',
+    label: 'Input',
+    title: 'Input produksi harian',
+    subtitle: 'Form cepat untuk submit angka produksi.',
+    badge: 'Cepat',
+  },
+  {
+    id: 'operator-history',
+    type: 'operator-feature',
+    icon: '🕘',
+    label: 'Riwayat',
+    title: 'Riwayat submit',
+    subtitle: 'Submit terakhir hari ini dari device operator.',
+    badge: 'Hari ini',
+  },
+  {
+    id: 'operator-dashboard',
+    type: 'operator-feature',
+    icon: '📊',
+    label: 'Dashboard',
+    title: 'Dashboard operator',
+    subtitle: 'Target, OK, Reject, dan Tandon hari ini.',
+    badge: 'Shift',
+  },
+  {
+    id: 'operator-defect',
+    type: 'operator-feature',
+    icon: '🧩',
+    label: 'Defect',
+    title: 'Defect insight',
+    subtitle: 'Kategori reject dan preview Pareto operator.',
+    badge: 'QCC',
+  },
+  {
+    id: 'operator-status',
+    type: 'operator-feature',
+    icon: '📡',
+    label: 'Status',
+    title: 'Status sinkronisasi',
+    subtitle: 'Draft, queue, retry, dan status sync device.',
+    badge: 'Sync',
+  },
+]);
 const selectedRole = ref(readPreferredRole());
 const visibleRoles = ref(readVisibleRoles());
 const sessionContext = ref(null);
@@ -138,6 +185,7 @@ const paretoPreview = computed(() => createParetoRejectSummary([
   ...queueItems.value.map((item) => item.payload),
 ]));
 const activeView = ref('operator');
+const activeOperatorFeature = ref('operator-input');
 const appViews = computed(() => [
   {
     id: 'operator',
@@ -200,6 +248,41 @@ const navViews = computed(() => appViews.value
     ...view,
     icon: workflowIconMap[view.id] || view.icon,
   })));
+const isSingleOperatorMode = computed(() =>
+  visibleRoles.value.length === 1 && visibleRoles.value[0] === 'Operator',
+);
+const navModeLabel = computed(() => (isSingleOperatorMode.value ? 'Menu Operator' : 'Pilih Role / Workspace'));
+const navItems = computed(() => (isSingleOperatorMode.value ? operatorFeatureViews : navViews.value));
+const activeNavId = computed(() => (isSingleOperatorMode.value ? activeOperatorFeature.value : activeView.value));
+const currentOperatorFeatureMeta = computed(() =>
+  operatorFeatureViews.find((view) => view.id === activeOperatorFeature.value) || operatorFeatureViews[0],
+);
+const activeShellMeta = computed(() => {
+  if (activeView.value === 'operator' && isSingleOperatorMode.value) {
+    return currentOperatorFeatureMeta.value;
+  }
+
+  return activeViewMeta.value;
+});
+const operatorContextItems = computed(() => [
+  { label: 'Line', value: form.value.line_id || '-' },
+  { label: 'Shift', value: form.value.shift_id || '-' },
+  { label: 'Mesin', value: form.value.machine_id || '-' },
+  { label: 'Operator', value: selectedRole.value || 'Operator' },
+]);
+const operatorOkPercent = computed(() =>
+  Math.min(100, Math.round((Number(form.value.perolehan_ok || 0) / Math.max(1, Number(form.value.target_harian || 0))) * 100)),
+);
+const operatorDonutStyle = computed(() => {
+  const ok = Math.max(0, Number(form.value.perolehan_ok || 0));
+  const reject = Math.max(0, Number(form.value.perolehan_reject || 0));
+  const total = Math.max(1, ok + reject);
+  const okPercent = Math.round((ok / total) * 100);
+
+  return {
+    background: `radial-gradient(circle, #ffffff 0 52%, transparent 53%), conic-gradient(#16a34a 0 ${okPercent}%, #dc2626 ${okPercent}% 100%)`,
+  };
+});
 const operatorTaskCards = computed(() => [
   {
     label: 'Draft device',
@@ -652,12 +735,25 @@ async function switchView(viewId) {
   }
 }
 
+async function switchNavigationItem(item) {
+  if (item.type === 'operator-feature') {
+    activeView.value = 'operator';
+    activeOperatorFeature.value = item.id;
+    return;
+  }
+
+  await switchView(item.id);
+}
+
 function ensureVisibleActiveView() {
   if (activeView.value === 'settings' || navViews.value.some((view) => view.id === activeView.value)) {
     return;
   }
 
   activeView.value = navViews.value[0]?.id || 'settings';
+  if (activeView.value === 'operator') {
+    activeOperatorFeature.value = 'operator-input';
+  }
 }
 
 function buildSessionPayload() {
@@ -779,8 +875,8 @@ function persistVisibleRoles(roles) {
         <button class="brand-trigger" type="button" aria-label="OPTIFLOW maintenance trigger" @click="handleBrandTap">
           OPTIFLOW
         </button>
-        <h1>{{ activeViewMeta.title }}</h1>
-        <p>{{ activeViewMeta.subtitle }}</p>
+        <h1>{{ activeShellMeta.title }}</h1>
+        <p>{{ activeShellMeta.subtitle }}</p>
       </div>
       <div class="top-actions">
         <div class="sync-pill" aria-label="Status sinkronisasi">
@@ -800,13 +896,17 @@ function persistVisibleRoles(roles) {
     </header>
 
     <nav class="app-nav" aria-label="Navigasi workflow">
+      <div class="nav-context">
+        <span>{{ navModeLabel }}</span>
+        <strong>{{ selectedRole }}</strong>
+      </div>
       <button
-        v-for="view in navViews"
+        v-for="view in navItems"
         :key="view.id"
         type="button"
-        :class="['nav-item', { active: activeView === view.id }]"
-        :aria-current="activeView === view.id ? 'page' : undefined"
-        @click="switchView(view.id)"
+        :class="['nav-item', { active: activeNavId === view.id }]"
+        :aria-current="activeNavId === view.id ? 'page' : undefined"
+        @click="switchNavigationItem(view)"
       >
         <span class="nav-icon" aria-hidden="true">{{ view.icon }}</span>
         <span class="nav-label">{{ view.label }}</span>
@@ -814,15 +914,24 @@ function persistVisibleRoles(roles) {
       </button>
     </nav>
 
-    <section v-if="activeView === 'operator'" class="metric-strip" aria-label="Ringkasan produksi">
+    <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-dashboard'" class="metric-strip" aria-label="Ringkasan produksi">
       <article v-for="metric in metrics" :key="metric.label" :class="['metric', metric.tone]">
         <span>{{ metric.label }}</span>
         <strong>{{ metric.value }}</strong>
       </article>
     </section>
 
-    <div :class="['workspace', `view-${activeView}`]">
-      <section v-if="activeView === 'operator'" class="panel input-panel role-workspace" aria-labelledby="form-title">
+    <div :class="['workspace', `view-${activeView}`, activeView === 'operator' ? `operator-${activeOperatorFeature}` : '']">
+      <section v-if="activeView === 'operator'" class="panel operator-context-panel" aria-label="Header shift aktif">
+        <div class="operator-context-grid">
+          <article v-for="item in operatorContextItems" :key="item.label">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+          </article>
+        </div>
+      </section>
+
+      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-input'" class="panel input-panel role-workspace" aria-labelledby="form-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Operator</p>
@@ -950,7 +1059,120 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <aside v-if="activeView === 'operator'" class="panel queue-panel role-workspace" aria-labelledby="queue-title">
+      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-history'" class="panel operator-history-panel role-workspace" aria-labelledby="history-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Riwayat</p>
+            <h2 id="history-title">Submit terakhir hari ini</h2>
+          </div>
+          <span class="badge">{{ queueItems.length }} lokal</span>
+        </div>
+
+        <div v-if="submitMessage" class="inline-info" role="status">
+          {{ submitMessage }}
+        </div>
+
+        <ul class="queue-list">
+          <li v-for="item in queueItems" :key="item.id">
+            <div>
+              <strong>{{ item.id }}</strong>
+              <span>{{ item.time }}</span>
+            </div>
+            <span :class="['status', item.status === 'CONFLICT_PENDING' ? 'conflict' : 'warning']">
+              {{ item.status }}
+            </span>
+          </li>
+        </ul>
+
+        <div v-if="queueItems.length === 0" class="empty-state">
+          Belum ada antrean submit lokal untuk hari ini.
+        </div>
+      </section>
+
+      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-dashboard'" class="panel operator-dashboard-panel role-workspace" aria-labelledby="operator-dashboard-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2 id="operator-dashboard-title">Target dan realisasi</h2>
+          </div>
+          <span class="badge">Hari ini</span>
+        </div>
+
+        <div class="operator-progress">
+          <div>
+            <span>Progress OK</span>
+            <strong>{{ formatNumber(form.perolehan_ok) }} / {{ formatNumber(form.target_harian) }}</strong>
+          </div>
+          <div class="progress-track">
+            <span :style="{ width: `${operatorOkPercent}%` }"></span>
+          </div>
+        </div>
+
+        <div class="operator-chart-grid">
+          <article class="chart-card">
+            <span>OK vs Reject</span>
+            <div class="donut-chart" :style="operatorDonutStyle"></div>
+            <strong>{{ formatNumber(totalOutput) }} total</strong>
+          </article>
+          <article class="chart-card">
+            <span>Tandon</span>
+            <strong>{{ formatNumber(form.tandon) }}</strong>
+            <p>Cadangan yang ikut dihitung dalam batas perolehan.</p>
+          </article>
+        </div>
+      </section>
+
+      <section v-if="activeView === 'operator' && activeOperatorFeature === 'operator-defect'" class="panel operator-defect-panel role-workspace" aria-labelledby="operator-defect-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Defect</p>
+            <h2 id="operator-defect-title">Reject dan Pareto mini</h2>
+          </div>
+          <span class="badge">{{ shouldShowDefect ? 'Reject aktif' : 'Tidak ada reject' }}</span>
+        </div>
+
+        <div class="defect-insight" aria-label="Defect Pareto preview">
+          <div>
+            <span>Faktor QCC</span>
+            <strong>{{ selectedDefectCategory?.qcc_factor || '-' }}</strong>
+          </div>
+          <div>
+            <span>Severity</span>
+            <strong>{{ selectedDefectCategory?.severity || '-' }}</strong>
+          </div>
+          <div>
+            <span>Pareto Top</span>
+            <strong>{{ paretoPreview[0]?.defect_name || '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-heading">
+            <div>
+              <span>Reference</span>
+              <strong>Kategori defect aktif</strong>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Kategori</th>
+                <th>QCC</th>
+                <th>Severity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="option in defectOptions.filter((item) => item.value)" :key="option.value">
+                <td>{{ option.label }}</td>
+                <td>{{ getDefectCategory(option.value)?.qcc_factor || '-' }}</td>
+                <td>{{ getDefectCategory(option.value)?.severity || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside v-if="activeView === 'operator' && activeOperatorFeature === 'operator-status'" class="panel queue-panel role-workspace" aria-labelledby="queue-title">
         <div class="section-title compact">
           <div>
             <p class="eyebrow">Sync</p>

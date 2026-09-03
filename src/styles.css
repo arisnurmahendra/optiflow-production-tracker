@@ -269,13 +269,17 @@ h2 {
 }
 
 .app-nav::before {
-  content: "Workflow";
+  content: none;
+}
+
+.nav-context {
   position: absolute;
   top: -28px;
   left: 8px;
   min-height: 22px;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   border: 1px solid rgba(14, 165, 233, 0.16);
   border-radius: 999px;
   padding: 2px 8px;
@@ -284,6 +288,18 @@ h2 {
   font-size: 12px;
   font-weight: 800;
   backdrop-filter: blur(10px);
+}
+
+.nav-context span {
+  color: #075985;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nav-context strong {
+  color: #f97316;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .nav-item {
@@ -430,6 +446,11 @@ h2 {
   gap: 14px;
 }
 
+.workspace.view-operator {
+  grid-template-columns: 1fr;
+  grid-template-areas: none;
+}
+
 .workspace.view-mandor,
 .workspace.view-supervisor,
 .workspace.view-management,
@@ -440,12 +461,16 @@ h2 {
 }
 
 .input-panel {
-  grid-area: input;
   border-color: #cfe0f2;
 }
 
-.queue-panel {
-  grid-area: queue;
+.workspace.view-operator .input-panel,
+.workspace.view-operator .queue-panel,
+.workspace.view-operator .operator-context-panel,
+.workspace.view-operator .operator-history-panel,
+.workspace.view-operator .operator-dashboard-panel,
+.workspace.view-operator .operator-defect-panel {
+  grid-area: auto;
 }
 
 .review-panel {
@@ -470,6 +495,44 @@ h2 {
 
 .panel {
   padding: 16px;
+}
+
+.operator-context-panel {
+  padding: 10px;
+}
+
+.operator-context-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operator-context-grid article {
+  min-height: 54px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.operator-context-grid span {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.operator-context-grid strong {
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .role-workspace {
@@ -1181,6 +1244,111 @@ td:nth-child(4) {
   line-height: 1.35;
 }
 
+.operator-progress {
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  background: var(--primary-soft);
+}
+
+.operator-progress > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.operator-progress span {
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.operator-progress strong {
+  color: var(--primary-dark);
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(191, 219, 254, 0.7);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #22c55e);
+}
+
+.operator-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.chart-card {
+  min-height: 178px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  background: rgba(248, 250, 252, 0.92);
+  text-align: center;
+}
+
+.chart-card span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chart-card strong {
+  color: var(--text-primary);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.chart-card p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.donut-chart {
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #ffffff 0 52%, transparent 53%),
+    conic-gradient(#16a34a 0 82%, #dc2626 82% 100%);
+  box-shadow: var(--shadow-neomorphic);
+}
+
+.empty-state {
+  min-height: 92px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(248, 250, 252, 0.88);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1347,7 +1515,7 @@ td:nth-child(4) {
     height: 62px;
     min-height: 62px;
     align-items: center;
-    margin: 44px 6px 0;
+    margin: 84px 6px 0;
     padding: 0 18px;
     border-color: rgba(255, 255, 255, 0.78);
     border-radius: 18px;
@@ -1379,6 +1547,16 @@ td:nth-child(4) {
 
   .app-nav::before {
     content: none;
+  }
+
+  .nav-context {
+    top: -82px;
+    right: 0;
+    left: 0;
+    justify-content: center;
+    margin: 0 auto;
+    width: fit-content;
+    max-width: 100%;
   }
 
   .nav-icon {
@@ -1472,6 +1650,8 @@ td:nth-child(4) {
   .defect-insight,
   .task-strip,
   .hrd-workflow,
+  .operator-context-grid,
+  .operator-chart-grid,
   .number-grid {
     grid-template-columns: 1fr;
   }
