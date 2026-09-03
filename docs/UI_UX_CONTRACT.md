@@ -32,7 +32,7 @@ Status implementasi 2026-09-03:
 - Tombol aksi utama wajib memakai warna solid.
 - Status kritis wajib terlihat dari kombinasi warna, teks, dan ikon.
 - Card/panel boleh memakai shadow lembut, tetapi tetap harus memiliki border atau pemisah yang jelas.
-- Border radius default maksimal 8px untuk card, input, table container, dan tombol.
+- Border radius default maksimal 8px untuk card operasional, input, table container, dan tombol standar; komponen taktil khusus seperti bottom dock, floating session button, role switcher, dan active nav bubble boleh memakai radius penuh/circular.
 - Jangan memakai Neumorphism murni yang membuat tombol terlihat seperti dekorasi.
 - Jangan memakai Claymorphism berlebihan untuk tabel, form padat, atau dashboard operasional.
 - Jangan memakai Glass accent pada konten yang membutuhkan pembacaan angka cepat atau status kritis.
@@ -190,8 +190,11 @@ Token awal:
 | `space-6` | `24px` | Gap antar section. |
 | `radius-sm` | `4px` | Badge, tag, table cell highlight. |
 | `radius-md` | `8px` | Card, input, button, modal. |
+| `radius-pill` | `999px` | Floating session button, active dock bubble, role switcher icon. |
 | `shadow-soft` | `0 8px 24px rgba(15, 23, 42, 0.08)` | Panel penting. |
-| `shadow-pressed` | `inset 2px 2px 5px rgba(15, 23, 42, 0.12), inset -2px -2px 5px rgba(255, 255, 255, 0.75)` | Toggle/segmented active state saja. |
+| `shadow-neomorphic` | `9px 9px 16px rgba(163, 177, 198, 0.42), -9px -9px 16px rgba(255, 255, 255, 0.72)` | Metric, role switcher, dan elemen taktil non-kritis. |
+| `shadow-pressed` | `inset 6px 6px 10px rgba(163, 177, 198, 0.45), inset -6px -6px 10px rgba(255, 255, 255, 0.72)` | Toggle/segmented active state saja. |
+| `shadow-clay` | `0 20px 40px rgba(249, 115, 22, 0.22), inset 0 -5px 10px rgba(154, 52, 18, 0.12)` | Aksen demo/trial dan active dock bubble. |
 
 Rules:
 - Radius komponen operasional maksimal `8px`.
