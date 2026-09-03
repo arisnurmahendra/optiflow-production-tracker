@@ -45,10 +45,10 @@ Token warna awal:
 
 | Token | Warna | Penggunaan |
 | :--- | :--- | :--- |
-| `background` | `#F4F7F9` | Latar aplikasi. |
+| `background` | `#C9EDFB` | Latar aplikasi biru terang seperti referensi mobile banking. |
 | `surface` | `#FFFFFF` | Panel, form, table container. |
 | `surface-soft` | `#EEF3F6` | Area sekunder dan empty state. |
-| `shell-tint` | `rgba(255, 255, 255, 0.74)` | Lapisan app shell di atas latar biru. |
+| `shell-tint` | `rgba(255, 255, 255, 0.68)` | Lapisan app shell di atas latar biru. |
 | `text-primary` | `#111827` | Teks utama. |
 | `text-secondary` | `#4B5563` | Teks pendukung. |
 | `primary` | `#2563EB` | Tombol utama, link aktif. |

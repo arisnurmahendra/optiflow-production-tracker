@@ -3,16 +3,16 @@
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   color: #111827;
-  background: #f4f7f9;
+  background: #c9edfb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --background: #f4f7f9;
+  --background: #c9edfb;
   --surface: #ffffff;
   --surface-soft: #eef3f6;
   --surface-raised: #f8fafc;
-  --shell-tint: rgba(255, 255, 255, 0.74);
+  --shell-tint: rgba(255, 255, 255, 0.68);
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --primary: #2563eb;
@@ -42,9 +42,9 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at 14% 7%, rgba(255, 255, 255, 0.96) 0 12%, rgba(255, 255, 255, 0) 34%),
-    radial-gradient(circle at 85% 13%, rgba(14, 165, 233, 0.38) 0 18%, rgba(14, 165, 233, 0) 42%),
-    linear-gradient(135deg, #eef9ff 0%, #f8fbff 33%, #bfe8fb 68%, #55b6e8 100%);
+    radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.98) 0 16%, rgba(255, 255, 255, 0) 36%),
+    radial-gradient(circle at 48% 45%, rgba(255, 255, 255, 0.94) 0 12%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(105deg, #dff5ff 0%, #f8fdff 22%, #edf9ff 42%, #b8e8fa 66%, #53bee9 100%);
   background-attachment: fixed;
 }
 
@@ -54,8 +54,8 @@ body::before {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.08) 48%, rgba(37, 99, 235, 0.08)),
-    radial-gradient(circle at 52% 92%, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0) 34%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.16) 42%, rgba(6, 182, 212, 0.2)),
+    radial-gradient(circle at 55% 88%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 32%);
   pointer-events: none;
 }
 
@@ -92,7 +92,7 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(239, 246, 255, 0.82)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(238, 249, 255, 0.78)),
     var(--shell-tint);
   box-shadow: var(--shadow-shell);
   backdrop-filter: blur(18px);
@@ -109,9 +109,9 @@ p {
   border: 1px solid rgba(125, 211, 252, 0.38);
   border-radius: 22px;
   background:
-    linear-gradient(135deg, rgba(2, 132, 199, 0.96), rgba(56, 189, 248, 0.88)),
-    #0ea5e9;
-  box-shadow: 0 20px 42px rgba(14, 165, 233, 0.24);
+    linear-gradient(135deg, rgba(0, 132, 204, 0.98), rgba(36, 179, 232, 0.94)),
+    #149fda;
+  box-shadow: 0 20px 42px rgba(20, 159, 218, 0.28);
 }
 
 .title-stack {
