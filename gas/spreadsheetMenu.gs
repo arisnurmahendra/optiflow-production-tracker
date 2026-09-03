@@ -1,5 +1,23 @@
 var OptiflowSpreadsheetMenu = (function () {
   var MENU_NAME = 'OPTIFLOW Admin';
+  var PROJECT_LINKS = Object.freeze([
+    Object.freeze({
+      label: 'Apps Script Editor',
+      url: 'https://script.google.com/u/0/home/projects/1tv9YkWU-SWTiw3KzPUOVqjK1L68W9ob0A1gvYYXkWcQC17R8L4XWwa7l/edit',
+    }),
+    Object.freeze({
+      label: 'Web App Dev',
+      url: 'https://script.google.com/macros/s/AKfycbyq5h4KBnxYJGxO6F9UUti4acnFpqtU-MtMBGaka1vb/dev',
+    }),
+    Object.freeze({
+      label: 'Web App Production',
+      url: 'https://script.google.com/macros/s/AKfycbwk-VdN6Gjxq0CMtT54dOgCCH332JSJphUOxPv8e_BbSrIJKjnOF6iqHbVR1wTIgLqWNw/exec',
+    }),
+    Object.freeze({
+      label: 'Project Drive Folder',
+      url: 'https://drive.google.com/drive/folders/1goa87UE15QYwC4pkeAeTsc33EjQdnF6N',
+    }),
+  ]);
 
   function create() {
     try {
@@ -12,6 +30,8 @@ var OptiflowSpreadsheetMenu = (function () {
         .addSeparator()
         .addItem('Show Schema Health', 'menuShowSchemaHealth')
         .addItem('Run GAS Smoke Test', 'menuRunGasSmokeTest')
+        .addSeparator()
+        .addItem('Open Project Links', 'menuOpenProjectLinks')
         .addToUi();
     } catch (error) {
       console.warn('OPTIFLOW menu creation failed: ' + sanitizeMessage(error));
@@ -126,6 +146,19 @@ var OptiflowSpreadsheetMenu = (function () {
     ].join('\n'));
 
     return response;
+  }
+
+  function openProjectLinksFromMenu() {
+    var html = HtmlService
+      .createHtmlOutput(buildProjectLinksHtml())
+      .setWidth(420)
+      .setHeight(360);
+
+    SpreadsheetApp.getUi().showModalDialog(html, 'OPTIFLOW Project Links');
+
+    return OptiflowResponse.success({
+      link_count: PROJECT_LINKS.length,
+    });
   }
 
   function seedUserRoles() {
@@ -285,6 +318,39 @@ var OptiflowSpreadsheetMenu = (function () {
     SpreadsheetApp.getUi().alert(title, message, SpreadsheetApp.getUi().ButtonSet.OK);
   }
 
+  function buildProjectLinksHtml() {
+    var links = PROJECT_LINKS.map(function (link) {
+      return '<a class="link" href="' + escapeAttribute(link.url) + '" target="_blank" rel="noopener noreferrer">'
+        + escapeHtml(link.label)
+        + '</a>';
+    }).join('');
+
+    return '<!doctype html><html><head><base target="_blank"><style>'
+      + 'body{font-family:Arial,sans-serif;margin:0;padding:18px;background:#f6f8fb;color:#18202f;}'
+      + 'h1{font-size:18px;margin:0 0 12px;}'
+      + 'p{font-size:12px;line-height:1.5;color:#5f6b7a;margin:0 0 14px;}'
+      + '.link{display:block;margin:10px 0;padding:12px 14px;border-radius:8px;background:#fff;color:#0b5cad;text-decoration:none;border:1px solid #d9e2ec;font-weight:700;}'
+      + '.link:hover{background:#eef6ff;}'
+      + '</style></head><body>'
+      + '<h1>OPTIFLOW Project Links</h1>'
+      + '<p>Shortcut allowlisted untuk admin proyek. Link terbuka di tab baru.</p>'
+      + links
+      + '</body></html>';
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value);
+  }
+
   function sanitizeMessage(error) {
     return String(error && error.message ? error.message : 'Unknown error')
       .replace(/[^\s]+@[^\s]+/g, '[masked-email]')
@@ -294,6 +360,7 @@ var OptiflowSpreadsheetMenu = (function () {
   return Object.freeze({
     bootstrapSheetsFromMenu: bootstrapSheetsFromMenu,
     create: create,
+    openProjectLinksFromMenu: openProjectLinksFromMenu,
     runGasSmokeTestFromMenu: runGasSmokeTestFromMenu,
     seedDummyMasterDataFromMenu: seedDummyMasterDataFromMenu,
     setDefaultScriptPropertiesFromMenu: setDefaultScriptPropertiesFromMenu,

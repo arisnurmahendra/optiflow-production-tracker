@@ -62,6 +62,13 @@ function menuRunGasSmokeTest() {
   return OptiflowSpreadsheetMenu.runGasSmokeTestFromMenu();
 }
 
+function menuOpenProjectLinks() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuOpenProjectLinks');
+
+  return OptiflowSpreadsheetMenu.openProjectLinksFromMenu();
+}
+
 function getHealthCheck() {
   // Input Validation & Sanitization
   OptiflowValidation.assertNoInput(arguments, 'getHealthCheck');

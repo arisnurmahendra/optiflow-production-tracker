@@ -95,6 +95,7 @@ const spreadsheet = new MockSpreadsheet();
 let uuidCounter = 0;
 const menuCalls = [];
 const alerts = [];
+const dialogs = [];
 const ui = {
   ButtonSet: { OK: 'OK' },
   createMenu(name) {
@@ -117,6 +118,9 @@ const ui = {
   },
   alert(title, message) {
     alerts.push({ title, message });
+  },
+  showModalDialog(html, title) {
+    dialogs.push({ html, title });
   },
 };
 const context = {
@@ -169,6 +173,23 @@ const context = {
       return ui;
     },
   },
+  HtmlService: {
+    createHtmlOutput(content) {
+      return {
+        content,
+        width: 0,
+        height: 0,
+        setWidth(width) {
+          this.width = width;
+          return this;
+        },
+        setHeight(height) {
+          this.height = height;
+          return this;
+        },
+      };
+    },
+  },
 };
 context.globalThis = context;
 
@@ -200,6 +221,9 @@ for (const file of files) {
 vm.runInNewContext('onOpen({})', context);
 if (menuCalls.length !== 1 || menuCalls[0].name !== 'OPTIFLOW Admin') {
   throw new Error('Expected OPTIFLOW Admin spreadsheet menu.');
+}
+if (!menuCalls[0].items.some((item) => item.functionName === 'menuOpenProjectLinks')) {
+  throw new Error('Expected project links menu item.');
 }
 
 vm.runInNewContext('menuBootstrapSheets()', context);
@@ -233,6 +257,17 @@ if (!alerts.some((alert) => alert.title === 'GAS Smoke Test' && alert.message.in
 }
 if (JSON.stringify(alerts).includes(originalSalt)) {
   throw new Error('Spreadsheet menu alerts must not expose secret values.');
+}
+
+const linksResponse = vm.runInNewContext('menuOpenProjectLinks()', context);
+if (!linksResponse.ok || linksResponse.data.link_count !== 4 || dialogs.length !== 1) {
+  throw new Error('Expected project links dialog response.');
+}
+if (!dialogs[0].html.content.includes('Apps Script Editor')
+  || !dialogs[0].html.content.includes('/dev')
+  || !dialogs[0].html.content.includes('/exec')
+  || !dialogs[0].html.content.includes('drive.google.com')) {
+  throw new Error('Expected allowlisted project links in dialog HTML.');
 }
 
 properties.AUTH_MODE = 'ON';

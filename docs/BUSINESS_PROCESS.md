@@ -328,9 +328,11 @@ Menu yang tersedia:
 - `Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, dan shift dummy hanya ketika `AUTH_MODE` bukan `ON`.
 - `Run GAS Smoke Test`: menjalankan native test runner dan menampilkan ringkasan aman.
 - `Show Schema Health`: menampilkan status health schema.
+- `Open Project Links`: membuka dialog berisi link allowlisted ke Apps Script editor, web app dev, web app production, dan folder Drive proyek.
 
 Aturan:
 - Menu toolbar tidak boleh menghapus data produksi.
 - Default Script Properties tidak boleh menimpa nilai yang sudah ada.
 - Dummy data wajib ditolak jika `AUTH_MODE=ON`.
 - Secret tidak boleh ditampilkan di alert, log, atau response menu.
+- Link eksternal toolbar wajib hardcoded/allowlisted di source dan ditampilkan sebagai tautan eksplisit; jangan membaca URL dari input user atau Script Properties.

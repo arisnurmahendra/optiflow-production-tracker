@@ -64,7 +64,7 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 - Management dashboard isolation is consistent: dashboard reads `MASTER_RECAP`, not `RAW_LOGS`, and excludes unapproved conflict data.
 - Security baseline is consistent with Google Workspace identity: `AUTH_MODE` is an environment toggle, while role truth remains in `USER_ROLES`.
 - UI/UX contract is aligned with operational needs: mobile prioritizes fast input, desktop prioritizes scan/review/dashboard control.
-- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, safe Script Properties maintenance, spreadsheet admin toolbar, native GAS test runner, and production readiness artifacts.
+- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, safe Script Properties maintenance, spreadsheet admin toolbar with project links, native GAS test runner, and production readiness artifacts.
 
 ## 4A. Current Code Alignment Snapshot
 

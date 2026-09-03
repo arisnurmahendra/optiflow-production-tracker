@@ -156,7 +156,7 @@ Setelah sheet foundational tersedia, `bootstrapSheets()` kembali wajib melewati 
 
 Menu spreadsheet:
 - Saat project terhubung ke Google Sheets, `onOpen()` menambahkan menu `OPTIFLOW Admin`.
-- Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, dan GAS smoke test.
+- Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, GAS smoke test, dan shortcut link proyek.
 - Dummy master data ditolak saat `AUTH_MODE=ON`, dan default Script Properties tidak menimpa nilai yang sudah ada.
 
 Alur push yang aman:
