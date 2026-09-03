@@ -23,7 +23,7 @@ This file does not replace the contracts. It tells the agent which contract to r
 
 - Frontend: Vue 3 operator form, autosave draft, sync queue controls, Pareto defect preview, Mandor approval inbox UI, and hidden SuperAdmin maintenance console.
 - Services: API adapter allowlist/timeout/safe response, mock GAS, IndexedDB persistence, operator report store, approval helpers, and defect/Pareto helpers.
-- Backend: access gate for expiry and registered-user render access, audit, auth/session, RBAC permissions, sheet bootstrap/health, spreadsheet admin toolbar with project links, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, Script Properties maintenance, native test runner, and validation.
+- Backend: access gate for expiry, registered-user render access, demo/trial email-gate bypass, audit, auth/session, RBAC permissions, sheet bootstrap/health, spreadsheet admin toolbar with project links, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, Script Properties maintenance, native test runner, and validation.
 - Tests: frontend API/approval/defect/M5/operator/state tests, GAS validation/sheets/auth/permissions/production logs/M5/script properties/test-runner/spreadsheet-menu tests, single-file build verification, and GAS deploy preparation.
 - Remaining major gaps: target-environment smoke evidence, field pilot execution, and actual QCC benefit validation from pilot data.
 

@@ -102,6 +102,14 @@ var OPTIFLOW_SCRIPT_PROPERTY_CONTRACT = Object.freeze({
     rotatable: false,
     pattern: '^\\d{4}-\\d{2}-\\d{2}$',
   }),
+  REQUIRE_REGISTERED_EMAIL_LOGIN: Object.freeze({
+    sensitivity: 'CONFIG',
+    readable: true,
+    updatable: true,
+    deletable: true,
+    rotatable: false,
+    allowed_values: Object.freeze(['TRUE', 'FALSE']),
+  }),
   SPREADSHEET_ID: Object.freeze({
     sensitivity: 'CONFIG',
     readable: true,

@@ -8,7 +8,7 @@ Semua item P0 wajib selesai sebelum production rollout:
 
 | Area | Check | Evidence | Status |
 | :--- | :--- | :--- | :--- |
-| Script Properties | `AUTH_MODE=ON`, `APP_ACTIVE_UNTIL` valid, `SPREADSHEET_ID` target benar, `ENCRYPTION_SALT` `SET`. | Hidden SuperAdmin console atau Apps Script properties. | Pending production setup |
+| Script Properties | `AUTH_MODE=ON`, `REQUIRE_REGISTERED_EMAIL_LOGIN=TRUE`, `APP_ACTIVE_UNTIL` valid, `SPREADSHEET_ID` target benar, `ENCRYPTION_SALT` `SET`. | Hidden SuperAdmin console atau Apps Script properties. | Pending production setup |
 | RBAC | Role `Operator`, `Mandor`, `Management`, `HRD`, dan `SuperAdmin` diuji dengan akun Google Workspace asli. | Smoke test manual. | Pending production account |
 | Validation | Semua callable wrapper punya blok `Input Validation & Sanitization`. | `npm run audit:gas:validation`. | Ready |
 | Secrets | Tidak ada secret di frontend, docs publik, logs, atau Git. | `npm audit --audit-level=moderate` dan review diff. | Ready |
@@ -34,4 +34,3 @@ Rollback atau tahan rollout jika salah satu terjadi:
 - Ada user production tanpa permission eksplisit.
 - `APP_ACTIVE_UNTIL` expired/invalid saat go-live.
 - Build menghasilkan file `.js` atau `.css` terpisah di `/dist`.
-

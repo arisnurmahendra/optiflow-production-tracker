@@ -275,6 +275,7 @@ Allowlist:
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `AUTH_MODE` | `CONFIG` | Masked/full enum | Ya | Tidak | Tidak | Nilai hanya `ON` atau `OFF`. |
 | `APP_ACTIVE_UNTIL` | `CONFIG` | Full date | Ya | Ya | Tidak | Format `YYYY-MM-DD`, inclusive sampai akhir tanggal berdasarkan `Asia/Jakarta`; kosong berarti tidak ada expiry. |
+| `REQUIRE_REGISTERED_EMAIL_LOGIN` | `CONFIG` | Full enum | Ya | Ya | Tidak | Nilai hanya `TRUE` atau `FALSE`; kosong dianggap `TRUE` oleh render gate. `FALSE` hanya untuk demo/trial/development terkontrol. |
 | `SPREADSHEET_ID` | `CONFIG` | Masked preview | Ya | Ya | Tidak | Format Google ID alfanumerik, `_`, atau `-`, minimal 20 karakter. |
 | `ENCRYPTION_SALT` | `SECRET` | Status-only | Tidak | Tidak | Ya | Tidak pernah dikirim mentah ke frontend, log, atau audit metadata. |
 
@@ -349,6 +350,8 @@ Request rotate secret:
 Semua endpoint maintenance wajib menolak key yang tidak ada di allowlist, action yang tidak sesuai kontrak key, role tanpa permission `script_property:*`, dan payload yang membawa field tambahan.
 
 `doGet()` wajib membaca `APP_ACTIVE_UNTIL` sebelum merender aplikasi. Jika tanggal hari ini di timezone `Asia/Jakarta` lebih besar dari nilai tersebut, atau format nilai tidak valid, backend wajib mengembalikan halaman penolakan akses tanpa merender `Index.html`.
+
+Setelah expiry gate lolos, `doGet()` wajib membaca `REQUIRE_REGISTERED_EMAIL_LOGIN`. Jika nilai kosong atau `TRUE`, `AUTH_MODE=ON` wajib menolak user yang email Google-nya tidak terdaftar/aktif di `USER_ROLES`. Jika nilai `FALSE`, aplikasi boleh render untuk skenario demo/trial tanpa registered-email render gate; production hardening wajib mengembalikannya ke `TRUE`.
 
 ## 16. Standar Waktu
 

@@ -111,8 +111,8 @@ var OptiflowValidation = (function () {
 
     var value = payload.value.trim();
 
-    if (key === 'AUTH_MODE' && contract.allowed_values.indexOf(value.toUpperCase()) === -1) {
-      throw new Error('Input Validation & Sanitization: AUTH_MODE must be ON or OFF.');
+    if (contract.allowed_values && contract.allowed_values.indexOf(value.toUpperCase()) === -1) {
+      throw new Error('Input Validation & Sanitization: script property enum value is not allowed.');
     }
 
     if (key === 'SPREADSHEET_ID' && !new RegExp(contract.pattern).test(value)) {
@@ -126,7 +126,7 @@ var OptiflowValidation = (function () {
     return {
       session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
       key: key,
-      value: key === 'AUTH_MODE' ? value.toUpperCase() : value,
+      value: contract.allowed_values ? value.toUpperCase() : value,
     };
   }
 

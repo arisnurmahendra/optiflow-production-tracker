@@ -81,6 +81,7 @@ Audit log wajib memfilter:
 ## 7. Production Readiness Checklist
 
 - `AUTH_MODE=ON`.
+- `REQUIRE_REGISTERED_EMAIL_LOGIN=TRUE` untuk production.
 - `ENCRYPTION_SALT` tersedia di Script Properties.
 - Tidak ada secret di source, frontend bundle, log, screenshot, atau dokumentasi publik.
 - RBAC diuji untuk role `Operator`, `Mandor`, `Management`, `HRD`, dan `SuperAdmin`.
@@ -102,6 +103,7 @@ Implemented and locally tested:
 - Active defect category validation for reject submissions.
 - Script Properties maintenance allowlist with secret masking and audit events.
 - `APP_ACTIVE_UNTIL` access gate for expired or invalid application period.
+- `REQUIRE_REGISTERED_EMAIL_LOGIN` render gate for production registered-email enforcement and controlled demo/trial bypass.
 - Single-file frontend build verification.
 - Backend quarantine approval mutation, daily closing, adjustment approval, idempotent `MASTER_RECAP`, supervisor control center, and management read-only dashboard.
 

@@ -248,9 +248,10 @@ Aturan akses:
 5. Secret seperti `ENCRYPTION_SALT` hanya tampil sebagai status `SET` atau `NOT_SET`, bukan nilai mentah.
 6. Update `AUTH_MODE` harus terbatas ke `ON` atau `OFF`.
 7. Update `APP_ACTIVE_UNTIL` harus memakai format `YYYY-MM-DD`; tanggal berlaku inclusive berdasarkan timezone `Asia/Jakarta`.
-8. Delete hanya boleh untuk key konfigurasi yang aman dihapus berdasarkan `DATA_SCHEMA.md`; `AUTH_MODE` dan secret tidak boleh dihapus.
-9. Rotate secret hanya boleh untuk key yang rotatable dan harus mengembalikan status-only.
-10. Semua aksi maintenance wajib dicatat ke `AUDIT_LOGS` dengan metadata tanpa secret.
+8. Update `REQUIRE_REGISTERED_EMAIL_LOGIN` harus terbatas ke `TRUE` atau `FALSE`; `FALSE` hanya boleh untuk demo/trial/development terkontrol.
+9. Delete hanya boleh untuk key konfigurasi yang aman dihapus berdasarkan `DATA_SCHEMA.md`; `AUTH_MODE` dan secret tidak boleh dihapus.
+10. Rotate secret hanya boleh untuk key yang rotatable dan harus mengembalikan status-only.
+11. Semua aksi maintenance wajib dicatat ke `AUDIT_LOGS` dengan metadata tanpa secret.
 
 Alur operasional:
 1. SuperAdmin membuka hidden console.
@@ -270,10 +271,12 @@ Alur expiry aplikasi:
 
 Alur akses user:
 1. Setelah expiry gate lolos, `doGet()` mengecek render access.
-2. Jika `AUTH_MODE=OFF`, aplikasi boleh render dan frontend meminta role simulation.
-3. Jika `AUTH_MODE=ON`, email dari `Session.getActiveUser().getEmail()` wajib ditemukan aktif di `USER_ROLES`.
-4. Jika email kosong, tidak terdaftar, nonaktif, soft-deleted, atau `AUTH_MODE` invalid, `doGet()` wajib menampilkan halaman `Akses ditolak` tanpa merender `Index.html`.
-5. Halaman penolakan hanya boleh menampilkan alasan aman, bukan email mentah, PII, role matrix, atau detail internal.
+2. Jika `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE`, aplikasi boleh render untuk demo/trial tanpa registered-email render gate.
+3. Jika `AUTH_MODE=OFF`, aplikasi boleh render dan frontend meminta role simulation.
+4. Jika `AUTH_MODE=ON` dan `REQUIRE_REGISTERED_EMAIL_LOGIN` kosong/`TRUE`, email dari `Session.getActiveUser().getEmail()` wajib ditemukan aktif di `USER_ROLES`.
+5. Jika email kosong, tidak terdaftar, nonaktif, soft-deleted, atau `AUTH_MODE` invalid, `doGet()` wajib menampilkan halaman `Akses ditolak` tanpa merender `Index.html`.
+6. Halaman penolakan hanya boleh menampilkan alasan aman, bukan email mentah, PII, role matrix, atau detail internal.
+7. Halaman penolakan boleh menyediakan tombol untuk ganti akun Google, membuka halaman pengelolaan izin Google, dan mencoba reload aplikasi. Apps Script tidak boleh menghapus permission Google secara programatik dari halaman ini.
 
 ## 14. Kontrak ROLE_PERMISSIONS
 
@@ -331,7 +334,7 @@ Spreadsheet-bound Apps Script boleh menambahkan menu toolbar `OPTIFLOW Admin` un
 
 Menu yang tersedia:
 - `Bootstrap Sheets`: membuat sheet/header default secara non-destruktif.
-- `Set Default Script Properties`: mengisi property yang masih kosong saja, termasuk `AUTH_MODE=OFF`, `SPREADSHEET_ID` dari active spreadsheet, `APP_ACTIVE_UNTIL`, dan `ENCRYPTION_SALT`.
+- `Set Default Script Properties`: mengisi property yang masih kosong saja, termasuk `AUTH_MODE=OFF`, `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE` untuk setup demo/trial, `SPREADSHEET_ID` dari active spreadsheet, `APP_ACTIVE_UNTIL`, dan `ENCRYPTION_SALT`.
 - `Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, dan shift dummy hanya ketika `AUTH_MODE` bukan `ON`.
 - `Run GAS Smoke Test`: menjalankan native test runner dan menampilkan ringkasan aman.
 - `Show Schema Health`: menampilkan status health schema.

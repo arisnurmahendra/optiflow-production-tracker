@@ -232,7 +232,10 @@ if (spreadsheet.sheets.size !== context.OPTIFLOW_REQUIRED_SHEETS.length) {
 }
 
 vm.runInNewContext('menuSetDefaultScriptProperties()', context);
-if (properties.AUTH_MODE !== 'OFF' || properties.SPREADSHEET_ID !== spreadsheet.id || !properties.ENCRYPTION_SALT) {
+if (properties.AUTH_MODE !== 'OFF'
+  || properties.REQUIRE_REGISTERED_EMAIL_LOGIN !== 'FALSE'
+  || properties.SPREADSHEET_ID !== spreadsheet.id
+  || !properties.ENCRYPTION_SALT) {
   throw new Error('Expected default Script Properties to be set when empty.');
 }
 const originalSalt = properties.ENCRYPTION_SALT;

@@ -1,5 +1,8 @@
 var OptiflowAccessGate = (function () {
   var ACTIVE_UNTIL_KEY = 'APP_ACTIVE_UNTIL';
+  var REQUIRE_REGISTERED_EMAIL_LOGIN_KEY = 'REQUIRE_REGISTERED_EMAIL_LOGIN';
+  var SWITCH_ACCOUNT_URL = 'https://accounts.google.com/AccountChooser';
+  var GOOGLE_PERMISSION_URL = 'https://myaccount.google.com/permissions';
 
   function isApplicationActive() {
     var activeUntil = String(PropertiesService.getScriptProperties().getProperty(ACTIVE_UNTIL_KEY) || '').trim();
@@ -30,6 +33,13 @@ var OptiflowAccessGate = (function () {
   }
 
   function getRenderAccessStatus() {
+    if (!isRegisteredEmailLoginRequired()) {
+      return {
+        active: true,
+        reason: 'DEMO_TRIAL_ACCESS',
+      };
+    }
+
     try {
       var sessionResponse = OptiflowAuth.getSessionContext({});
       var session = sessionResponse.data || {};
@@ -60,6 +70,11 @@ var OptiflowAccessGate = (function () {
     }
   }
 
+  function isRegisteredEmailLoginRequired() {
+    var value = String(PropertiesService.getScriptProperties().getProperty(REQUIRE_REGISTERED_EMAIL_LOGIN_KEY) || '').trim().toUpperCase();
+    return value !== 'FALSE';
+  }
+
   function buildAccessDeniedHtml(status) {
     var reason = status && status.reason ? status.reason : 'ACCESS_DENIED';
     var activeUntilText = status && status.active_until
@@ -69,7 +84,7 @@ var OptiflowAccessGate = (function () {
       ? '<p>Email Google Anda belum terdaftar atau tidak aktif di database OPTIFLOW.</p>'
       : activeUntilText;
     var helpText = reason === 'USER_NOT_AUTHORIZED'
-      ? '<p>Silakan hubungi Mandor atau SuperAdmin untuk pendaftaran akses.</p>'
+      ? '<p>Silakan hubungi Mandor atau SuperAdmin untuk pendaftaran akses, atau gunakan akun Google yang sudah terdaftar.</p>'
       : '<p>Silakan hubungi Mandor atau SuperAdmin jika masa aktif perlu diperpanjang.</p>';
 
     return '<!doctype html>'
@@ -85,6 +100,7 @@ var OptiflowAccessGate = (function () {
       + '.eyebrow{margin:0 0 8px;color:#dc2626;font-size:12px;font-weight:800;letter-spacing:0;text-transform:uppercase}'
       + 'h1{margin:0 0 10px;font-size:24px;line-height:1.15;letter-spacing:0}p{margin:0 0 10px;color:#4b5563;font-size:14px;line-height:1.5}'
       + '.code{display:inline-flex;min-height:30px;align-items:center;border:1px solid #fca5a5;border-radius:8px;background:#fff7f7;color:#991b1b;padding:5px 9px;font-size:12px;font-weight:800}'
+      + '.actions{display:grid;gap:8px;margin:16px 0 14px}.button{display:flex;min-height:42px;align-items:center;justify-content:center;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#111827;text-decoration:none;font-size:13px;font-weight:800;cursor:pointer}.primary{background:#111827;color:#fff;border-color:#111827}.button:hover{background:#f8fafc}.primary:hover{background:#1f2937}button.button{width:100%;font-family:inherit}'
       + '</style>'
       + '</head>'
       + '<body>'
@@ -93,6 +109,11 @@ var OptiflowAccessGate = (function () {
       + '<h1 id="access-denied-title">Akses ditolak</h1>'
       + message
       + helpText
+      + '<div class="actions">'
+      + '<a class="button primary" href="' + SWITCH_ACCOUNT_URL + '" target="_top" rel="noopener noreferrer">Ganti akun Google</a>'
+      + '<a class="button" href="' + GOOGLE_PERMISSION_URL + '" target="_blank" rel="noopener noreferrer">Kelola izin Google</a>'
+      + '<button class="button" type="button" onclick="window.location.reload()">Coba lagi</button>'
+      + '</div>'
       + '<span class="code">' + escapeHtml(reason) + '</span>'
       + '</main>'
       + '</body>'
@@ -111,6 +132,7 @@ var OptiflowAccessGate = (function () {
   return Object.freeze({
     buildAccessDeniedHtml: buildAccessDeniedHtml,
     getRenderAccessStatus: getRenderAccessStatus,
+    isRegisteredEmailLoginRequired: isRegisteredEmailLoginRequired,
     isApplicationActive: isApplicationActive,
   });
 })();

@@ -63,6 +63,7 @@ Required properties:
 - `SPREADSHEET_ID`: required when the Apps Script project is standalone; optional when the script is container-bound to the target Google Sheet.
 - `AUTH_MODE`: `ON` for production Google account validation, `OFF` for local role simulation.
 - `APP_ACTIVE_UNTIL`: optional `YYYY-MM-DD` expiry gate in `Asia/Jakarta`; if expired or invalid, `doGet()` must render the access denied page instead of the app.
+- `REQUIRE_REGISTERED_EMAIL_LOGIN`: `TRUE` enables registered-email render gate, `FALSE` allows controlled demo/trial render without checking `USER_ROLES` at `doGet()`. Missing/empty means `TRUE`.
 - `ENCRYPTION_SALT`: server-only secret for encryption or blind indexing operations.
 
 Rules:
@@ -132,7 +133,7 @@ For the current Google identity model:
 - Use secure transport provided by Google deployment.
 - Mask sensitive data in logs and UI responses.
 - Return safe structured errors without stack traces.
-- `AUTH_MODE` in Script Properties is only an environment toggle: `ON` validates `Session.getActiveUser().getEmail()`, while `OFF` enables role simulation for development. Role truth still comes from `USER_ROLES`.
+- `AUTH_MODE` in Script Properties is only an environment toggle: `ON` validates `Session.getActiveUser().getEmail()`, while `OFF` enables role simulation for development. Role truth still comes from `USER_ROLES`. `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE` is only for demo/trial render bypass and must not be used as a production authorization substitute.
 
 ## 9. Implementation Protocol
 

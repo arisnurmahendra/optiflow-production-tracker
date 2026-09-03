@@ -55,6 +55,7 @@ var OptiflowSpreadsheetMenu = (function () {
     var defaults = {
       AUTH_MODE: 'OFF',
       APP_ACTIVE_UNTIL: buildDefaultActiveUntil(),
+      REQUIRE_REGISTERED_EMAIL_LOGIN: 'FALSE',
       ENCRYPTION_SALT: Utilities.getUuid() + '-' + Utilities.getUuid(),
     };
     var changed = [];

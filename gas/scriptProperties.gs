@@ -95,7 +95,7 @@ var OptiflowScriptProperties = (function () {
   }
 
   function maskValue(key, value) {
-    if (key === 'AUTH_MODE' || key === 'APP_ACTIVE_UNTIL') {
+    if (key === 'AUTH_MODE' || key === 'APP_ACTIVE_UNTIL' || key === 'REQUIRE_REGISTERED_EMAIL_LOGIN') {
       return value;
     }
 

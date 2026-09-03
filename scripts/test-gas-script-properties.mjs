@@ -93,6 +93,7 @@ class MockSpreadsheet {
 const properties = {
   AUTH_MODE: 'OFF',
   APP_ACTIVE_UNTIL: '2099-12-31',
+  REQUIRE_REGISTERED_EMAIL_LOGIN: 'TRUE',
   SPREADSHEET_ID: '1abcDEFghiJKLmnopQRSTuvWXyz_12345',
   ENCRYPTION_SALT: 'super-secret-salt',
 };
@@ -244,6 +245,11 @@ if (!activeUntilStatus || activeUntilStatus.value_preview !== '2099-12-31') {
   throw new Error('Expected APP_ACTIVE_UNTIL to be readable as a non-secret expiry date.');
 }
 
+const registeredEmailGateStatus = status.data.properties.find((property) => property.key === 'REQUIRE_REGISTERED_EMAIL_LOGIN');
+if (!registeredEmailGateStatus || registeredEmailGateStatus.value_preview !== 'TRUE') {
+  throw new Error('Expected REQUIRE_REGISTERED_EMAIL_LOGIN to be readable as a non-secret config value.');
+}
+
 vm.runInNewContext(
   "setScriptProperty({ session: superAdminSession, key: 'AUTH_MODE', value: 'ON' })",
   { ...context, superAdminSession },
@@ -278,6 +284,28 @@ try {
 if (!rejected) {
   throw new Error('Expected invalid AUTH_MODE enum to be rejected.');
 }
+
+vm.runInNewContext(
+  "setScriptProperty({ session: superAdminSession, key: 'REQUIRE_REGISTERED_EMAIL_LOGIN', value: 'false' })",
+  { ...context, superAdminSession },
+);
+if (properties.REQUIRE_REGISTERED_EMAIL_LOGIN !== 'FALSE') {
+  throw new Error('Expected REQUIRE_REGISTERED_EMAIL_LOGIN update to be normalized and accepted.');
+}
+
+rejected = false;
+try {
+  vm.runInNewContext(
+    "setScriptProperty({ session: superAdminSession, key: 'REQUIRE_REGISTERED_EMAIL_LOGIN', value: 'MAYBE' })",
+    { ...context, superAdminSession },
+  );
+} catch {
+  rejected = true;
+}
+if (!rejected) {
+  throw new Error('Expected invalid REQUIRE_REGISTERED_EMAIL_LOGIN enum to be rejected.');
+}
+properties.REQUIRE_REGISTERED_EMAIL_LOGIN = 'TRUE';
 
 vm.runInNewContext(
   "setScriptProperty({ session: superAdminSession, key: 'APP_ACTIVE_UNTIL', value: '2026-12-31' })",
@@ -341,11 +369,20 @@ properties.AUTH_MODE = 'ON';
 htmlOutput = vm.runInNewContext('doGet()', context);
 if (!htmlOutput.content.includes('USER_NOT_AUTHORIZED')
   || !htmlOutput.content.includes('belum terdaftar')
+  || !htmlOutput.content.includes('https://accounts.google.com/AccountChooser')
+  || !htmlOutput.content.includes('https://myaccount.google.com/permissions')
   || htmlOutput.file === 'Index'
   || htmlOutput.content.includes('superadmin@example.com')
   || htmlOutput.content.includes('super-secret-salt')) {
   throw new Error('Expected unregistered AUTH_MODE=ON user to receive safe access denied page.');
 }
+
+properties.REQUIRE_REGISTERED_EMAIL_LOGIN = 'FALSE';
+htmlOutput = vm.runInNewContext('doGet()', context);
+if (htmlOutput.file !== 'Index') {
+  throw new Error('Expected demo/trial email login bypass to render Index.html.');
+}
+properties.REQUIRE_REGISTERED_EMAIL_LOGIN = 'TRUE';
 properties.AUTH_MODE = 'OFF';
 
 vm.runInNewContext(

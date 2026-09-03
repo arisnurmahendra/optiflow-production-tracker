@@ -19,7 +19,7 @@
 
 Status per 2026-09-03:
 - Selesai: `OPT-001` sampai `OPT-027`.
-- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, expiry gate, native GAS test runner, hardening checklist, deployment checklist, pilot plan, dan QCC package template.
+- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, expiry gate, registered-email/demo render gate, native GAS test runner, hardening checklist, deployment checklist, pilot plan, dan QCC package template.
 - M5 selesai: backend quarantine approval mutation, daily closing, adjustment, recap, supervisor control center, dan management dashboard.
 - Setelah M6/M7 artifact closure, sisa pekerjaan utama adalah eksekusi smoke test di GAS target, pilot lapangan, dan validasi benefit QCC aktual dari data pilot.
 
@@ -110,6 +110,7 @@ Kriteria selesai:
 - Fungsi GAS yang menerima input eksternal memiliki blok awal `Input Validation & Sanitization`.
 - `AUTH_MODE=OFF` mengembalikan daftar role simulasi dan memvalidasi role yang dipilih.
 - `AUTH_MODE=ON` mengabaikan request simulasi role dan memakai `Session.getActiveUser().getEmail()`.
+- `REQUIRE_REGISTERED_EMAIL_LOGIN=TRUE` menolak render app untuk email tidak terdaftar; `FALSE` hanya untuk demo/trial terkontrol.
 - Endpoint tanpa permission eksplisit ditolak dan mencatat audit `RBAC_DENIED`.
 - Callable wrapper di `Code.js` lolos audit `npm run audit:gas:validation`.
 
@@ -263,6 +264,7 @@ Deliverables:
 - Hidden maintenance console SuperAdmin untuk status/update/delete/rotate Script Properties berbasis allowlist.
 - Spreadsheet toolbar admin untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
 - Expiry gate berbasis `APP_ACTIVE_UNTIL` yang menampilkan halaman akses ditolak saat aplikasi sudah melewati masa aktif.
+- Demo/trial render gate berbasis `REQUIRE_REGISTERED_EMAIL_LOGIN` dan halaman akses ditolak dengan aksi ganti akun, kelola izin Google, dan reload.
 - Production API wrapper memakai `google.script.run.withSuccessHandler().withFailureHandler()`.
 - Artefak checklist:
   - `docs/PRODUCTION_HARDENING_CHECKLIST.md`.
@@ -277,6 +279,7 @@ Kriteria selesai:
 - RBAC, audit masking, dan safe error response memenuhi baseline POL.ISMS.001.
 - Script Properties maintenance menolak key non-allowlist, tidak membocorkan secret, dan mencatat audit.
 - `doGet()` memblokir akses ketika `APP_ACTIVE_UNTIL` expired atau invalid tanpa merender aplikasi utama.
+- `doGet()` memblokir user tidak terdaftar ketika registered-email login aktif, serta hanya bypass untuk demo/trial jika `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE`.
 - Test runner GAS menghasilkan log Pass/Fail untuk CRUD, validation, idempotency, RBAC, quarantine, closing, adjustment, dan recap.
 - Checklist hardening dan deployment memiliki langkah, bukti verifikasi, dan rollback gate ringkas.
 

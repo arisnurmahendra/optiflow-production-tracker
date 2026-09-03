@@ -120,6 +120,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Role truth berasal dari `USER_ROLES`; permission truth berasal dari `ROLE_PERMISSIONS`.
 - `AUTH_MODE=ON` memakai `Session.getActiveUser().getEmail()`, sedangkan `AUTH_MODE=OFF` hanya untuk simulasi role development.
 - Saat `AUTH_MODE=ON`, `doGet()` menolak render aplikasi jika email Google tidak terdaftar/aktif di `USER_ROLES`.
+- `REQUIRE_REGISTERED_EMAIL_LOGIN=TRUE` mengaktifkan registered-email render gate; `FALSE` hanya untuk demo/trial terkontrol tanpa validasi email saat halaman dirender.
 - Script Properties hanya boleh dimutasi melalui endpoint maintenance allowlisted dan permission eksplisit.
 - `APP_ACTIVE_UNTIL` memakai format `YYYY-MM-DD` dan berlaku inclusive berdasarkan timezone `Asia/Jakarta`.
 
@@ -150,8 +151,9 @@ Initial setup di Apps Script:
 1. Set `SPREADSHEET_ID` di Script Properties jika project GAS standalone.
 2. Jalankan `bootstrapSheets()` sekali untuk membuat sheet/header awal. Pemanggilan pertama boleh berjalan walaupun `AUTH_MODE`, `USER_ROLES`, `ROLE_PERMISSIONS`, dan `AUDIT_LOGS` belum siap.
 3. Isi minimal `USER_ROLES` dan `ROLE_PERMISSIONS`, termasuk permission `schema:bootstrap` untuk admin yang berwenang.
-4. Set `AUTH_MODE` ke `OFF` untuk development atau `ON` untuk production.
-5. Set `APP_ACTIVE_UNTIL` bila aplikasi perlu masa aktif terbatas.
+4. Set `AUTH_MODE` ke `OFF` untuk development/demo atau `ON` untuk production.
+5. Set `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE` hanya untuk demo/trial; gunakan `TRUE` untuk production.
+6. Set `APP_ACTIVE_UNTIL` bila aplikasi perlu masa aktif terbatas.
 
 Setelah sheet foundational tersedia, `bootstrapSheets()` kembali wajib melewati auth/RBAC.
 
@@ -159,6 +161,7 @@ Menu spreadsheet:
 - Saat project terhubung ke Google Sheets, `onOpen()` menambahkan menu `OPTIFLOW Admin`.
 - Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, GAS smoke test, dan shortcut link proyek.
 - Dummy master data ditolak saat `AUTH_MODE=ON`, dan default Script Properties tidak menimpa nilai yang sudah ada.
+- Halaman akses ditolak menyediakan aksi ganti akun Google, kelola izin Google, dan reload aplikasi tanpa membocorkan detail internal.
 
 Alur push yang aman:
 
@@ -206,7 +209,7 @@ gas/
 
 `Code.js` hanya berperan sebagai entrypoint untuk `doGet()` dan wrapper fungsi yang dipanggil frontend. Business logic backend ditempatkan di modul `gas/*.gs` dengan namespace object agar aman di global scope Google Apps Script.
 
-Script Properties maintenance tersedia sebagai hidden SuperAdmin console dan endpoint GAS allowlisted. Secret seperti `ENCRYPTION_SALT` hanya dikembalikan sebagai status, bukan nilai mentah. `APP_ACTIVE_UNTIL` dapat dipakai untuk menentukan masa aktif aplikasi; jika expired, Apps Script menampilkan halaman akses ditolak.
+Script Properties maintenance tersedia sebagai hidden SuperAdmin console dan endpoint GAS allowlisted. Secret seperti `ENCRYPTION_SALT` hanya dikembalikan sebagai status, bukan nilai mentah. `APP_ACTIVE_UNTIL` dapat dipakai untuk menentukan masa aktif aplikasi; jika expired, Apps Script menampilkan halaman akses ditolak. `REQUIRE_REGISTERED_EMAIL_LOGIN` mengontrol render gate email terdaftar: `TRUE` untuk produksi, `FALSE` untuk demo/trial.
 
 Validasi backend:
 

@@ -54,11 +54,11 @@ Ringkasan langkah:
 
 Per 2026-09-03, implementasi sudah mencakup:
 - Frontend Vue 3 mobile operator dengan autosave draft, IndexedDB queue, sync status, dan preview Pareto defect.
-- Backend GAS modular untuk health check, sheet bootstrap, spreadsheet admin toolbar dengan project links, auth/session, RBAC, validation, audit, production logs, quarantine, daily closing, adjustment, recap, dashboard, access gate, Script Properties maintenance, dan native test runner.
+- Backend GAS modular untuk health check, sheet bootstrap, spreadsheet admin toolbar dengan project links, auth/session, RBAC, validation, audit, production logs, quarantine, daily closing, adjustment, recap, dashboard, expiry/registered-email/demo access gate, Script Properties maintenance, dan native test runner.
 - Append-only `RAW_LOGS` dengan idempotency `transaction_id`.
 - Conflict detection untuk mesin sama/operator berbeda/waktu berdekatan ke `CONFLICT_PENDING`.
 - Default `DEFECT_CATEGORIES` untuk Pareto awal: solder tipis, solder bridge, komponen missing, dan visual scratch.
-- Hidden SuperAdmin console untuk key Script Properties yang disahkan, tanpa membuka secret mentah ke frontend.
+- Hidden SuperAdmin console untuk key Script Properties yang disahkan, tanpa membuka secret mentah ke frontend; demo/trial tanpa registered-email gate hanya boleh lewat `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE`.
 - Workflow Mandor untuk approval mutation, daily closing, adjustment, recap batch, supervisor control center, dan dashboard management read-only.
 - Artefak M6/M7 sudah tersedia: production hardening checklist, deployment checklist, pilot rollout plan, dan QCC report package template.
 

@@ -14,6 +14,7 @@
 - Endpoint maintenance Script Properties tidak boleh mengirim nilai secret mentah ke frontend; secret hanya boleh dikembalikan sebagai status `SET` atau `NOT_SET`.
 - Mutasi Script Properties wajib diaudit dengan metadata yang tidak berisi nilai property.
 - `APP_ACTIVE_UNTIL` wajib divalidasi sebagai `YYYY-MM-DD`; jika expired atau invalid, `doGet()` harus menolak render aplikasi utama dan mengembalikan halaman akses ditolak.
+- `REQUIRE_REGISTERED_EMAIL_LOGIN` wajib divalidasi sebagai enum `TRUE`/`FALSE`; nilai kosong harus diperlakukan sebagai `TRUE` oleh render gate, dan `FALSE` hanya boleh untuk demo/trial/development terkontrol.
 
 ## 2. Auth Dan RBAC
 
@@ -22,7 +23,8 @@
 - Saat `AUTH_MODE=ON`, user tidak terdaftar atau tidak aktif harus ditolak.
 - Saat `AUTH_MODE=OFF`, role switcher hanya boleh dipakai untuk development/testing.
 - Saat `AUTH_MODE` kosong atau tidak dikenal, backend wajib fail closed dan menolak session.
-- `doGet()` wajib menjalankan render access gate: pada `AUTH_MODE=ON`, email aktif Google yang tidak ada/aktif di `USER_ROLES` harus menerima halaman `Akses ditolak`, bukan `Index.html`.
+- `doGet()` wajib menjalankan render access gate: pada `AUTH_MODE=ON` dan `REQUIRE_REGISTERED_EMAIL_LOGIN` kosong/`TRUE`, email aktif Google yang tidak ada/aktif di `USER_ROLES` harus menerima halaman `Akses ditolak`, bukan `Index.html`.
+- Halaman `Akses ditolak` boleh menyediakan tombol ganti akun Google, kelola izin Google, dan reload aplikasi; halaman ini tidak boleh memuat session context, PII, role matrix, data produksi, atau Script Properties mentah.
 - Pengecualian hanya untuk `bootstrapSheets()` first-run: jika `USER_ROLES`, `ROLE_PERMISSIONS`, atau `AUDIT_LOGS` belum ada, endpoint boleh membuat schema/header awal tanpa session/RBAC untuk memutus circular dependency bootstrap. Setelah tiga sheet foundational tersebut ada, `bootstrapSheets()` kembali wajib memakai `schema:bootstrap`.
 - Request `simulated_role` dari frontend hanya boleh diproses ketika `AUTH_MODE=OFF`.
 - Session context tidak boleh mengirim PII terenkripsi, PII mentah, blind index, atau nilai Script Properties ke frontend.
