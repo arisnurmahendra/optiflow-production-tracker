@@ -80,6 +80,7 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding-right: 148px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -152,6 +153,10 @@ h2 {
 }
 
 .session-fab {
+  position: fixed;
+  top: 16px;
+  right: max(16px, calc((100vw - 1240px) / 2 + 18px));
+  z-index: 30;
   min-height: 48px;
   border: 1px solid #fed7aa;
   border-radius: 999px;
@@ -202,7 +207,7 @@ h2 {
 }
 
 .app-nav {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   position: sticky;
   top: 0;
   z-index: 10;
@@ -337,6 +342,7 @@ h2 {
 .workspace.view-mandor,
 .workspace.view-supervisor,
 .workspace.view-management,
+.workspace.view-hrd,
 .workspace.view-settings {
   grid-template-columns: 1fr;
   grid-template-areas: "main";
@@ -360,6 +366,10 @@ h2 {
 }
 
 .dashboard-panel {
+  grid-area: main;
+}
+
+.hrd-panel {
   grid-area: main;
 }
 
@@ -976,10 +986,21 @@ td:nth-child(4) {
   line-height: 1.2;
 }
 
+.role-button small {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .role-button.active {
   border-color: #bfdbfe;
   background: var(--primary-soft);
   box-shadow: var(--shadow-pressed);
+}
+
+.role-button.selected {
+  border-color: #fb923c;
 }
 
 .inline-error,
@@ -1013,6 +1034,7 @@ td:nth-child(4) {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+    padding-right: 62px;
     padding-bottom: 12px;
   }
 
@@ -1030,6 +1052,8 @@ td:nth-child(4) {
   }
 
   .session-fab {
+    top: 12px;
+    right: 12px;
     min-width: 58px;
     min-height: 48px;
     padding: 6px;
@@ -1046,7 +1070,7 @@ td:nth-child(4) {
     bottom: 16px;
     left: 16px;
     top: auto;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
     grid-auto-flow: column;
     grid-auto-columns: auto;
     min-height: 66px;
@@ -1156,6 +1180,7 @@ td:nth-child(4) {
   .workspace.view-mandor,
   .workspace.view-supervisor,
   .workspace.view-management,
+  .workspace.view-hrd,
   .workspace.view-settings {
     grid-template-areas: "main";
   }

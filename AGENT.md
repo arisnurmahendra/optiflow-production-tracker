@@ -32,10 +32,10 @@ Current implementation baseline as of 2026-09-03:
 
 - Frontend uses Vue 3 Composition API.
 - UI follows `docs/UI_UX_CONTRACT.md`: Industrial Soft UI with 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, and 10% Claymorphism / Glass accent.
-- Large frontend workflows must be separated into scalable app views/tabs; do not stack Operator, Mandor, Supervisor, Management, and Settings as one long page.
+- Large frontend workflows must be separated into scalable app views/tabs; do not stack Operator, Mandor, Supervisor, Management, HRD, and Settings as one long page.
 - Use top workflow navigation on desktop and bottom nav buttons on mobile.
 - Mobile bottom nav inactive items should show large icons only; the active item shows icon, label, and compact badge.
-- User Settings should open from the top floating session button, not from mobile bottom nav. Try Role must update the UI instantly for `AUTH_MODE=OFF`; backend must still ignore `simulated_role` when `AUTH_MODE=ON`.
+- User Settings should open from the top floating session button, not from mobile bottom nav. Try Role must update the UI instantly for `AUTH_MODE=OFF`, role buttons are multi-select for visible workflow menus, and backend must still ignore `simulated_role` when `AUTH_MODE=ON`.
 - Heavy workflow views such as Supervisor and Management should lazy-load their API data when opened.
 - Primary actions must use solid high-contrast buttons; critical statuses need color, text, and icon treatment.
 - State is handled with composables, not Vuex or Pinia.

@@ -241,9 +241,11 @@ Alur pengaturan user:
 1. User membuka view Pengaturan.
 2. Frontend memanggil `getSessionContext` melalui `apiAdapter.js`.
 3. Jika `AUTH_MODE=OFF`, user boleh memilih role dari allowlist `Operator`, `Mandor`, `Management`, `HRD`, atau `SuperAdmin`.
-4. Role pilihan boleh disimpan lokal sebagai preferensi demo/trial, tetapi tidak boleh ditulis ke Sheet atau Script Properties.
-5. Semua aksi frontend berikutnya mengirim `session.simulated_role` sesuai role pilihan.
-6. Jika `AUTH_MODE=ON`, backend mengabaikan simulated role dan tetap memakai email Google aktif.
+4. Role button boleh multi-select untuk menentukan workflow menu yang dirender pada app shell.
+5. Satu role terpilih tetap menjadi `selectedRole` untuk payload session saat ini.
+6. Role pilihan dan visible-role preference boleh disimpan lokal sebagai preferensi demo/trial, tetapi tidak boleh ditulis ke Sheet atau Script Properties.
+7. Semua aksi frontend berikutnya mengirim `session.simulated_role` sesuai `selectedRole`.
+8. Jika `AUTH_MODE=ON`, backend mengabaikan simulated role dan tetap memakai email Google aktif.
 
 ## 13. Alur Hidden Maintenance Console SuperAdmin
 

@@ -95,7 +95,29 @@ const dashboardLoading = ref(false);
 const dashboardError = ref('');
 const dashboardLoaded = ref(false);
 const roleOptions = Object.freeze(['Operator', 'Mandor', 'Management', 'HRD', 'SuperAdmin']);
+const roleIcons = Object.freeze({
+  Operator: '📝',
+  Mandor: '✅',
+  Management: '📈',
+  HRD: '👤',
+  SuperAdmin: '🔐',
+});
+const workflowRoleMap = Object.freeze({
+  operator: Object.freeze(['Operator', 'SuperAdmin']),
+  mandor: Object.freeze(['Mandor', 'SuperAdmin']),
+  supervisor: Object.freeze(['Mandor', 'SuperAdmin']),
+  management: Object.freeze(['Management', 'SuperAdmin']),
+  hrd: Object.freeze(['HRD', 'SuperAdmin']),
+});
+const workflowIconMap = Object.freeze({
+  operator: roleIcons.Operator,
+  mandor: roleIcons.Mandor,
+  supervisor: '📊',
+  management: roleIcons.Management,
+  hrd: roleIcons.HRD,
+});
 const selectedRole = ref(readPreferredRole());
+const visibleRoles = ref(readVisibleRoles());
 const sessionContext = ref(null);
 const sessionLoading = ref(false);
 const sessionError = ref('');
@@ -150,6 +172,14 @@ const appViews = computed(() => [
     badge: dashboardLoading.value ? 'Memuat' : 'MASTER_RECAP',
   },
   {
+    id: 'hrd',
+    icon: roleIcons.HRD,
+    label: 'HRD',
+    title: 'User privacy',
+    subtitle: 'Review kesiapan akses user tanpa membuka PII mentah.',
+    badge: 'PII guarded',
+  },
+  {
     id: 'settings',
     icon: '⚙️',
     label: 'Pengaturan',
@@ -161,7 +191,15 @@ const appViews = computed(() => [
 const activeViewMeta = computed(() =>
   appViews.value.find((view) => view.id === activeView.value) || appViews.value[0],
 );
-const navViews = computed(() => appViews.value.filter((view) => view.id !== 'settings'));
+const navViews = computed(() => appViews.value
+  .filter((view) =>
+    view.id !== 'settings'
+    && (workflowRoleMap[view.id] || []).some((role) => visibleRoles.value.includes(role)),
+  )
+  .map((view) => ({
+    ...view,
+    icon: workflowIconMap[view.id] || view.icon,
+  })));
 const currentSessionLabel = computed(() => {
   if (sessionContext.value?.auth_mode === 'ON') {
     return `${sessionContext.value.role || 'Unknown'} dari Google Account`;
@@ -473,14 +511,32 @@ async function setTryRole(role) {
     return;
   }
 
-  selectedRole.value = role;
-  persistPreferredRole(role);
+  const wasVisible = visibleRoles.value.includes(role);
+  let nextVisibleRoles = wasVisible
+    ? visibleRoles.value.filter((item) => item !== role)
+    : [...visibleRoles.value, role];
+
+  if (nextVisibleRoles.length === 0) {
+    nextVisibleRoles = [role];
+  }
+
+  visibleRoles.value = nextVisibleRoles;
+  selectedRole.value = wasVisible && selectedRole.value === role
+    ? nextVisibleRoles[0]
+    : role;
+  persistPreferredRole(selectedRole.value);
+  persistVisibleRoles(nextVisibleRoles);
+  ensureVisibleActiveView();
   sessionError.value = '';
-  sessionMessage.value = `Role demo langsung aktif sebagai ${role}.`;
+  sessionMessage.value = `Role demo langsung aktif sebagai ${selectedRole.value}.`;
   void refreshSessionContext();
 }
 
 async function switchView(viewId) {
+  if (viewId !== 'settings' && !navViews.value.some((view) => view.id === viewId)) {
+    return;
+  }
+
   activeView.value = viewId;
 
   if (viewId === 'supervisor' && !supervisorLoaded.value) {
@@ -494,6 +550,14 @@ async function switchView(viewId) {
   if (viewId === 'settings') {
     await refreshSessionContext();
   }
+}
+
+function ensureVisibleActiveView() {
+  if (activeView.value === 'settings' || navViews.value.some((view) => view.id === activeView.value)) {
+    return;
+  }
+
+  activeView.value = navViews.value[0]?.id || 'settings';
 }
 
 function buildSessionPayload() {
@@ -556,6 +620,7 @@ function handleKeydown(event) {
 
 onMounted(() => {
   hydrate();
+  ensureVisibleActiveView();
   refreshSessionContext();
   window.addEventListener('keydown', handleKeydown);
 });
@@ -578,11 +643,31 @@ function readPreferredRole() {
   }
 }
 
+function readVisibleRoles() {
+  try {
+    const storedRoles = JSON.parse(window.localStorage.getItem('optiflow.visible_roles') || '[]');
+    const validRoles = Array.isArray(storedRoles)
+      ? storedRoles.filter((role) => roleOptions.includes(role))
+      : [];
+    return validRoles.length ? [...new Set(validRoles)] : ['Operator', 'Mandor', 'Management'];
+  } catch {
+    return ['Operator', 'Mandor', 'Management'];
+  }
+}
+
 function persistPreferredRole(role) {
   try {
     window.localStorage.setItem('optiflow.try_role', role);
   } catch {
     // localStorage is optional; selected role still works for this session.
+  }
+}
+
+function persistVisibleRoles(roles) {
+  try {
+    window.localStorage.setItem('optiflow.visible_roles', JSON.stringify(roles));
+  } catch {
+    // localStorage is optional; visible roles still work for this session.
   }
 }
 </script>
@@ -1110,6 +1195,33 @@ function persistPreferredRole(role) {
         </div>
       </section>
 
+      <section v-if="activeView === 'hrd'" class="panel hrd-panel" aria-labelledby="hrd-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">HRD</p>
+            <h2 id="hrd-title">User privacy readiness</h2>
+          </div>
+          <span class="badge">PII guarded</span>
+        </div>
+
+        <div class="settings-grid">
+          <article class="settings-card">
+            <span>Akses user</span>
+            <strong>USER_ROLES</strong>
+            <p>Role truth tetap dari sheet backend; UI tidak menyimpan daftar email atau role.</p>
+          </article>
+          <article class="settings-card">
+            <span>Data sensitif</span>
+            <strong>Masked only</strong>
+            <p>PII mentah tidak ditampilkan pada workflow umum dan tetap dijaga oleh backend.</p>
+          </article>
+        </div>
+
+        <div class="hint-box">
+          View HRD disiapkan sebagai permukaan scalable untuk review user dan PII masking tanpa membuka secret atau data mentah.
+        </div>
+      </section>
+
       <section v-if="activeView === 'settings'" class="panel settings-panel" aria-labelledby="settings-title">
         <div class="section-title">
           <div>
@@ -1137,11 +1249,13 @@ function persistPreferredRole(role) {
             v-for="role in roleOptions"
             :key="role"
             type="button"
-            :class="['role-button', { active: selectedRole === role }]"
+            :class="['role-button', { active: visibleRoles.includes(role), selected: selectedRole === role }]"
+            :aria-pressed="visibleRoles.includes(role)"
             @click="setTryRole(role)"
           >
-            <span>{{ role === 'Operator' ? '📝' : role === 'Mandor' ? '✅' : role === 'Management' ? '📈' : role === 'HRD' ? '👤' : '🔐' }}</span>
+            <span>{{ roleIcons[role] }}</span>
             <strong>{{ role }}</strong>
+            <small>{{ visibleRoles.includes(role) ? 'Menu aktif' : 'Menu hidden' }}</small>
           </button>
         </div>
 
