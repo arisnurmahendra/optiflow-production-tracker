@@ -276,30 +276,78 @@ h2 {
   position: absolute;
   top: -28px;
   left: 8px;
-  min-height: 22px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  z-index: 12;
+}
+
+.nav-context-trigger {
+  min-height: 26px;
   border: 1px solid rgba(14, 165, 233, 0.16);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   background: rgba(255, 255, 255, 0.72);
   color: #075985;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   backdrop-filter: blur(10px);
 }
 
-.nav-context span {
+.nav-context-trigger span {
   color: #075985;
   font-size: 12px;
   font-weight: 900;
 }
 
-.nav-context strong {
-  color: #f97316;
-  font-size: 12px;
-  font-weight: 900;
+.nav-role-menu {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  width: min(260px, calc(100vw - 32px));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-shell);
+  backdrop-filter: blur(14px);
+}
+
+.nav-role-option {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.nav-role-option span {
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+}
+
+.nav-role-option strong {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-role-option.active {
+  border-color: #bfdbfe;
+  background: var(--primary-soft);
+}
+
+.nav-role-option.selected {
+  border-color: #fb923c;
 }
 
 .nav-item {
@@ -1553,10 +1601,17 @@ td:nth-child(4) {
     top: -82px;
     right: 0;
     left: 0;
-    justify-content: center;
     margin: 0 auto;
     width: fit-content;
     max-width: 100%;
+  }
+
+  .nav-role-menu {
+    top: auto;
+    bottom: 34px;
+    left: 50%;
+    width: min(260px, calc(100vw - 48px));
+    transform: translateX(-50%);
   }
 
   .nav-icon {

@@ -165,6 +165,7 @@ const operatorFeatureViews = Object.freeze([
 ]);
 const selectedRole = ref(readPreferredRole());
 const visibleRoles = ref(readVisibleRoles());
+const navRoleMenuOpen = ref(false);
 const sessionContext = ref(null);
 const sessionLoading = ref(false);
 const sessionError = ref('');
@@ -715,6 +716,15 @@ async function setTryRole(role) {
   void refreshSessionContext();
 }
 
+async function selectRoleFromNav(role) {
+  await setTryRole(role);
+  navRoleMenuOpen.value = false;
+}
+
+function toggleNavRoleMenu() {
+  navRoleMenuOpen.value = !navRoleMenuOpen.value;
+}
+
 async function switchView(viewId) {
   if (viewId !== 'settings' && !navViews.value.some((view) => view.id === viewId)) {
     return;
@@ -736,6 +746,8 @@ async function switchView(viewId) {
 }
 
 async function switchNavigationItem(item) {
+  navRoleMenuOpen.value = false;
+
   if (item.type === 'operator-feature') {
     activeView.value = 'operator';
     activeOperatorFeature.value = item.id;
@@ -897,8 +909,29 @@ function persistVisibleRoles(roles) {
 
     <nav class="app-nav" aria-label="Navigasi workflow">
       <div class="nav-context">
-        <span>{{ navModeLabel }}</span>
-        <strong>{{ selectedRole }}</strong>
+        <button
+          class="nav-context-trigger"
+          type="button"
+          :aria-expanded="navRoleMenuOpen"
+          aria-haspopup="menu"
+          @click="toggleNavRoleMenu"
+        >
+          <span>{{ navModeLabel }}</span>
+        </button>
+        <div v-if="navRoleMenuOpen" class="nav-role-menu" role="menu" aria-label="Pilih role atau workspace">
+          <button
+            v-for="role in roleOptions"
+            :key="role"
+            type="button"
+            role="menuitemcheckbox"
+            :aria-checked="visibleRoles.includes(role)"
+            :class="['nav-role-option', { active: visibleRoles.includes(role), selected: selectedRole === role }]"
+            @click="selectRoleFromNav(role)"
+          >
+            <span>{{ roleIcons[role] }}</span>
+            <strong>{{ role }}</strong>
+          </button>
+        </div>
       </div>
       <button
         v-for="view in navItems"
