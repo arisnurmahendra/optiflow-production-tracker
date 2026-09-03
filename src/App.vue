@@ -436,15 +436,16 @@ function compactFilter(filter) {
 <template>
   <main class="app-shell">
     <header class="topbar">
-      <div>
+      <div class="title-stack">
         <button class="brand-trigger" type="button" aria-label="OPTIFLOW maintenance trigger" @click="handleBrandTap">
           OPTIFLOW
         </button>
         <h1>Input produksi harian</h1>
+        <p>Pelaporan operator, approval Mandor, dan dashboard operasional.</p>
       </div>
       <div class="sync-pill" aria-label="Status sinkronisasi">
         <span class="dot"></span>
-        Offline - draft aman
+        {{ syncStatus }}
       </div>
     </header>
 
@@ -577,7 +578,7 @@ function compactFilter(filter) {
             <h2 id="queue-title">Antrean device</h2>
           </div>
           <button class="icon-button" type="button" aria-label="Retry sync" :disabled="isSyncing" @click="syncQueue">
-            R
+            Retry
           </button>
         </div>
 
