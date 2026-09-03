@@ -15,6 +15,14 @@ function doGet() {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 
+  var renderAccessStatus = OptiflowAccessGate.getRenderAccessStatus();
+
+  if (!renderAccessStatus.active) {
+    return HtmlService.createHtmlOutput(OptiflowAccessGate.buildAccessDeniedHtml(renderAccessStatus))
+      .setTitle(OPTIFLOW_APP.name + ' - Akses Ditolak')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle(OPTIFLOW_APP.name)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

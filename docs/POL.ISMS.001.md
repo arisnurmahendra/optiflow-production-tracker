@@ -16,6 +16,7 @@ Required controls:
 - User tidak aktif atau soft-deleted tidak boleh mengakses sistem.
 - Administrator dan SuperAdmin wajib memakai kontrol MFA dari Google Workspace bila tersedia.
 - Setiap endpoint backend melakukan authorization berdasarkan role dan resource.
+- Web app render gate wajib menolak email Google yang kosong, tidak terdaftar, nonaktif, atau soft-deleted sebelum `Index.html` dimuat.
 - Pengecualian bootstrap pertama hanya berlaku untuk `bootstrapSheets()` saat `USER_ROLES`, `ROLE_PERMISSIONS`, atau `AUDIT_LOGS` belum tersedia; pengecualian ini tidak boleh dipakai untuk aksi operasional atau maintenance.
 
 Conditional controls for future custom password auth:

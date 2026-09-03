@@ -119,6 +119,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard final sebelum Human-in-the-Loop.
 - Role truth berasal dari `USER_ROLES`; permission truth berasal dari `ROLE_PERMISSIONS`.
 - `AUTH_MODE=ON` memakai `Session.getActiveUser().getEmail()`, sedangkan `AUTH_MODE=OFF` hanya untuk simulasi role development.
+- Saat `AUTH_MODE=ON`, `doGet()` menolak render aplikasi jika email Google tidak terdaftar/aktif di `USER_ROLES`.
 - Script Properties hanya boleh dimutasi melalui endpoint maintenance allowlisted dan permission eksplisit.
 - `APP_ACTIVE_UNTIL` memakai format `YYYY-MM-DD` dan berlaku inclusive berdasarkan timezone `Asia/Jakarta`.
 

@@ -22,6 +22,7 @@
 - Saat `AUTH_MODE=ON`, user tidak terdaftar atau tidak aktif harus ditolak.
 - Saat `AUTH_MODE=OFF`, role switcher hanya boleh dipakai untuk development/testing.
 - Saat `AUTH_MODE` kosong atau tidak dikenal, backend wajib fail closed dan menolak session.
+- `doGet()` wajib menjalankan render access gate: pada `AUTH_MODE=ON`, email aktif Google yang tidak ada/aktif di `USER_ROLES` harus menerima halaman `Akses ditolak`, bukan `Index.html`.
 - Pengecualian hanya untuk `bootstrapSheets()` first-run: jika `USER_ROLES`, `ROLE_PERMISSIONS`, atau `AUDIT_LOGS` belum ada, endpoint boleh membuat schema/header awal tanpa session/RBAC untuk memutus circular dependency bootstrap. Setelah tiga sheet foundational tersebut ada, `bootstrapSheets()` kembali wajib memakai `schema:bootstrap`.
 - Request `simulated_role` dari frontend hanya boleh diproses ketika `AUTH_MODE=OFF`.
 - Session context tidak boleh mengirim PII terenkripsi, PII mentah, blind index, atau nilai Script Properties ke frontend.

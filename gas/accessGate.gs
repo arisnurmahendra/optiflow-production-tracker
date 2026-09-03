@@ -29,10 +29,48 @@ var OptiflowAccessGate = (function () {
     };
   }
 
+  function getRenderAccessStatus() {
+    try {
+      var sessionResponse = OptiflowAuth.getSessionContext({});
+      var session = sessionResponse.data || {};
+
+      if (session.auth_mode === OPTIFLOW_AUTH_MODES.OFF) {
+        return {
+          active: true,
+          reason: 'DEVELOPMENT_ROLE_SELECTION',
+        };
+      }
+
+      if (session.auth_mode === OPTIFLOW_AUTH_MODES.ON && session.email && session.role) {
+        return {
+          active: true,
+          reason: 'AUTHORIZED_USER',
+        };
+      }
+
+      return {
+        active: false,
+        reason: 'USER_NOT_AUTHORIZED',
+      };
+    } catch (error) {
+      return {
+        active: false,
+        reason: 'USER_NOT_AUTHORIZED',
+      };
+    }
+  }
+
   function buildAccessDeniedHtml(status) {
+    var reason = status && status.reason ? status.reason : 'ACCESS_DENIED';
     var activeUntilText = status && status.active_until
       ? '<p>Masa aktif aplikasi berakhir pada <strong>' + escapeHtml(status.active_until) + '</strong>.</p>'
       : '<p>Konfigurasi masa aktif aplikasi tidak valid. Hubungi SuperAdmin untuk pemeriksaan Script Properties.</p>';
+    var message = reason === 'USER_NOT_AUTHORIZED'
+      ? '<p>Email Google Anda belum terdaftar atau tidak aktif di database OPTIFLOW.</p>'
+      : activeUntilText;
+    var helpText = reason === 'USER_NOT_AUTHORIZED'
+      ? '<p>Silakan hubungi Mandor atau SuperAdmin untuk pendaftaran akses.</p>'
+      : '<p>Silakan hubungi Mandor atau SuperAdmin jika masa aktif perlu diperpanjang.</p>';
 
     return '<!doctype html>'
       + '<html lang="id">'
@@ -53,9 +91,9 @@ var OptiflowAccessGate = (function () {
       + '<main role="alert" aria-labelledby="access-denied-title">'
       + '<p class="eyebrow">OPTIFLOW</p>'
       + '<h1 id="access-denied-title">Akses ditolak</h1>'
-      + activeUntilText
-      + '<p>Silakan hubungi Mandor atau SuperAdmin jika masa aktif perlu diperpanjang.</p>'
-      + '<span class="code">' + escapeHtml(status.reason || 'ACCESS_DENIED') + '</span>'
+      + message
+      + helpText
+      + '<span class="code">' + escapeHtml(reason) + '</span>'
       + '</main>'
       + '</body>'
       + '</html>';
@@ -72,6 +110,7 @@ var OptiflowAccessGate = (function () {
 
   return Object.freeze({
     buildAccessDeniedHtml: buildAccessDeniedHtml,
+    getRenderAccessStatus: getRenderAccessStatus,
     isApplicationActive: isApplicationActive,
   });
 })();

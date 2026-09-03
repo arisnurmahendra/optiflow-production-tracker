@@ -268,6 +268,13 @@ Alur expiry aplikasi:
 4. Jika tanggal sudah lewat atau format property tidak valid, `doGet()` menampilkan halaman `Akses ditolak`.
 5. Halaman penolakan tidak boleh memuat data produksi, session context, Script Properties mentah, atau secret.
 
+Alur akses user:
+1. Setelah expiry gate lolos, `doGet()` mengecek render access.
+2. Jika `AUTH_MODE=OFF`, aplikasi boleh render dan frontend meminta role simulation.
+3. Jika `AUTH_MODE=ON`, email dari `Session.getActiveUser().getEmail()` wajib ditemukan aktif di `USER_ROLES`.
+4. Jika email kosong, tidak terdaftar, nonaktif, soft-deleted, atau `AUTH_MODE` invalid, `doGet()` wajib menampilkan halaman `Akses ditolak` tanpa merender `Index.html`.
+5. Halaman penolakan hanya boleh menampilkan alasan aman, bukan email mentah, PII, role matrix, atau detail internal.
+
 ## 14. Kontrak ROLE_PERMISSIONS
 
 `ROLE_PERMISSIONS` adalah sumber kebenaran untuk authorization action-level. Role saja tidak cukup untuk menjalankan endpoint yang mengubah atau membaca data operasional.

@@ -337,6 +337,17 @@ if (gate.active || gate.reason !== 'INVALID_EXPIRY_CONFIGURATION') {
 
 properties.APP_ACTIVE_UNTIL = '2026-12-31';
 
+properties.AUTH_MODE = 'ON';
+htmlOutput = vm.runInNewContext('doGet()', context);
+if (!htmlOutput.content.includes('USER_NOT_AUTHORIZED')
+  || !htmlOutput.content.includes('belum terdaftar')
+  || htmlOutput.file === 'Index'
+  || htmlOutput.content.includes('superadmin@example.com')
+  || htmlOutput.content.includes('super-secret-salt')) {
+  throw new Error('Expected unregistered AUTH_MODE=ON user to receive safe access denied page.');
+}
+properties.AUTH_MODE = 'OFF';
+
 vm.runInNewContext(
   "deleteScriptProperty({ session: superAdminSession, key: 'SPREADSHEET_ID' })",
   { ...context, superAdminSession },
