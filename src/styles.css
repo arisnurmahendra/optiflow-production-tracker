@@ -173,7 +173,7 @@ h2 {
 .badge,
 .status {
   min-height: 30px;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   gap: 7px;
   border: 1px solid var(--border);
@@ -261,11 +261,25 @@ h2 {
   top: 0;
   z-index: 10;
   padding: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(14, 165, 233, 0.34);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: var(--shadow-soft);
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(255, 255, 255, 0.9) 38%, rgba(186, 230, 253, 0.62)),
+    rgba(240, 249, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    0 14px 34px rgba(14, 116, 144, 0.14);
   backdrop-filter: blur(12px);
+}
+
+.app-nav::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  z-index: -1;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.46);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.54);
 }
 
 .app-nav::before {
@@ -440,13 +454,29 @@ h2 {
 }
 
 .metric {
+  border: 1px solid rgba(219, 227, 234, 0.86);
   min-height: 86px;
   padding: 14px;
   display: grid;
   align-content: center;
   gap: 5px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
   background: rgba(232, 238, 244, 0.86);
   box-shadow: var(--shadow-neomorphic);
+}
+
+.metric:hover {
+  border-color: rgba(14, 165, 233, 0.42);
+  background: rgba(240, 249, 255, 0.94);
+  transform: translateY(-1px);
+}
+
+.metric:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-pressed);
 }
 
 .metric span,
@@ -479,6 +509,118 @@ h2 {
 .metric.warning,
 .mini-metric.warning {
   border-left: 4px solid var(--warning);
+}
+
+.skeleton-card {
+  pointer-events: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-line,
+.skeleton-pill {
+  display: block;
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.88), rgba(248, 250, 252, 0.98), rgba(226, 232, 240, 0.88));
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.skeleton-line {
+  width: 68%;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.skeleton-line.short {
+  width: 42%;
+}
+
+.skeleton-line.wide {
+  width: 92%;
+}
+
+.skeleton-line.tiny {
+  width: 52px;
+  height: 10px;
+}
+
+.skeleton-line.metric-value {
+  width: 74px;
+  height: 24px;
+}
+
+.skeleton-pill {
+  width: 86px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.skeleton-chart {
+  border: 1px solid rgba(219, 227, 234, 0.76);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(219, 234, 254, 0.62) 1px, transparent 1px),
+    rgba(248, 250, 252, 0.72);
+  background-size: 100% 42px;
+}
+
+.table-skeleton {
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+.metric-help-popup {
+  border: 1px solid rgba(186, 230, 253, 0.9);
+  border-radius: 12px;
+  color: var(--text-primary);
+  background:
+    linear-gradient(135deg, rgba(240, 249, 255, 0.98), rgba(255, 255, 255, 0.98)),
+    #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.metric-help-title {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.metric-help-body {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.metric-help-body p {
+  margin: 0 0 10px;
+}
+
+.metric-help-confirm {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
 }
 
 .mini-metric.conflict {
@@ -775,6 +917,7 @@ select:focus,
 input:focus,
 .button:focus,
 .icon-button:focus,
+.metric:focus,
 .role-button:focus,
 .session-fab:focus,
 .row-button:focus,
@@ -1307,8 +1450,91 @@ td:nth-child(4) {
 
 .performance-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.performance-donut-card {
+  min-height: 176px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(112px, 0.42fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 14px;
+  background: rgba(248, 250, 252, 0.94);
+  box-shadow: var(--shadow-soft);
+}
+
+.donut-chart-frame {
+  position: relative;
+  width: min(100%, 148px);
+  height: 100%;
+  min-height: 132px;
+  aspect-ratio: 1;
+  align-self: stretch;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+}
+
+.performance-donut-chart {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.donut-chart-frame span {
+  position: relative;
+  z-index: 1;
+  color: var(--text-primary);
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.donut-chart-frame:hover span,
+.donut-chart-frame:focus-within span {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.donut-detail {
+  min-width: 0;
+  min-height: 132px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.donut-detail > span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.donut-detail strong {
+  color: var(--text-primary);
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.donut-detail small {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.donut-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .performance-card {
@@ -1404,6 +1630,44 @@ td:nth-child(4) {
   gap: 8px;
 }
 
+.chart-tools {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.chart-period-control {
+  min-height: 34px;
+  border: 1px solid rgba(186, 230, 253, 0.9);
+  border-radius: 999px;
+  padding: 3px;
+  display: inline-flex !important;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.chart-period-control button {
+  min-height: 26px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.chart-period-control button.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.22);
+}
+
 .chart-legend span {
   display: inline-flex;
   align-items: center;
@@ -1425,37 +1689,26 @@ td:nth-child(4) {
   background: var(--success);
 }
 
-.line-chart {
+.ok-line {
+  background: var(--warning);
+}
+
+.reject-line {
+  background: var(--danger);
+}
+
+.chart-canvas-frame {
+  position: relative;
   width: 100%;
-  min-height: 190px;
-  overflow: visible;
+  height: clamp(180px, 26vh, 260px);
+  min-height: 180px;
+  overflow: hidden;
 }
 
-.chart-axis,
-.chart-grid-line {
-  stroke: #dbeafe;
-  stroke-width: 1;
-}
-
-.chart-line {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 4;
-}
-
-.chart-line.target {
-  stroke: var(--primary);
-}
-
-.chart-line.actual {
-  stroke: var(--success);
-}
-
-.chart-label {
-  fill: var(--text-secondary);
-  font-size: 9px;
-  font-weight: 800;
+.line-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .operator-progress > div:first-child {
@@ -1490,54 +1743,6 @@ td:nth-child(4) {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--primary), #22c55e);
-}
-
-.operator-chart-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
-  gap: 10px;
-}
-
-.chart-card {
-  min-height: 178px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
-  display: grid;
-  place-items: center;
-  gap: 10px;
-  background: rgba(248, 250, 252, 0.92);
-  text-align: center;
-}
-
-.chart-card span {
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.chart-card strong {
-  color: var(--text-primary);
-  font-size: 24px;
-  line-height: 1;
-}
-
-.chart-card p {
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.donut-chart {
-  width: 112px;
-  height: 112px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle, #ffffff 0 52%, transparent 53%),
-    conic-gradient(#16a34a 0 82%, #dc2626 82% 100%);
-  box-shadow: var(--shadow-neomorphic);
 }
 
 .empty-state {
@@ -1722,11 +1927,13 @@ td:nth-child(4) {
     align-items: center;
     margin: 44px 6px 0;
     padding: 0 18px;
-    border-color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(186, 230, 253, 0.78);
     border-radius: 18px;
-    background: #ffffff;
+    background:
+      linear-gradient(180deg, rgba(240, 249, 255, 0.98), rgba(255, 255, 255, 0.98)),
+      #ffffff;
     box-shadow:
-      0 18px 34px rgba(15, 23, 42, 0.15),
+      0 18px 34px rgba(14, 116, 144, 0.16),
       inset 0 1px 0 rgba(255, 255, 255, 0.9);
     overflow: visible;
   }
@@ -1838,6 +2045,39 @@ td:nth-child(4) {
     display: none;
   }
 
+  .chart-canvas-frame {
+    height: clamp(168px, 34vh, 220px);
+    min-height: 168px;
+  }
+
+  .chart-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chart-tools {
+    justify-items: start;
+    gap: 8px;
+  }
+
+  .chart-period-control {
+    width: auto;
+    max-width: 100%;
+    flex: 0 1 auto;
+    justify-content: space-between;
+  }
+
+  .chart-period-control button {
+    flex: 0 1 auto;
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+
+  .chart-legend {
+    justify-content: flex-start;
+    flex: 1 1 auto;
+  }
+
   .metric-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1867,9 +2107,29 @@ td:nth-child(4) {
     grid-template-columns: 1fr;
   }
 
-  .performance-grid,
-  .operator-chart-grid {
+  .performance-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-donut-card {
+    min-height: 184px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .donut-detail {
+    justify-items: center;
+  }
+
+  .donut-detail strong {
+    font-size: 18px;
+  }
+
+  .donut-breakdown {
+    justify-content: center;
   }
 
   .panel {

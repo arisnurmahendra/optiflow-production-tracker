@@ -94,6 +94,7 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-031` | Build Supervisor control center with alert-first layout | Review | P1 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
 | `OPT-032` | Build Management read-only KPI dashboard task flow | Review | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
 | `OPT-033` | Build HRD user access and role audit workspace | Review | P2 | `type:feature`, `type:security`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
+| `OPT-034` | Move defect category master data to Spreadsheet-backed CRUD | Closed | P1 | `type:feature`, `area:backend`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #28 |
 
 ## 5. Closed Issue Log
 
@@ -126,6 +127,7 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-025` | #25 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; pilot rollout plan pushed in commit `2c943f1`; field evidence remains external. |
 | `OPT-026` | #26 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; QCC report package template pushed in commit `2c943f1`; actual benefits wait for pilot data. |
 | `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
+| `OPT-034` | #28 | 2026-09-04 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `git diff --check` passed; spreadsheet-backed defect category CRUD implemented locally; commit hash pending until user-approved push. |
 
 ## 6. Issue Template
 

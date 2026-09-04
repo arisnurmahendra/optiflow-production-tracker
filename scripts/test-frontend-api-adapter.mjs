@@ -30,6 +30,100 @@ if (!health.ok || health.data.status !== 'ok' || health.meta.mocked !== true) {
   throw new Error('Expected mock GAS health response to be normalized.');
 }
 
+const operatorDashboard = await api.getOperatorDashboard({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-03',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+  },
+  page: 1,
+  page_size: 8,
+});
+
+if (
+  operatorDashboard.data.summary.ok_today <= 0
+  || operatorDashboard.data.trend_history.length !== 7
+  || operatorDashboard.data.weekly_history.length !== 7
+  || operatorDashboard.data.recent_submissions.length === 0
+) {
+  throw new Error('Expected mock Operator dashboard response to include complete dummy data.');
+}
+
+const trendDeltaKinds = new Set(operatorDashboard.data.trend_history.map((row) =>
+  Math.sign(Number(row.actual || 0) - Number(row.target || 0)),
+));
+if (!trendDeltaKinds.has(-1) || !trendDeltaKinds.has(0) || !trendDeltaKinds.has(1)) {
+  throw new Error('Expected mock Operator daily trend to include under, exact, and over target examples.');
+}
+
+const todayTrend = operatorDashboard.data.trend_history.find((row) => row.label === 'Hari ini');
+if (todayTrend.actual !== todayTrend.ok + todayTrend.reject) {
+  throw new Error('Expected mock Operator realization to equal OK + Reject.');
+}
+
+const monthlyOperatorDashboard = await api.getOperatorDashboard({
+  session: { simulated_role: 'Operator' },
+  filter: { factory_date: '2026-09-03', line_id: 'SMT-02', shift_id: 'SHIFT-1', machine_id: 'SLD-14' },
+  period: 'MONTHLY',
+  page: 1,
+  page_size: 8,
+});
+
+if (monthlyOperatorDashboard.data.period !== 'MONTHLY' || monthlyOperatorDashboard.data.trend_history.length !== 6) {
+  throw new Error('Expected mock Operator dashboard to support monthly trend period.');
+}
+
+const defectCategories = await api.getDefectCategories({ session: { simulated_role: 'Operator' } });
+if (!defectCategories.data.categories.some((category) => category.defect_category_id === 'DEF-COLD-SOLDER')) {
+  throw new Error('Expected mock GAS to expose seeded defect categories.');
+}
+
+await api.upsertDefectCategory({
+  session: { simulated_role: 'SuperAdmin' },
+  category: {
+    defect_category_id: 'DEF-API-NEW',
+    defect_name: 'API seeded defect',
+    qcc_factor: 'Machine',
+    severity: 'HIGH',
+    status_aktif: true,
+  },
+});
+const updatedDefects = await api.getDefectCategories({ session: { simulated_role: 'Operator' } });
+if (!updatedDefects.data.categories.some((category) => category.defect_category_id === 'DEF-API-NEW')) {
+  throw new Error('Expected mock GAS upsertDefectCategory to add active category.');
+}
+
+await api.deactivateDefectCategory({
+  session: { simulated_role: 'SuperAdmin' },
+  defect_category_id: 'DEF-API-NEW',
+});
+const activeDefects = await api.getDefectCategories({ session: { simulated_role: 'Operator' } });
+if (activeDefects.data.categories.some((category) => category.defect_category_id === 'DEF-API-NEW')) {
+  throw new Error('Expected mock GAS deactivateDefectCategory to hide inactive category from active list.');
+}
+
+const seedDefects = await api.seedDefectCategories({ session: { simulated_role: 'SuperAdmin' } });
+if (!Array.isArray(seedDefects.data.inserted)) {
+  throw new Error('Expected mock GAS seedDefectCategories to return inserted list.');
+}
+
+const hrdDashboard = await api.getHrdAccessDashboard({
+  session: { simulated_role: 'HRD' },
+  page: 1,
+  page_size: 10,
+});
+if (hrdDashboard.data.summary.active_users <= 0 || hrdDashboard.data.role_matrix.length === 0) {
+  throw new Error('Expected mock HRD dashboard to include user and role summary.');
+}
+if (JSON.stringify(hrdDashboard.data).includes('operator@example.com')
+  || JSON.stringify(hrdDashboard.data).includes('phone_blind_index')
+  || JSON.stringify(hrdDashboard.data).includes('profile_base64')
+  || JSON.stringify(hrdDashboard.data).includes('alamat_encrypted')) {
+  throw new Error('Expected mock HRD dashboard to avoid raw PII fields.');
+}
+
 const properties = await api.getScriptPropertiesStatus({ session: { simulated_role: 'SuperAdmin' } });
 const salt = properties.data.properties.find((property) => property.key === 'ENCRYPTION_SALT');
 if (!salt || salt.value_preview !== '') {

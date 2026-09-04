@@ -43,10 +43,11 @@ Status implementasi 2026-09-03:
 3. Operator memilih line, shift, machine ID, target harian, tandon, OK, dan reject.
 4. Frontend menjalankan validasi Zod.
 5. Jika reject lebih dari 0, operator wajib memilih kategori defect.
-6. Kategori defect membawa `qcc_factor` dan `severity` agar reject langsung siap untuk Pareto awal dan analisis QCC.
-7. Frontend menyimpan draft otomatis di IndexedDB sebelum submit.
-8. Frontend membuat `transaction_id` UUID dan `device_timestamp` UTC.
-9. Submit dikirim melalui `apiAdapter.js`.
+6. Kategori defect berasal dari sheet `DEFECT_CATEGORIES` melalui backend GAS, dengan fallback cache/default hanya untuk development/offline.
+7. Kategori defect membawa `qcc_factor` dan `severity` agar reject langsung siap untuk Pareto awal dan analisis QCC.
+8. Frontend menyimpan draft otomatis di IndexedDB sebelum submit.
+9. Frontend membuat `transaction_id` UUID dan `device_timestamp` UTC.
+10. Submit dikirim melalui `apiAdapter.js`.
 10. Backend melakukan validasi server.
 11. Jika valid dan tidak anomali, data ditulis ke `RAW_LOGS` dengan status `ACCEPTED`.
 12. Jika duplikat, backend mengembalikan status idempotent tanpa menulis ulang.
@@ -193,13 +194,17 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Navigasi utama menampilkan menu fitur untuk workspace yang sedang aktif, bukan daftar role. Pemilihan workspace dilakukan melalui trigger/dropdown di area nav.
 - Semua workspace default ke menu `Dashboard` saat pertama dipilih.
 - Untuk `Operator`, navigasi fitur berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
-- Dashboard Operator menampilkan statistik performa pekerjaan hari ini vs kemarin untuk `Target`, `Tandon`, `OK`, dan `Reject`, serta diagram line histori default 1 minggu untuk `target` dan `realisasi`. Sampai endpoint histori operator tersedia, data histori di frontend hanya boleh ditandai sebagai snapshot lokal/demo.
+- Dashboard Operator menampilkan statistik performa pekerjaan hari ini vs kemarin untuk `Target`, `Tandon`, `OK`, dan `Reject`, komposisi ChartJS doughnut `OK vs Reject` untuk `Hari ini` dan `Kemarin`, serta ChartJS trend detail `Target`, `Realisasi`, `OK`, dan `Reject` dengan pilihan `Daily`, `Weekly`, dan `Monthly`. Angka tengah doughnut berarti capaian `Realisasi / Target`; `Realisasi` pada chart berarti `OK + Reject`; `Tandon` tidak dihitung dalam chart, tetapi tetap ditampilkan sebagai informasi cadangan. Default periode adalah `Daily` dengan 7 hari terakhir. Di development lokal, data ini boleh berasal dari `mock_gas.js` selama response meniru kontrak callable `getOperatorDashboard`.
+- Riwayat Operator menampilkan `recent_submissions` dari response `getOperatorDashboard` ditambah antrean lokal IndexedDB bila ada, sehingga user dapat melihat contoh data lengkap tanpa upload ke GAS.
+- Status Operator menampilkan status draft, queue, sync lokal, dan ringkasan mock/backend tanpa membuka approval atau data manajemen.
 - Header shift aktif Operator berisi line, shift, mesin, dan operator; header ini wajib tampil di semua menu fitur Operator.
 - Menu `Defect` menjadi permukaan khusus untuk kategori reject, QCC factor, severity, dan Pareto mini agar informasi cacat tidak bercampur dengan form input.
 - `Mandor`: fokus pada pending approval, conflict queue, dan daily closing. Default Mandor harus menonjolkan item yang membutuhkan keputusan Human-in-the-Loop.
 - `Supervisor`: fokus pada alert-first control center: conflict, closing terbuka, raw log anomali, dan adjustment. Data berat tetap lazy-load saat view dibuka.
 - `Management`: fokus pada read-only insight dari `MASTER_RECAP`, Pareto defect, trend/KPI, dan export/report. Tidak boleh ada aksi mutasi produksi.
 - `HRD`: fokus pada user access readiness, role audit, dan PII masking. HRD tidak boleh membuka secret atau Script Properties dari workspace normal.
+- HRD tahap MVP bersifat read-only untuk akses user: melihat user aktif/nonaktif, role distribution, permission readiness, dan ringkasan audit akses. HRD tidak boleh menerima email mentah, nama/alamat/telepon terenkripsi, blind index, profile base64, metadata audit mentah, secret, atau Script Properties dari workspace normal.
+- Seed dummy HRD/admin boleh mengisi `USER_ROLES` dengan email, username, role, status, placeholder terenkripsi untuk nama/alamat/telepon, blind index, dan `profile_base64`. Data ini hanya untuk development/staging saat `AUTH_MODE=OFF`; production wajib memakai data HRD resmi dan enkripsi backend.
 - `SuperAdmin`: tetap memakai hidden maintenance console terpisah dari 5 menu utama.
 
 ## 10. Pilot Rollout
@@ -219,6 +224,13 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Data setelah closing tidak boleh diubah langsung.
 - Reject wajib punya kategori defect jika `perolehan_reject > 0`.
 - Kategori defect untuk reject wajib aktif di `DEFECT_CATEGORIES`.
+- Tambah/ubah/nonaktif kategori defect dilakukan di master spreadsheet atau endpoint SuperAdmin/Mandor, harus tervalidasi, audit-log, dan tidak mengubah transaksi historis.
+- Pembagian otoritas master defect:
+  - Operator hanya melihat/memakai kategori defect aktif. Jika menemukan defect baru, proses production-ready adalah mengusulkan ke Mandor/Supervisor, bukan menulis langsung ke master.
+  - Mandor boleh mengelola kategori defect operasional (`create`, `update`, `soft_delete`) karena bertanggung jawab pada validasi lapangan dan closing harian.
+  - Supervisor, bila dibuat sebagai role resmi backend, boleh mengelola kategori defect lintas line dengan hak setara Mandor kecuali `seed`.
+  - Management tetap read-only agar KPI, Pareto, dan laporan improvement tidak bisa dipengaruhi oleh perubahan reference data dari pihak pembaca laporan.
+  - SuperAdmin memegang `seed` dan administrasi sistem karena seed adalah bootstrap/configuration action.
 - Kombinasi `operator_email + factory_date + line_id + shift_id + machine_id` dipakai sebagai sinyal duplicate detection tambahan.
 - Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.
@@ -331,6 +343,7 @@ Baseline resource/action:
 | `adjustment` | `create`, `read`, `approve`, `reject` |
 | `dashboard` | `read` |
 | `user_role` | `create`, `read`, `update`, `soft_delete` |
+| `audit_log` | `read` |
 | `script_property` | `read_status`, `update`, `delete`, `rotate_secret` |
 | `test_runner` | `run` |
 

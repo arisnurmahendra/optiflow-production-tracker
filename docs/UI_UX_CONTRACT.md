@@ -88,11 +88,13 @@ Dilarang:
 ## 4A. Role Workspace Ergonomics
 
 - Operator workspace wajib memprioritaskan form submit cepat, lalu draft/sync, lalu riwayat submit terbaru.
-- Operator Dashboard wajib menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject, plus line chart histori default 1 minggu untuk Target vs Realisasi. Jika histori backend belum tersedia, UI wajib memberi label snapshot lokal/demo.
+- Operator Dashboard wajib menampilkan komposisi perolehan `Hari ini` dan `Kemarin` sebagai ChartJS doughnut `OK vs Reject`, plus ChartJS trend detail `Target`, `Realisasi`, `OK`, dan `Reject` dengan segmented control horizontal `Daily`, `Weekly`, dan `Monthly`. Angka tengah doughnut wajib menampilkan capaian `Realisasi / Target`, bukan rasio `OK / Realisasi`. `Realisasi` berarti `OK + Reject`, sedangkan `Tandon` tidak masuk garis realisasi dan tampil sebagai informasi pendamping. Default periode adalah `Daily`. Chart wajib memakai container responsif dengan tinggi terikat agar tidak terlalu besar di desktop atau terlalu kecil di mobile. Dalam mode development, UI wajib dapat membaca dummy `getOperatorDashboard` dari `mock_gas.js` agar visual dapat diperiksa tanpa upload ke GAS.
+- Metric strip Operator untuk `Target`, `OK`, `Reject`, dan `Queue` wajib bisa diklik/tap untuk membuka bantuan ringkas yang menjelaskan arti metric, rumus, dan tindakan yang perlu dilakukan user.
+- Riwayat dan Status Operator harus punya empty/loading/error state yang jelas, serta tetap menggabungkan informasi mock/backend dengan queue lokal tanpa membuat user membaca log teknis.
 - Mandor workspace wajib action-first: pending approval, conflict, dan closing harus dipisah sebagai task surface yang mudah dipindai.
 - Supervisor workspace wajib alert-first: conflict, closing terbuka, adjustment pending, dan transaksi anomali tampil sebelum tabel mentah.
 - Management workspace wajib insight-first dan read-only: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data.
-- HRD workspace wajib privacy-first: user access, role assignment, dan audit readiness tampil dengan PII masked dan tanpa akses secret.
+- HRD workspace wajib privacy-first: dashboard user access, role assignment, permission readiness, dan audit summary tampil dengan PII masked dan tanpa akses secret. Default HRD adalah Dashboard; menu Users menampilkan direktori akses masked, Roles menampilkan matriks permission, Audit menampilkan ringkasan event aman, dan Privacy menampilkan batas data yang tidak boleh dibuka. Walaupun seed `USER_ROLES` dapat berisi username, field terenkripsi, dan `profile_base64`, dashboard akses read-only HRD tidak boleh merender avatar/profile atau PII detail sampai ada workflow HRD detail yang disetujui kontrak.
 
 ## 5. Mobile Mandor
 

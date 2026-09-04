@@ -32,6 +32,7 @@ var OptiflowSpreadsheetMenu = (function () {
         .addItem('✅ Run GAS Smoke Test', 'menuRunGasSmokeTest')
         .addSeparator()
         .addItem('🔗 Open Project Links', 'menuOpenProjectLinks')
+        .addItem('Seed Defect Categories', 'menuSeedDefectCategories')
         .addToUi();
     } catch (error) {
       console.warn('OPTIFLOW menu creation failed: ' + sanitizeMessage(error));
@@ -113,6 +114,27 @@ var OptiflowSpreadsheetMenu = (function () {
     });
   }
 
+  function seedDefectCategoriesFromMenu() {
+    OptiflowSheets.bootstrap();
+
+    var session = {
+      auth_mode: 'MENU',
+      email: Session.getActiveUser().getEmail() || 'menu.user@optiflow.local',
+      role: 'SuperAdmin',
+      user_id: 'MENU-SUPERADMIN',
+      is_simulated: false,
+      requires_role_selection: false,
+    };
+    var response = OptiflowDefectCategories.seedDefaults({}, session);
+
+    showAlert('Seed Defect Categories', [
+      'Inserted defaults: ' + response.data.inserted.length,
+      response.data.inserted.length ? response.data.inserted.join('\n') : 'All default defect categories already exist.',
+    ].join('\n'));
+
+    return response;
+  }
+
   function showSchemaHealthFromMenu() {
     var response = OptiflowSheets.healthCheck();
     var health = response.data;
@@ -163,62 +185,109 @@ var OptiflowSpreadsheetMenu = (function () {
   }
 
   function seedUserRoles() {
+    var profileBase64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxOCIgZmlsbD0iIzM4YjRmOCIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMjQiIHI9IjEwIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE0IDU2YzMtMTMgMTMtMjAgMTgtMjBzMTUgNyAxOCAyMCIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==';
     return appendMissingRecords('USER_ROLES', 'email', [
       {
         user_id: 'DEV-Operator',
         email: 'operator@example.com',
         role: 'Operator',
-        nama_lengkap_encrypted: '',
-        nomor_telepon_encrypted: '',
-        phone_blind_index: '',
+        nama_lengkap_encrypted: 'enc:dev-operator-name',
+        nomor_telepon_encrypted: 'enc:dev-operator-phone',
+        phone_blind_index: 'blind:dev-operator-phone',
         status_aktif: true,
         is_deleted: false,
         deleted_at: '',
         last_login: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        username: 'operator.demo',
+        alamat_encrypted: 'enc:dev-operator-address',
+        profile_base64: profileBase64,
       },
       {
         user_id: 'DEV-Mandor',
         email: 'mandor@example.com',
         role: 'Mandor',
-        nama_lengkap_encrypted: '',
-        nomor_telepon_encrypted: '',
-        phone_blind_index: '',
+        nama_lengkap_encrypted: 'enc:dev-mandor-name',
+        nomor_telepon_encrypted: 'enc:dev-mandor-phone',
+        phone_blind_index: 'blind:dev-mandor-phone',
         status_aktif: true,
         is_deleted: false,
         deleted_at: '',
         last_login: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        username: 'mandor.demo',
+        alamat_encrypted: 'enc:dev-mandor-address',
+        profile_base64: profileBase64,
       },
       {
         user_id: 'DEV-Management',
         email: 'management@example.com',
         role: 'Management',
-        nama_lengkap_encrypted: '',
-        nomor_telepon_encrypted: '',
-        phone_blind_index: '',
+        nama_lengkap_encrypted: 'enc:dev-management-name',
+        nomor_telepon_encrypted: 'enc:dev-management-phone',
+        phone_blind_index: 'blind:dev-management-phone',
         status_aktif: true,
         is_deleted: false,
         deleted_at: '',
         last_login: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        username: 'management.demo',
+        alamat_encrypted: 'enc:dev-management-address',
+        profile_base64: profileBase64,
+      },
+      {
+        user_id: 'DEV-HRD',
+        email: 'hrd@example.com',
+        role: 'HRD',
+        nama_lengkap_encrypted: 'enc:dev-hrd-name',
+        nomor_telepon_encrypted: 'enc:dev-hrd-phone',
+        phone_blind_index: 'blind:dev-hrd-phone',
+        status_aktif: true,
+        is_deleted: false,
+        deleted_at: '',
+        last_login: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        username: 'hrd.demo',
+        alamat_encrypted: 'enc:dev-hrd-address',
+        profile_base64: profileBase64,
       },
       {
         user_id: 'DEV-SuperAdmin',
         email: 'superadmin@example.com',
         role: 'SuperAdmin',
-        nama_lengkap_encrypted: '',
-        nomor_telepon_encrypted: '',
-        phone_blind_index: '',
+        nama_lengkap_encrypted: 'enc:dev-superadmin-name',
+        nomor_telepon_encrypted: 'enc:dev-superadmin-phone',
+        phone_blind_index: 'blind:dev-superadmin-phone',
         status_aktif: true,
         is_deleted: false,
         deleted_at: '',
         last_login: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        username: 'superadmin.demo',
+        alamat_encrypted: 'enc:dev-superadmin-address',
+        profile_base64: profileBase64,
+      },
+      {
+        user_id: 'DEV-Inactive-Operator',
+        email: 'inactive.operator@example.com',
+        role: 'Operator',
+        nama_lengkap_encrypted: 'enc:dev-inactive-operator-name',
+        nomor_telepon_encrypted: 'enc:dev-inactive-operator-phone',
+        phone_blind_index: 'blind:dev-inactive-operator-phone',
+        status_aktif: false,
+        is_deleted: false,
+        deleted_at: '',
+        last_login: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        username: 'operator.inactive.demo',
+        alamat_encrypted: 'enc:dev-inactive-operator-address',
+        profile_base64: profileBase64,
       },
     ]);
   }
@@ -227,9 +296,11 @@ var OptiflowSpreadsheetMenu = (function () {
     var records = [];
     var rolePermissions = {
       Operator: {
-        production_report: ['create'],
+        defect_category: ['read'],
+        production_report: ['create', 'read'],
       },
       Mandor: {
+        defect_category: ['read', 'create', 'update', 'soft_delete', 'seed'],
         production_report: ['create', 'read'],
         quarantine: ['read', 'approve', 'reject', 'request_correction'],
         daily_closing: ['create', 'read', 'reopen'],
@@ -238,6 +309,11 @@ var OptiflowSpreadsheetMenu = (function () {
       },
       Management: {
         dashboard: ['read'],
+        defect_category: ['read'],
+      },
+      HRD: {
+        audit_log: ['read'],
+        user_role: ['read'],
       },
       SuperAdmin: OPTIFLOW_PERMISSION_CATALOG,
     };
@@ -363,6 +439,7 @@ var OptiflowSpreadsheetMenu = (function () {
     create: create,
     openProjectLinksFromMenu: openProjectLinksFromMenu,
     runGasSmokeTestFromMenu: runGasSmokeTestFromMenu,
+    seedDefectCategoriesFromMenu: seedDefectCategoriesFromMenu,
     seedDummyMasterDataFromMenu: seedDummyMasterDataFromMenu,
     setDefaultScriptPropertiesFromMenu: setDefaultScriptPropertiesFromMenu,
     showSchemaHealthFromMenu: showSchemaHealthFromMenu,

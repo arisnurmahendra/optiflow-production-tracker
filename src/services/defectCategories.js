@@ -1,4 +1,4 @@
-export const defectCategories = Object.freeze([
+export const defaultDefectCategories = Object.freeze([
   {
     defect_category_id: 'DEF-SOLDER-THIN',
     defect_name: 'Solder tipis',
@@ -27,11 +27,29 @@ export const defectCategories = Object.freeze([
     severity: 'LOW',
     status_aktif: true,
   },
+  {
+    defect_category_id: 'DEF-POLARITY-REVERSE',
+    defect_name: 'Polaritas terbalik',
+    qcc_factor: 'Man',
+    severity: 'CRITICAL',
+    status_aktif: true,
+  },
+  {
+    defect_category_id: 'DEF-COLD-SOLDER',
+    defect_name: 'Cold solder',
+    qcc_factor: 'Method',
+    severity: 'HIGH',
+    status_aktif: true,
+  },
 ]);
+
+let runtimeDefectCategories = [...defaultDefectCategories];
+
+export const defectCategories = defaultDefectCategories;
 
 export const defectOptions = Object.freeze([
   { value: '', label: 'Tidak ada defect' },
-  ...defectCategories
+  ...defaultDefectCategories
     .filter((category) => category.status_aktif)
     .map((category) => ({
       value: category.defect_category_id,
@@ -41,8 +59,43 @@ export const defectOptions = Object.freeze([
     })),
 ]);
 
+export function setDefectCategories(categories) {
+  if (!Array.isArray(categories) || categories.length === 0) {
+    runtimeDefectCategories = [...defaultDefectCategories];
+    return runtimeDefectCategories;
+  }
+
+  runtimeDefectCategories = categories
+    .map(normalizeDefectCategory)
+    .filter(Boolean);
+
+  if (runtimeDefectCategories.length === 0) {
+    runtimeDefectCategories = [...defaultDefectCategories];
+  }
+
+  return runtimeDefectCategories;
+}
+
+export function getDefectCategories() {
+  return [...runtimeDefectCategories];
+}
+
+export function getDefectOptions() {
+  return [
+    { value: '', label: 'Tidak ada defect' },
+    ...runtimeDefectCategories
+      .filter((category) => category.status_aktif)
+      .map((category) => ({
+        value: category.defect_category_id,
+        label: `${category.defect_name} - ${category.qcc_factor}`,
+        severity: category.severity,
+        qcc_factor: category.qcc_factor,
+      })),
+  ];
+}
+
 export function getDefectCategory(defectCategoryId) {
-  return defectCategories.find((category) =>
+  return runtimeDefectCategories.find((category) =>
     category.status_aktif && category.defect_category_id === defectCategoryId,
   ) || null;
 }
@@ -87,4 +140,28 @@ export function createParetoRejectSummary(items) {
       ...item,
       pareto_percent: totalReject > 0 ? Math.round((item.reject_total / totalReject) * 1000) / 10 : 0,
     }));
+}
+
+function normalizeDefectCategory(category) {
+  if (!category || typeof category !== 'object') {
+    return null;
+  }
+
+  const defectCategoryId = String(category.defect_category_id || '').trim().toUpperCase();
+  const defectName = String(category.defect_name || '').trim();
+  const qccFactor = String(category.qcc_factor || '').trim();
+  const severity = String(category.severity || '').trim().toUpperCase();
+
+  if (!defectCategoryId || !defectName || !qccFactor || !severity) {
+    return null;
+  }
+
+  return {
+    defect_category_id: defectCategoryId,
+    defect_name: defectName,
+    qcc_factor: qccFactor,
+    severity,
+    status_aktif: category.status_aktif === true || String(category.status_aktif).toUpperCase() === 'TRUE',
+    updated_at: String(category.updated_at || ''),
+  };
 }

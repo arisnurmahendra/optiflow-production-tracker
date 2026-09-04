@@ -115,7 +115,10 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Workflow besar dipisah sebagai view aplikasi: Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan; hidden SuperAdmin console tetap tidak muncul di navigasi normal.
 - Workflow role sekarang memakai pola production workspace: Overview, Work Queue, dan Detail/Action agar setiap role melihat tugas relevan, bukan satu halaman berisi semua fitur.
 - Nav utama menampilkan menu fitur untuk workspace aktif di desktop dan mobile; pemilihan workspace pindah ke dropdown nav. Semua workspace default ke Dashboard, dan Operator memakai Dashboard, Input, Riwayat, Defect, dan Status.
-- Dashboard Operator menampilkan performa hari ini vs kemarin untuk Target, Tandon, OK, dan Reject, serta line chart histori default 1 minggu untuk Target vs Realisasi; histori saat ini diberi label snapshot lokal/demo sampai endpoint backend khusus tersedia.
+- Dashboard Operator menampilkan metric Target, OK, Reject, Queue dari response dashboard, ChartJS doughnut OK vs Reject untuk Hari ini/Kemarin, serta ChartJS trend Target, Realisasi, OK, dan Reject dengan pilihan Daily, Weekly, dan Monthly. Angka tengah doughnut berarti capaian `Realisasi / Target`, sedangkan realisasi berarti OK + Reject. Tandon tetap informasi terpisah; mode development memakai dummy `getOperatorDashboard` dari `src/services/mock_gas.js` agar UI bisa diperiksa tanpa upload ke GAS.
+- Kategori defect production berasal dari sheet `DEFECT_CATEGORIES`, bukan hardcode-only UI. Jalankan menu Spreadsheet `Seed Defect Categories` untuk mengisi default seed, lalu tambah defect baru sebagai row spreadsheet atau melalui callable terotorisasi `upsertDefectCategory`; frontend mengambilnya lewat `getDefectCategories` dengan fallback mock/default saat development lokal.
+- Hak akses master defect mengikuti separation of duties: Operator dan Management `read` saja; Mandor boleh `create/update/soft_delete`; Supervisor baru mendapat hak kelola jika sudah menjadi role resmi backend; SuperAdmin memegang full access termasuk `seed`.
+- HRD workspace mulai diisi sebagai dashboard read-only untuk user access, role readiness, permission matrix, dan audit summary. Seed dummy `USER_ROLES` menyediakan email, username, placeholder nama/alamat/telepon terenkripsi, blind index, role, status, dan profile base64 untuk development, tetapi UI HRD read-only hanya menerima email masked/status-only dan tidak menerima PII mentah, PII terenkripsi, blind index, Script Properties, profile base64, atau metadata audit mentah.
 - Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Mobile bottom nav menampilkan icon besar untuk semua menu; teks penuh hanya muncul pada menu aktif.
 - View Pengaturan dibuka dari top floating button dan menyediakan Try Role instan/multi-select untuk demo/trial saat `AUTH_MODE=OFF`, sehingga tester tidak perlu berganti email dan bisa menentukan menu workflow yang tampil.
@@ -239,7 +242,7 @@ Di production `AUTH_MODE=ON`, jalankan dengan akun SuperAdmin yang terdaftar dan
 
 ## Frontend API Adapter
 
-Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation.
+Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. Untuk Operator, mock menyediakan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, histori 1 minggu, recent submissions, status sync, dan Pareto defect sehingga dashboard dapat diuji cukup dengan `npm run dev`.
 
 ## Verifikasi Lokal
 

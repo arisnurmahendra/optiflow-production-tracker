@@ -164,6 +164,8 @@ const files = [
   'gas/productionLogs.gs',
   'gas/recap.gs',
   'gas/dashboard.gs',
+  'gas/defectCategories.gs',
+  'gas/hrd.gs',
   'Code.js',
 ];
 
@@ -174,6 +176,7 @@ for (const file of files) {
 vm.runInNewContext('OptiflowSheets.bootstrap()', context);
 
 appendPermission('Operator', 'production_report', 'create', true);
+appendPermission('Operator', 'production_report', 'read', true);
 appendPermission('Mandor', 'production_report', 'create', true);
 appendPermission('Mandor', 'quarantine', 'read', true);
 appendPermission('Mandor', 'quarantine', 'approve', true);
@@ -311,6 +314,48 @@ if (recap.data.rows_written !== 2 || recapAgain.data.rows_written !== 2) {
 const dashboard = vm.runInNewContext(`getManagementDashboard(${JSON.stringify(recapRequest)})`, context);
 if (dashboard.data.summary.ok_total !== 2065 || dashboard.data.summary.reject_total !== 50 || dashboard.data.rows.total !== 2) {
   throw new Error('Expected management dashboard to read clean MASTER_RECAP totals only.');
+}
+
+const operatorDashboard = vm.runInNewContext(`getOperatorDashboard(${JSON.stringify({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-02',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'operator@example.com',
+  },
+  page: 1,
+  page_size: 8,
+})})`, context);
+if (
+  operatorDashboard.data.summary.ok_today !== 1160
+  || operatorDashboard.data.trend_history.length !== 7
+  || operatorDashboard.data.weekly_history.length !== 7
+  || operatorDashboard.data.recent_submissions.length !== 1
+) {
+  throw new Error('Expected operator dashboard to return scoped summary, weekly history, and recent submissions.');
+}
+const operatorTodayTrend = operatorDashboard.data.trend_history.find((row) => row.label === 'Hari ini');
+if (operatorTodayTrend.actual !== operatorTodayTrend.ok + operatorTodayTrend.reject) {
+  throw new Error('Expected operator dashboard realization to equal OK + Reject.');
+}
+
+const operatorWeeklyDashboard = vm.runInNewContext(`getOperatorDashboard(${JSON.stringify({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-02',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'operator@example.com',
+  },
+  period: 'WEEKLY',
+  page: 1,
+  page_size: 8,
+})})`, context);
+if (operatorWeeklyDashboard.data.period !== 'WEEKLY' || operatorWeeklyDashboard.data.trend_history.length !== 8) {
+  throw new Error('Expected operator dashboard to support weekly trend period.');
 }
 
 const supervisor = vm.runInNewContext(`getSupervisorControlCenter(${JSON.stringify({

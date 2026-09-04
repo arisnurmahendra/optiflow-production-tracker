@@ -308,8 +308,98 @@ var OptiflowValidation = (function () {
     return validateFilterRequest(args, request, functionName, true);
   }
 
-  function validateFilterRequest(args, request, functionName, allowMissing) {
-    var payload = validateRequestObject(args, request, functionName, ['session', 'filter', 'page', 'page_size'], allowMissing);
+  function validateOperatorDashboardRequest(args, request) {
+    var payload = validateFilterRequest(args, request, 'getOperatorDashboard', true, ['period']);
+    return {
+      session: payload.session,
+      filter: payload.filter,
+      pagination: payload.pagination,
+      period: payload.period === undefined || payload.period === ''
+        ? 'DAILY'
+        : normalizeEnum(payload.period, 'period', ['DAILY', 'WEEKLY', 'MONTHLY']),
+    };
+  }
+
+  function validateDefectCategoryListRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getDefectCategories', ['session', 'include_inactive'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      include_inactive: normalizeBoolean(payload.include_inactive, 'include_inactive', false),
+    };
+  }
+
+  function validateDefectCategoryUpsertRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'upsertDefectCategory', ['session', 'category'], false);
+    var category = validateRequestObject([payload.category], payload.category, 'upsertDefectCategory.category', [
+      'defect_category_id',
+      'defect_name',
+      'qcc_factor',
+      'severity',
+      'status_aktif',
+    ], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      category: {
+        defect_category_id: normalizeDefectCategoryId(category.defect_category_id),
+        defect_name: normalizeFreeText(category.defect_name, 'defect_name', 80),
+        qcc_factor: normalizeQccFactor(category.qcc_factor),
+        severity: normalizeEnum(category.severity, 'severity', ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+        status_aktif: normalizeBoolean(category.status_aktif, 'status_aktif', true),
+      },
+    };
+  }
+
+  function validateDefectCategoryDeactivateRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'deactivateDefectCategory', ['session', 'defect_category_id'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      defect_category_id: normalizeDefectCategoryId(payload.defect_category_id),
+    };
+  }
+
+  function validateDefectCategorySeedRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'seedDefectCategories', ['session'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+    };
+  }
+
+  function validateHrdAccessDashboardRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getHrdAccessDashboard', ['session', 'filter', 'page', 'page_size'], true);
+    var rawFilter = payload.filter || {};
+    var filter = validateRequestObject([rawFilter], rawFilter, 'getHrdAccessDashboard.filter', ['role', 'status'], true);
+    var normalizedFilter = {};
+
+    if (filter.role) {
+      normalizedFilter.role = normalizeRole(filter.role);
+    }
+
+    if (filter.status) {
+      normalizedFilter.status = normalizeEnum(filter.status, 'status', ['ACTIVE', 'INACTIVE', 'DELETED', 'ALL']);
+    }
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      filter: normalizedFilter,
+      pagination: {
+        page: normalizePage(payload.page),
+        page_size: normalizePageSize(payload.page_size),
+      },
+    };
+  }
+
+  function validateFilterRequest(args, request, functionName, allowMissing, extraAllowedKeys) {
+    var payload = validateRequestObject(
+      args,
+      request,
+      functionName,
+      ['session', 'filter', 'page', 'page_size'].concat(extraAllowedKeys || []),
+      allowMissing
+    );
     var rawFilter = payload.filter || {};
     var filter = validateRequestObject([rawFilter], rawFilter, functionName + '.filter', [
       'factory_date',
@@ -334,6 +424,7 @@ var OptiflowValidation = (function () {
         page: normalizePage(payload.page),
         page_size: normalizePageSize(payload.page_size),
       },
+      period: payload.period,
     };
   }
 
@@ -492,6 +583,71 @@ var OptiflowValidation = (function () {
     return normalizeIdentifier(value, fieldName);
   }
 
+  function normalizeDefectCategoryId(value) {
+    var normalized = normalizeIdentifier(value, 'defect_category_id');
+
+    if (!/^DEF-[A-Z0-9-]{2,40}$/.test(normalized)) {
+      throw new Error('Input Validation & Sanitization: defect_category_id must use DEF-* format.');
+    }
+
+    return normalized;
+  }
+
+  function normalizeQccFactor(value) {
+    if (typeof value !== 'string') {
+      throw new Error('Input Validation & Sanitization: qcc_factor must be a string enum.');
+    }
+
+    var normalized = value.trim().toLowerCase();
+    var map = {
+      man: 'Man',
+      method: 'Method',
+      machine: 'Machine',
+      material: 'Material',
+      environment: 'Environment',
+    };
+
+    if (!map[normalized]) {
+      throw new Error('Input Validation & Sanitization: qcc_factor is not allowed.');
+    }
+
+    return map[normalized];
+  }
+
+  function normalizeRole(value) {
+    if (typeof value !== 'string') {
+      throw new Error('Input Validation & Sanitization: role must be a string enum.');
+    }
+
+    var normalized = value.trim();
+    if (OPTIFLOW_ROLES.indexOf(normalized) === -1) {
+      throw new Error('Input Validation & Sanitization: role is not allowed.');
+    }
+
+    return normalized;
+  }
+
+  function normalizeBoolean(value, fieldName, defaultValue) {
+    if (value === undefined || value === null || value === '') {
+      return Boolean(defaultValue);
+    }
+
+    if (value === true || value === false) {
+      return value;
+    }
+
+    var normalized = String(value).trim().toUpperCase();
+    if (normalized === 'TRUE') {
+      return true;
+    }
+
+    if (normalized === 'FALSE') {
+      return false;
+    }
+
+    throw new Error('Input Validation & Sanitization: ' + fieldName + ' must be boolean.');
+  }
+
   function normalizeInteger(value, fieldName) {
     var numberValue = Number(value);
 
@@ -577,7 +733,13 @@ var OptiflowValidation = (function () {
     validateAdjustmentCreateRequest: validateAdjustmentCreateRequest,
     validateAdjustmentDecisionRequest: validateAdjustmentDecisionRequest,
     validateDailyClosingRequest: validateDailyClosingRequest,
+    validateDefectCategoryDeactivateRequest: validateDefectCategoryDeactivateRequest,
+    validateDefectCategoryListRequest: validateDefectCategoryListRequest,
+    validateDefectCategorySeedRequest: validateDefectCategorySeedRequest,
+    validateDefectCategoryUpsertRequest: validateDefectCategoryUpsertRequest,
+    validateHrdAccessDashboardRequest: validateHrdAccessDashboardRequest,
     validateListRequest: validateListRequest,
+    validateOperatorDashboardRequest: validateOperatorDashboardRequest,
     validateQuarantineDecisionRequest: validateQuarantineDecisionRequest,
     validateRecapRunRequest: validateRecapRunRequest,
     validateTestRunnerRequest: validateTestRunnerRequest,

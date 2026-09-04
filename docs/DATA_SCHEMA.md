@@ -44,6 +44,11 @@ Status implementasi 2026-09-03:
 | `last_login` | String atau kosong | ISO 8601 UTC login terakhir. |
 | `created_at` | String | ISO 8601 UTC saat dibuat. |
 | `updated_at` | String | ISO 8601 UTC saat diperbarui. |
+| `username` | String | Username internal untuk tampilan/admin lookup; harus unik per user jika diaktifkan. |
+| `alamat_encrypted` | String | Alamat pengguna terenkripsi di backend. |
+| `profile_base64` | String atau kosong | Avatar/profile image base64 untuk kebutuhan HRD/admin; dianggap data pribadi dan tidak boleh dikirim ke workspace non-HRD. |
+
+Seed dummy development wajib mengisi variasi role minimal `Operator`, `Mandor`, `Management`, `HRD`, `SuperAdmin`, dan satu user nonaktif. Field nama, alamat, nomor telepon, dan profile dummy boleh ada untuk validasi UI/HRD, tetapi data production wajib mengikuti aturan enkripsi dan masking di kontrak keamanan.
 
 ## 3. Schema `ROLE_PERMISSIONS`
 
@@ -59,6 +64,8 @@ Status implementasi 2026-09-03:
 Authorization wajib memakai exact match `role + resource + action`. Missing permission, `is_allowed=FALSE`, role tidak dikenal, resource tidak dikenal, atau action tidak dikenal wajib ditolak. `SuperAdmin` tetap harus memiliki permission eksplisit di matrix.
 
 Resource `test_runner` hanya memiliki action `run` dan ditujukan untuk smoke test produksi oleh `SuperAdmin` atau role lain yang diberi izin eksplisit. Hasil runner wajib berupa ringkasan Pass/Fail tanpa secret, PII mentah, atau payload produksi lengkap.
+
+Resource `audit_log` hanya memiliki action `read` untuk ringkasan audit aman. HRD boleh membaca ringkasan audit akses dan role tanpa payload mentah atau PII mentah.
 
 ## 4. Schema `RAW_LOGS`
 
@@ -117,7 +124,16 @@ Resource `test_runner` hanya memiliki action `run` dan ditujukan untuk smoke tes
 | `status_aktif` | Boolean | `TRUE` jika kategori aktif. |
 | `updated_at` | String UTC | Waktu diperbarui. |
 
-Default bootstrap wajib mengisi katalog MVP jika sheet masih kosong: `DEF-SOLDER-THIN`, `DEF-SOLDER-BRIDGE`, `DEF-COMPONENT-MISS`, dan `DEF-VISUAL-SCRATCH`. Setiap kategori wajib membawa `qcc_factor` dan `severity` agar capture reject siap dipakai untuk Pareto dan QCC Step 1.
+`DEFECT_CATEGORIES` adalah sumber utama kategori defect untuk frontend dan backend. Frontend wajib mengambil katalog aktif melalui callable `getDefectCategories`, menyimpannya sebagai cache runtime, dan hanya memakai default lokal/mock sebagai fallback development/offline. Perubahan kategori dilakukan dengan endpoint terotorisasi dan/atau edit spreadsheet terkontrol, bukan hardcode UI.
+
+Default bootstrap/seed wajib mengisi katalog MVP jika sheet masih kosong atau item belum ada: `DEF-SOLDER-THIN`, `DEF-SOLDER-BRIDGE`, `DEF-COMPONENT-MISS`, `DEF-VISUAL-SCRATCH`, `DEF-POLARITY-REVERSE`, dan `DEF-COLD-SOLDER`. Setiap kategori wajib membawa `qcc_factor` dan `severity` agar capture reject siap dipakai untuk Pareto dan QCC Step 1.
+
+Hak akses master defect:
+- `Operator`: `read` saja. Operator boleh melihat dan memilih kategori defect aktif, tetapi tidak boleh menambah, mengubah, seed, atau menonaktifkan reference data.
+- `Mandor`: `read`, `create`, `update`, dan `soft_delete`. Mandor boleh mengelola kategori defect operasional karena paling dekat dengan validasi lapangan, tetapi seluruh perubahan wajib tervalidasi dan diaudit.
+- `Supervisor`: jika role `Supervisor` resmi ditambahkan ke `USER_ROLES`, berikan `read`, `create`, `update`, dan `soft_delete` untuk kontrol lintas line. `seed` tetap bukan aksi harian.
+- `Management`: `read` saja. Management membaca insight/Pareto dan tidak boleh mengubah master defect agar independensi data KPI tetap terjaga.
+- `SuperAdmin`: full access termasuk `seed`, karena seed adalah aksi administrasi sistem.
 
 ## 8. Schema `QUARANTINE`
 
@@ -371,6 +387,11 @@ Setelah expiry gate lolos, `doGet()` wajib membaca `REQUIRE_REGISTERED_EMAIL_LOG
 - Data `CONFLICT_PENDING` wajib direferensikan ke `QUARANTINE` dengan `reason_code=MACHINE_OPERATOR_TIME_COLLISION`.
 - Data `CONFLICT_PENDING` tidak boleh dihitung ke `MASTER_RECAP` sampai Mandor/Supervisor melakukan approve.
 - Jika `perolehan_reject > 0`, `defect_category_id` wajib merujuk kategori aktif di `DEFECT_CATEGORIES`; kategori tidak aktif atau tidak dikenal wajib ditolak oleh frontend dan backend.
+- Callable master defect:
+  - `getDefectCategories({ session, include_inactive? })` mengembalikan `categories` dari `DEFECT_CATEGORIES`; Operator/Management hanya menerima kategori aktif.
+  - `upsertDefectCategory({ session, category })` membuat/memperbarui satu kategori dengan validasi ID, nama, `qcc_factor`, `severity`, dan `status_aktif`; hanya Mandor/Supervisor resmi/SuperAdmin.
+  - `deactivateDefectCategory({ session, defect_category_id })` melakukan soft delete dengan `status_aktif=FALSE`; hanya Mandor/Supervisor resmi/SuperAdmin.
+  - `seedDefectCategories({ session })` menambahkan default seed yang belum ada tanpa menghapus kategori existing; hanya SuperAdmin atau menu administrasi terkontrol.
 
 ## 18. Kontrak Callable M5
 
@@ -390,3 +411,17 @@ Callable recap/dashboard:
 - `runMasterRecap(request)` menerima `session`, optional `factory_date`, `line_id`, dan `shift_id`, lalu mengganti data turunan di `MASTER_RECAP` secara idempotent untuk scope tersebut.
 - `getSupervisorControlCenter(request)` menerima `session`, filter server-side, `page`, dan `page_size`.
 - `getManagementDashboard(request)` menerima `session`, filter server-side, `page`, dan `page_size`, lalu membaca `MASTER_RECAP` tanpa menampilkan data mentah `RAW_LOGS`.
+- `getOperatorDashboard(request)` menerima `session`, filter server-side, `page`, `page_size`, dan optional `period` dengan enum `DAILY`, `WEEKLY`, atau `MONTHLY`, lalu mengembalikan response ringkas khusus Operator. Response wajib memakai shape standar `{ok,data,meta,error}` dan `data` berisi:
+  - `summary`: `factory_date`, `line_id`, `shift_id`, `machine_id`, `operator_name_masked`, `target_today`, `tandon_today`, `ok_today`, `reject_today`, `target_yesterday`, `tandon_yesterday`, `ok_yesterday`, dan `reject_yesterday`.
+  - `trend_history`: array time-series sesuai `period`; `DAILY` default berisi 7 hari, `WEEKLY` berisi beberapa minggu terakhir, dan `MONTHLY` berisi beberapa bulan terakhir. Setiap item memuat `period`, `period_start`, `period_end`, `label`, `target`, `actual`, `ok`, `reject`, dan `tandon`. Untuk chart produksi, `actual` wajib berarti `ok + reject`; frontend wajib dapat menampilkan detail `target`, `actual`, `ok`, dan `reject`. `tandon` tidak ikut dihitung dalam realisasi chart dan hanya tampil sebagai informasi pendamping.
+  - `weekly_history`: alias backward-compatible untuk `trend_history` saat `period=DAILY` sampai seluruh client lama dipensiunkan.
+  - `recent_submissions`: transaksi terbaru untuk riwayat Operator, memakai `transaction_id`, `device_timestamp`, `line_id`, `shift_id`, `machine_id`, angka produksi, `status`, dan optional `defect_category_id`.
+  - `sync`: status ringkas `draft_status`, `queue_count`, `last_sync_at`, dan `status`.
+  - `pareto`: ringkasan defect Operator berisi `defect_category_id`, `defect_name`, `reject_total`, `pareto_percent`, `qcc_factor`, dan `severity`.
+
+Callable HRD:
+- `getHrdAccessDashboard({ session, filter?, page?, page_size? })` membutuhkan permission `user_role:read`.
+- Response hanya boleh memuat `summary`, `users`, `role_matrix`, dan `audit_summary`.
+- `users.items[]` memuat `user_id`, `email_masked`, `role`, `status_aktif`, `is_deleted`, `last_login`, `created_at`, dan `updated_at`; tidak boleh memuat `email` mentah, `nama_lengkap_encrypted`, `alamat_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, atau `profile_base64` pada dashboard akses read-only.
+- `role_matrix[]` memuat role, total permission aktif, resource aktif, dan flag readiness.
+- `audit_summary` memuat hitungan action login/RBAC/user-role dan timestamp terakhir; tidak boleh memuat `AUDIT_LOGS.metadata_json` mentah.

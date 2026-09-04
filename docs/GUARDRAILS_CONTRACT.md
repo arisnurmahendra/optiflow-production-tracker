@@ -28,6 +28,7 @@
 - Pengecualian hanya untuk `bootstrapSheets()` first-run: jika `USER_ROLES`, `ROLE_PERMISSIONS`, atau `AUDIT_LOGS` belum ada, endpoint boleh membuat schema/header awal tanpa session/RBAC untuk memutus circular dependency bootstrap. Setelah tiga sheet foundational tersebut ada, `bootstrapSheets()` kembali wajib memakai `schema:bootstrap`.
 - Request `simulated_role` dari frontend hanya boleh diproses ketika `AUTH_MODE=OFF`.
 - Session context tidak boleh mengirim PII terenkripsi, PII mentah, blind index, atau nilai Script Properties ke frontend.
+- HRD access dashboard hanya boleh mengirim data user yang dimasking/status-only. Dilarang mengirim `email` mentah, `nama_lengkap_encrypted`, `alamat_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, `profile_base64`, atau `AUDIT_LOGS.metadata_json` mentah ke UI read-only.
 - Session success/failure wajib dicatat ke `AUDIT_LOGS` dengan metadata aman.
 - Semua endpoint backend wajib mengecek permission sesuai role.
 - Role saja tidak cukup untuk authorization; backend wajib mengecek `ROLE_PERMISSIONS` berdasarkan exact match `role + resource + action`.
@@ -93,6 +94,14 @@
 - Data yang sudah masuk periode `CLOSED` tidak boleh diubah langsung.
 - Koreksi setelah closing wajib masuk `ADJUSTMENT_LOGS` dan membutuhkan approval.
 - Kategori defect wajib ketika `perolehan_reject > 0`.
+- Kategori defect tidak boleh menjadi hardcode-only di UI production. `DEFECT_CATEGORIES` adalah sumber utama; frontend hanya boleh memakai fallback default/mock ketika GAS belum tersedia, dan backend tetap memvalidasi kategori aktif dari spreadsheet.
+- Master defect mengikuti separation of duties:
+  - Operator: `defect_category.read` saja.
+  - Mandor: `defect_category.read/create/update/soft_delete`.
+  - Supervisor resmi, jika ada dalam enum backend: `defect_category.read/create/update/soft_delete`.
+  - Management: `defect_category.read` saja.
+  - SuperAdmin: full access termasuk `defect_category.seed`.
+- `defect_category.seed` adalah aksi administrasi/bootstrap, bukan aksi operasional harian. Jangan diberikan ke Management; berikan ke SuperAdmin dan menu administrasi terkontrol.
 
 ## 5. Blind Indexing
 

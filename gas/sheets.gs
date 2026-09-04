@@ -34,6 +34,8 @@ var OptiflowSheets = (function () {
       if (sheet.getLastRow() === 0) {
         writeHeader(sheet, OPTIFLOW_SHEET_SCHEMAS[sheetName]);
         initializedHeaders.push(sheetName);
+      } else {
+        appendMissingHeaderColumns(sheet, OPTIFLOW_SHEET_SCHEMAS[sheetName]);
       }
 
       if (sheetName === 'DEFECT_CATEGORIES' && sheet.getLastRow() === 1) {
@@ -139,6 +141,40 @@ var OptiflowSheets = (function () {
     });
   }
 
+  function seedMissingDefaultDefectCategories() {
+    var spreadsheet = getSpreadsheet();
+    var sheet = spreadsheet.getSheetByName('DEFECT_CATEGORIES');
+
+    if (!sheet) {
+      throw new Error('Missing required sheet DEFECT_CATEGORIES. Run bootstrapSheets first.');
+    }
+
+    var existingKeys = getRows('DEFECT_CATEGORIES').reduce(function (index, category) {
+      index[String(category.defect_category_id || '').trim().toUpperCase()] = true;
+      return index;
+    }, {});
+    var inserted = [];
+
+    OPTIFLOW_DEFAULT_DEFECT_CATEGORIES.forEach(function (category) {
+      if (existingKeys[category.defect_category_id]) {
+        return;
+      }
+
+      appendRow(sheet, 'DEFECT_CATEGORIES', {
+        defect_category_id: category.defect_category_id,
+        defect_name: category.defect_name,
+        qcc_factor: category.qcc_factor,
+        severity: category.severity,
+        status_aktif: category.status_aktif,
+        updated_at: new Date().toISOString(),
+      });
+      inserted.push(category.defect_category_id);
+      existingKeys[category.defect_category_id] = true;
+    });
+
+    return inserted;
+  }
+
   function appendRow(sheet, sheetName, record) {
     var headers = OPTIFLOW_SHEET_SCHEMAS[sheetName];
     var row = headers.map(function (header) {
@@ -151,6 +187,19 @@ var OptiflowSheets = (function () {
   function writeHeader(sheet, headers) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
+  }
+
+  function appendMissingHeaderColumns(sheet, expectedHeaders) {
+    var actualHeaders = readHeader(sheet);
+    var missingAtEnd = expectedHeaders.filter(function (header) {
+      return actualHeaders.indexOf(header) === -1;
+    });
+
+    if (missingAtEnd.length === 0) {
+      return;
+    }
+
+    sheet.getRange(1, actualHeaders.length + 1, 1, missingAtEnd.length).setValues([missingAtEnd]);
   }
 
   function buildHealthReport(spreadsheet) {
@@ -269,5 +318,6 @@ var OptiflowSheets = (function () {
     healthCheck: healthCheck,
     isFirstRunBootstrapRequired: isFirstRunBootstrapRequired,
     replaceDataRows: replaceDataRows,
+    seedMissingDefaultDefectCategories: seedMissingDefaultDefectCategories,
   });
 })();

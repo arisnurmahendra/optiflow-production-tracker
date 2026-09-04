@@ -160,6 +160,8 @@ const files = [
   'gas/productionLogs.gs',
   'gas/recap.gs',
   'gas/dashboard.gs',
+  'gas/defectCategories.gs',
+  'gas/hrd.gs',
   'gas/spreadsheetMenu.gs',
   'gas/test_runner.gs',
   'Code.js',

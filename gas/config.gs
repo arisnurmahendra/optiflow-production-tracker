@@ -70,6 +70,20 @@ var OPTIFLOW_DEFAULT_DEFECT_CATEGORIES = Object.freeze([
     severity: 'LOW',
     status_aktif: true,
   }),
+  Object.freeze({
+    defect_category_id: 'DEF-POLARITY-REVERSE',
+    defect_name: 'Polaritas terbalik',
+    qcc_factor: 'Man',
+    severity: 'CRITICAL',
+    status_aktif: true,
+  }),
+  Object.freeze({
+    defect_category_id: 'DEF-COLD-SOLDER',
+    defect_name: 'Cold solder',
+    qcc_factor: 'Method',
+    severity: 'HIGH',
+    status_aktif: true,
+  }),
 ]);
 
 var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
@@ -79,7 +93,9 @@ var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   quarantine: Object.freeze(['read', 'approve', 'reject', 'request_correction']),
   daily_closing: Object.freeze(['create', 'read', 'reopen']),
   adjustment: Object.freeze(['create', 'read', 'approve', 'reject']),
+  audit_log: Object.freeze(['read']),
   dashboard: Object.freeze(['read']),
+  defect_category: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
   test_runner: Object.freeze(['run']),
   user_role: Object.freeze(['create', 'read', 'update', 'soft_delete']),
   script_property: Object.freeze(['read_status', 'update', 'delete', 'rotate_secret']),
@@ -141,6 +157,9 @@ var OPTIFLOW_SHEET_SCHEMAS = Object.freeze({
     'last_login',
     'created_at',
     'updated_at',
+    'username',
+    'alamat_encrypted',
+    'profile_base64',
   ]),
   ROLE_PERMISSIONS: Object.freeze([
     'permission_id',

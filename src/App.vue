@@ -1,5 +1,8 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import Chart from 'chart.js/auto';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useOperatorReportStore } from './composables/useOperatorReportStore.js';
 import { ApiAdapterError, api } from './services/apiAdapter.js';
 import {
@@ -12,12 +15,14 @@ import {
   summarizeApprovalCases,
 } from './services/approvalInbox.js';
 import {
-  defectOptions,
+  defectOptions as defaultDefectOptions,
   formatNumber,
   createParetoRejectSummary,
+  getDefectOptions,
   getDefectCategory,
   lineOptions,
   machineOptions,
+  setDefectCategories,
   shiftOptions,
 } from './services/operatorReportForm.js';
 import {
@@ -41,7 +46,6 @@ const {
   formErrors,
   hydrate,
   isTotalValid,
-  metrics,
   normalizeRejectState,
   persistenceError,
   queueItems,
@@ -94,6 +98,55 @@ const dashboardData = ref(null);
 const dashboardLoading = ref(false);
 const dashboardError = ref('');
 const dashboardLoaded = ref(false);
+const hrdData = ref(null);
+const hrdLoading = ref(false);
+const hrdError = ref('');
+const hrdLoaded = ref(false);
+const operatorDashboardData = ref(null);
+const operatorDashboardLoading = ref(false);
+const operatorDashboardError = ref('');
+const operatorDashboardLoaded = ref(false);
+const operatorTrendChartCanvas = ref(null);
+let operatorTrendChart = null;
+const operatorDonutChartCanvases = ref([]);
+const operatorDonutCharts = [];
+const defectOptions = ref(defaultDefectOptions);
+const defectCatalogLoading = ref(false);
+const defectCatalogError = ref('');
+const defectCatalogVersion = ref(0);
+const skeletonItems = Object.freeze([1, 2, 3, 4]);
+const skeletonRows = Object.freeze([1, 2, 3, 4, 5]);
+const operatorTrendPeriod = ref('DAILY');
+const operatorTrendPeriods = Object.freeze([
+  { value: 'DAILY', label: 'Daily', hint: '7 hari' },
+  { value: 'WEEKLY', label: 'Weekly', hint: '8 minggu' },
+  { value: 'MONTHLY', label: 'Monthly', hint: '6 bulan' },
+]);
+const operatorTrendPeriodLabel = computed(() =>
+  operatorTrendPeriods.find((period) => period.value === operatorTrendPeriod.value)?.hint || '7 hari',
+);
+const metricHelpContent = Object.freeze({
+  Target: {
+    icon: 'info',
+    title: 'Apa itu Target?',
+    html: '<p><strong>Target</strong> adalah jumlah perolehan yang harus dicapai pada line, shift, dan mesin aktif.</p><p>Dipakai sebagai pembanding utama terhadap realisasi produksi.</p><p><strong>Rumus kontrol:</strong> Realisasi = OK + Reject.</p>',
+  },
+  OK: {
+    icon: 'success',
+    title: 'Apa itu OK?',
+    html: '<p><strong>OK</strong> adalah jumlah produk yang lolos standar kualitas dan bisa dihitung sebagai output baik.</p><p>Angka ini tetap menjadi bagian dari realisasi produksi.</p>',
+  },
+  Reject: {
+    icon: 'warning',
+    title: 'Apa itu Reject?',
+    html: '<p><strong>Reject</strong> adalah jumlah produk yang tidak lolos standar kualitas.</p><p>Jika Reject lebih dari 0, operator wajib memilih kategori defect agar data bisa dipakai untuk Pareto dan QCC.</p>',
+  },
+  Queue: {
+    icon: 'question',
+    title: 'Apa itu Queue?',
+    html: '<p><strong>Queue</strong> adalah antrean laporan yang tersimpan lokal di IndexedDB dan belum selesai sinkron ke GAS.</p><p>Data tetap aman saat koneksi putus dan akan dikirim ulang saat device online.</p>',
+  },
+});
 const roleOptions = Object.freeze(['Operator', 'Mandor', 'Management', 'HRD', 'SuperAdmin']);
 const roleIcons = Object.freeze({
   Operator: '📝',
@@ -204,16 +257,27 @@ const dashboardTiles = computed(() => buildDashboardTiles(dashboardData.value ||
 const supervisorRawRows = computed(() => getFirstPageItems(supervisorData.value?.raw_logs));
 const supervisorQuarantineRows = computed(() => getFirstPageItems(supervisorData.value?.quarantine));
 const dashboardRows = computed(() => getFirstPageItems(dashboardData.value?.rows));
-const selectedDefectCategory = computed(() => getDefectCategory(form.value.defect_category_id));
-const paretoPreview = computed(() => createParetoRejectSummary([
-  {
-    payload: {
-      defect_category_id: form.value.defect_category_id,
-      perolehan_reject: form.value.perolehan_reject,
+const operatorDashboardPending = computed(() => operatorDashboardLoading.value && !operatorDashboardData.value);
+const supervisorPending = computed(() => supervisorLoading.value && !supervisorLoaded.value);
+const dashboardPending = computed(() => dashboardLoading.value && !dashboardLoaded.value);
+const hrdPending = computed(() => hrdLoading.value && !hrdLoaded.value);
+const sessionPending = computed(() => sessionLoading.value && !sessionContext.value);
+const selectedDefectCategory = computed(() => {
+  defectCatalogVersion.value;
+  return getDefectCategory(form.value.defect_category_id);
+});
+const paretoPreview = computed(() => {
+  defectCatalogVersion.value;
+  return createParetoRejectSummary([
+    {
+      payload: {
+        defect_category_id: form.value.defect_category_id,
+        perolehan_reject: form.value.perolehan_reject,
+      },
     },
-  },
-  ...queueItems.value.map((item) => item.payload),
-]));
+    ...queueItems.value.map((item) => item.payload),
+  ]);
+});
 const activeView = ref('operator');
 const activeRoleFeatures = ref({
   operator: 'operator-dashboard',
@@ -309,88 +373,133 @@ const activeShellMeta = computed(() => {
   return activeViewMeta.value;
 });
 const operatorContextItems = computed(() => [
-  { label: 'Line', value: form.value.line_id || '-' },
-  { label: 'Shift', value: form.value.shift_id || '-' },
-  { label: 'Mesin', value: form.value.machine_id || '-' },
-  { label: 'Operator', value: selectedRole.value || 'Operator' },
+  { label: 'Line', value: operatorDashboardSummary.value.line_id || form.value.line_id || '-' },
+  { label: 'Shift', value: operatorDashboardSummary.value.shift_id || form.value.shift_id || '-' },
+  { label: 'Mesin', value: operatorDashboardSummary.value.machine_id || form.value.machine_id || '-' },
+  { label: 'Operator', value: operatorDashboardSummary.value.operator_name_masked || selectedRole.value || 'Operator' },
 ]);
+const operatorDashboardSummary = computed(() => operatorDashboardData.value?.summary || {
+  factory_date: new Date().toISOString().slice(0, 10),
+  line_id: form.value.line_id || '-',
+  shift_id: form.value.shift_id || '-',
+  machine_id: form.value.machine_id || '-',
+  operator_name_masked: selectedRole.value || 'Operator',
+  target_today: Number(form.value.target_harian || 0),
+  tandon_today: Number(form.value.tandon || 0),
+  ok_today: Number(form.value.perolehan_ok || 0),
+  reject_today: Number(form.value.perolehan_reject || 0),
+  target_yesterday: Math.max(0, Math.round(Number(form.value.target_harian || 0) * 0.96)),
+  tandon_yesterday: Math.max(0, Math.round(Number(form.value.tandon || 0) * 0.9)),
+  ok_yesterday: Math.max(0, Math.round(Number(form.value.perolehan_ok || 0) * 0.94)),
+  reject_yesterday: Math.max(0, Math.round(Number(form.value.perolehan_reject || 0) * 1.08)),
+});
 const operatorOkPercent = computed(() =>
-  Math.min(100, Math.round((Number(form.value.perolehan_ok || 0) / Math.max(1, Number(form.value.target_harian || 0))) * 100)),
+  Math.min(100, Math.round((Number(operatorDashboardSummary.value.ok_today || 0) / Math.max(1, Number(operatorDashboardSummary.value.target_today || 0))) * 100)),
 );
-const operatorDonutStyle = computed(() => {
+const operatorComparisonDonuts = computed(() => [
+  {
+    label: 'Hari ini',
+    target: Number(operatorDashboardSummary.value.target_today || 0),
+    ok: Number(operatorDashboardSummary.value.ok_today || 0),
+    reject: Number(operatorDashboardSummary.value.reject_today || 0),
+    tandon: Number(operatorDashboardSummary.value.tandon_today || 0),
+  },
+  {
+    label: 'Kemarin',
+    target: Number(operatorDashboardSummary.value.target_yesterday || 0),
+    ok: Number(operatorDashboardSummary.value.ok_yesterday || 0),
+    reject: Number(operatorDashboardSummary.value.reject_yesterday || 0),
+    tandon: Number(operatorDashboardSummary.value.tandon_yesterday || 0),
+  },
+].map((item) => {
+  const actual = item.ok + item.reject;
+  const okSharePercent = (item.ok / Math.max(1, actual)) * 100;
+  const achievementPercent = (actual / Math.max(1, item.target)) * 100;
+  const gap = actual - item.target;
+  return {
+    ...item,
+    actual,
+    okSharePercent,
+    achievementPercent,
+    achievementPercentLabel: `${formatPercent(achievementPercent)}%`,
+    gap,
+    status: gap > 0 ? 'Melebihi target' : gap < 0 ? 'Kurang target' : 'Pas target',
+  };
+}));
+const operatorTrendHistory = computed(() => {
+  const rows = operatorDashboardData.value?.trend_history || operatorDashboardData.value?.weekly_history || [];
+  if (rows.length) {
+    return rows.map((row) => ({
+      label: row.label,
+      target: Number(row.target || 0),
+      actual: Number(row.actual || (Number(row.ok || 0) + Number(row.reject || 0))),
+      ok: Number(row.ok || 0),
+      reject: Number(row.reject || 0),
+    }));
+  }
+
+  const target = Math.max(1, Number(form.value.target_harian || 0));
   const ok = Math.max(0, Number(form.value.perolehan_ok || 0));
   const reject = Math.max(0, Number(form.value.perolehan_reject || 0));
-  const total = Math.max(1, ok + reject);
-  const okPercent = Math.round((ok / total) * 100);
-
-  return {
-    background: `radial-gradient(circle, #ffffff 0 52%, transparent 53%), conic-gradient(#16a34a 0 ${okPercent}%, #dc2626 ${okPercent}% 100%)`,
+  const labelsByPeriod = {
+    DAILY: ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'Kemarin', 'Hari ini'],
+    WEEKLY: ['W-7', 'W-6', 'W-5', 'W-4', 'W-3', 'W-2', 'W-1', 'W'],
+    MONTHLY: ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'Bulan ini'],
   };
-});
-const operatorYesterdaySnapshot = computed(() => {
-  const target = Math.max(0, Math.round(Number(form.value.target_harian || 0) * 0.96));
-  const tandon = Math.max(0, Math.round(Number(form.value.tandon || 0) * 0.9));
-  const ok = Math.max(0, Math.round(Number(form.value.perolehan_ok || 0) * 0.94));
-  const reject = Math.max(0, Math.round(Number(form.value.perolehan_reject || 0) * 1.08));
+  const labels = labelsByPeriod[operatorTrendPeriod.value] || labelsByPeriod.DAILY;
 
-  return { target, tandon, ok, reject };
+  return labels.map((label, index) => ({
+    label,
+    target: Math.round(target * (0.92 + (index % 4) * 0.025)),
+    actual: Math.round((ok + reject) * (0.84 + (index % 5) * 0.035)),
+    ok: Math.round(ok * (0.84 + (index % 5) * 0.035)),
+    reject: Math.round(reject * (0.84 + (index % 5) * 0.035)),
+  }));
 });
-const operatorPerformanceCards = computed(() => [
+const operatorRecentSubmissions = computed(() => [
+  ...(operatorDashboardData.value?.recent_submissions || []),
+  ...queueItems.value.map((item) => ({
+    transaction_id: item.id,
+    device_timestamp: item.time,
+    line_id: item.payload?.line_id || form.value.line_id,
+    shift_id: item.payload?.shift_id || form.value.shift_id,
+    machine_id: item.payload?.machine_id || form.value.machine_id,
+    target_harian: item.payload?.target_harian || 0,
+    tandon: item.payload?.tandon || 0,
+    perolehan_ok: item.payload?.perolehan_ok || 0,
+    perolehan_reject: item.payload?.perolehan_reject || 0,
+    defect_category_id: item.payload?.defect_category_id || '',
+    status: item.status || 'QUEUED',
+  })),
+]);
+const operatorSyncSummary = computed(() => operatorDashboardData.value?.sync || {
+  draft_status: draftStatus.value,
+  queue_count: queueItems.value.length,
+  last_sync_at: '',
+  status: syncStatus.value,
+});
+const operatorDashboardMetrics = computed(() => [
   {
     label: 'Target',
-    today: form.value.target_harian,
-    yesterday: operatorYesterdaySnapshot.value.target,
+    value: formatNumber(operatorDashboardSummary.value.target_today),
     tone: 'neutral',
   },
   {
-    label: 'Tandon',
-    today: form.value.tandon,
-    yesterday: operatorYesterdaySnapshot.value.tandon,
-    tone: 'warning',
-  },
-  {
     label: 'OK',
-    today: form.value.perolehan_ok,
-    yesterday: operatorYesterdaySnapshot.value.ok,
+    value: formatNumber(operatorDashboardSummary.value.ok_today),
     tone: 'success',
   },
   {
     label: 'Reject',
-    today: form.value.perolehan_reject,
-    yesterday: operatorYesterdaySnapshot.value.reject,
+    value: formatNumber(operatorDashboardSummary.value.reject_today),
     tone: 'danger',
   },
+  {
+    label: 'Queue',
+    value: formatNumber(operatorSyncSummary.value.queue_count),
+    tone: 'warning',
+  },
 ]);
-const operatorWeeklyHistory = computed(() => {
-  const target = Math.max(1, Number(form.value.target_harian || 0));
-  const ok = Math.max(0, Number(form.value.perolehan_ok || 0));
-  const labels = ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'Kemarin', 'Hari ini'];
-  const targetFactors = [0.92, 0.95, 0.98, 1, 0.97, 0.96, 1];
-  const outputFactors = [0.83, 0.88, 0.9, 0.93, 0.91, 0.94, 1];
-
-  return labels.map((label, index) => ({
-    label,
-    target: Math.round(target * targetFactors[index]),
-    actual: Math.round(ok * outputFactors[index]),
-  }));
-});
-const operatorWeeklyMax = computed(() =>
-  Math.max(1, ...operatorWeeklyHistory.value.flatMap((row) => [row.target, row.actual])),
-);
-const operatorTargetLinePoints = computed(() => buildLineChartPoints(
-  operatorWeeklyHistory.value.map((row) => row.target),
-  operatorWeeklyMax.value,
-));
-const operatorActualLinePoints = computed(() => buildLineChartPoints(
-  operatorWeeklyHistory.value.map((row) => row.actual),
-  operatorWeeklyMax.value,
-));
-const operatorWeeklyChartLabels = computed(() =>
-  operatorWeeklyHistory.value.map((row, index) => ({
-    label: row.label,
-    x: index * (300 / Math.max(1, operatorWeeklyHistory.value.length - 1)),
-  })),
-);
 const operatorTaskCards = computed(() => [
   {
     label: 'Draft device',
@@ -473,24 +582,47 @@ const managementInsightCards = computed(() => [
 ]);
 const hrdAccessCards = computed(() => [
   {
-    label: 'Role source',
-    value: 'USER_ROLES',
-    hint: 'Role truth tetap dari backend, bukan dari UI.',
+    label: 'User aktif',
+    value: formatNumber(hrdSummary.value.active_users),
+    hint: `${formatNumber(hrdSummary.value.total_users)} user terdaftar, ${formatNumber(hrdSummary.value.inactive_users)} nonaktif.`,
+    tone: 'success',
+  },
+  {
+    label: 'Role readiness',
+    value: hrdSummary.value.roles_with_missing_permissions > 0 ? 'Review' : 'Ready',
+    hint: `${formatNumber(hrdSummary.value.roles_with_missing_permissions)} role tanpa permission aktif.`,
+    tone: hrdSummary.value.roles_with_missing_permissions > 0 ? 'warning' : 'success',
+  },
+  {
+    label: 'Audit access',
+    value: formatNumber(hrdAuditSummary.value.session + hrdAuditSummary.value.rbac + hrdAuditSummary.value.user_role),
+    hint: hrdAuditSummary.value.last_event_at ? `Event terakhir ${formatDateTime(hrdAuditSummary.value.last_event_at)}.` : 'Belum ada audit event.',
     tone: 'success',
   },
   {
     label: 'PII policy',
     value: 'Masked',
-    hint: 'Workspace normal tidak membuka PII mentah.',
+    hint: 'Email masked; PII/encrypted/blind index tidak dikirim.',
     tone: 'warning',
   },
-  {
-    label: 'Audit access',
-    value: 'AUDIT_LOGS',
-    hint: 'Akses dan perubahan role harus terlacak.',
-    tone: 'success',
-  },
 ]);
+const hrdSummary = computed(() => hrdData.value?.summary || {
+  total_users: 0,
+  active_users: 0,
+  inactive_users: 0,
+  deleted_users: 0,
+  roles_with_missing_permissions: 0,
+  last_audit_at: '',
+});
+const hrdUsers = computed(() => getFirstPageItems(hrdData.value?.users));
+const hrdRoleMatrix = computed(() => hrdData.value?.role_matrix || []);
+const hrdAuditSummary = computed(() => hrdData.value?.audit_summary || {
+  session: 0,
+  rbac: 0,
+  user_role: 0,
+  other: 0,
+  last_event_at: '',
+});
 const currentSessionLabel = computed(() => {
   if (sessionContext.value?.auth_mode === 'ON') {
     return `${sessionContext.value.role || 'Unknown'} dari Google Account`;
@@ -552,6 +684,7 @@ const maintenanceProperties = ref([
 
 const isMaintenanceOpen = ref(false);
 const isMaintenanceLoading = ref(false);
+const isMaintenanceLoaded = ref(false);
 const maintenanceError = ref('');
 const tapCount = ref(0);
 let keyBuffer = '';
@@ -560,6 +693,7 @@ const maintenanceSummary = computed(() => {
   const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
   return `${setCount}/${maintenanceProperties.value.length} key siap`;
 });
+const maintenancePending = computed(() => isMaintenanceLoading.value && !isMaintenanceLoaded.value);
 
 function openMaintenanceConsole() {
   isMaintenanceOpen.value = true;
@@ -578,6 +712,7 @@ async function refreshMaintenanceProperties() {
   try {
     const response = await api.getScriptPropertiesStatus({ session: buildSessionPayload() });
     maintenanceProperties.value = response.data.properties || [];
+    isMaintenanceLoaded.value = true;
   } catch (error) {
     maintenanceError.value = getSafeErrorMessage(error);
   } finally {
@@ -766,6 +901,73 @@ async function refreshManagementDashboard() {
   }
 }
 
+async function refreshHrdAccessDashboard() {
+  hrdLoading.value = true;
+  hrdError.value = '';
+
+  try {
+    const response = await api.getHrdAccessDashboard({
+      session: buildSessionPayload(),
+      filter: {},
+      page: 1,
+      page_size: 10,
+    });
+    hrdData.value = response.data;
+    hrdLoaded.value = true;
+  } catch (error) {
+    hrdError.value = getSafeErrorMessage(error);
+  } finally {
+    hrdLoading.value = false;
+  }
+}
+
+async function refreshOperatorDashboard() {
+  operatorDashboardLoading.value = true;
+  operatorDashboardError.value = '';
+
+  try {
+    const response = await api.getOperatorDashboard({
+      session: buildSessionPayload(),
+      filter: compactFilter({
+        factory_date: operatorDashboardSummary.value.factory_date,
+        line_id: form.value.line_id,
+        shift_id: form.value.shift_id,
+        machine_id: form.value.machine_id,
+      }),
+      period: operatorTrendPeriod.value,
+      page: 1,
+      page_size: 8,
+    });
+    operatorDashboardData.value = response.data;
+    operatorDashboardLoaded.value = true;
+  } catch (error) {
+    operatorDashboardError.value = getSafeErrorMessage(error);
+  } finally {
+    operatorDashboardLoading.value = false;
+  }
+}
+
+async function refreshDefectCategories() {
+  defectCatalogLoading.value = true;
+  defectCatalogError.value = '';
+
+  try {
+    const response = await api.getDefectCategories({
+      session: buildSessionPayload(),
+    });
+    setDefectCategories(response.data.categories || []);
+    defectOptions.value = getDefectOptions();
+    defectCatalogVersion.value += 1;
+  } catch (error) {
+    setDefectCategories([]);
+    defectOptions.value = getDefectOptions();
+    defectCatalogVersion.value += 1;
+    defectCatalogError.value = `${getSafeErrorMessage(error)} Memakai katalog defect default lokal.`;
+  } finally {
+    defectCatalogLoading.value = false;
+  }
+}
+
 async function submitOperatorReportWithSession() {
   return submitOperatorReport({
     session: buildSessionPayload(),
@@ -849,12 +1051,20 @@ async function switchView(viewId) {
 
   activeView.value = viewId;
 
+  if (viewId === 'operator' && !operatorDashboardLoaded.value) {
+    await refreshOperatorDashboard();
+  }
+
   if (viewId === 'supervisor' && !supervisorLoaded.value) {
     await refreshSupervisorControlCenter();
   }
 
   if (viewId === 'management' && !dashboardLoaded.value) {
     await refreshManagementDashboard();
+  }
+
+  if (viewId === 'hrd' && !hrdLoaded.value) {
+    await refreshHrdAccessDashboard();
   }
 
   if (viewId === 'settings') {
@@ -870,6 +1080,9 @@ async function switchNavigationItem(item) {
       ...activeRoleFeatures.value,
       [activeView.value]: item.id,
     };
+    if (activeView.value === 'operator' && !operatorDashboardLoaded.value) {
+      await refreshOperatorDashboard();
+    }
     return;
   }
 
@@ -904,19 +1117,295 @@ function formatDateTime(timestamp) {
   }).format(new Date(timestamp));
 }
 
-function buildLineChartPoints(values, maxValue) {
-  const safeMax = Math.max(1, Number(maxValue || 0));
-  const width = 300;
-  const height = 120;
-  const lastIndex = Math.max(1, values.length - 1);
+function formatPercent(value) {
+  const numericValue = Number(value || 0);
 
-  return values
-    .map((value, index) => {
-      const x = Math.round((index / lastIndex) * width);
-      const y = Math.round(height - (Math.max(0, Number(value || 0)) / safeMax) * height);
-      return `${x},${y}`;
-    })
-    .join(' ');
+  return new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: Number.isInteger(numericValue) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(numericValue);
+}
+
+function renderOperatorTrendChart() {
+  if (!operatorTrendChartCanvas.value) {
+    return;
+  }
+
+  const rootStyles = window.getComputedStyle(document.documentElement);
+  if (operatorTrendChart && operatorTrendChart.canvas !== operatorTrendChartCanvas.value) {
+    operatorTrendChart.destroy();
+    operatorTrendChart = null;
+  }
+
+  const primaryColor = rootStyles.getPropertyValue('--primary').trim() || '#2563eb';
+  const successColor = rootStyles.getPropertyValue('--success').trim() || '#16a34a';
+  const dangerColor = rootStyles.getPropertyValue('--danger').trim() || '#dc2626';
+  const warningColor = rootStyles.getPropertyValue('--warning').trim() || '#f59e0b';
+  const textSecondary = rootStyles.getPropertyValue('--text-secondary').trim() || '#4b5563';
+  const gridColor = '#dbeafe';
+  const labels = operatorTrendHistory.value.map((row) => row.label);
+  const targetData = operatorTrendHistory.value.map((row) => Number(row.target || 0));
+  const actualData = operatorTrendHistory.value.map((row) => Number(row.actual || 0));
+  const okData = operatorTrendHistory.value.map((row) => Number(row.ok || 0));
+  const rejectData = operatorTrendHistory.value.map((row) => Number(row.reject || 0));
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: 'Target',
+        data: targetData,
+        borderColor: primaryColor,
+        backgroundColor: 'rgba(37, 99, 235, 0.12)',
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: primaryColor,
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 3,
+        tension: 0.35,
+        fill: false,
+      },
+      {
+        label: 'Realisasi',
+        data: actualData,
+        borderColor: successColor,
+        backgroundColor: 'rgba(22, 163, 74, 0.12)',
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: successColor,
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 3,
+        tension: 0.35,
+        fill: true,
+      },
+      {
+        label: 'OK',
+        data: okData,
+        borderColor: warningColor,
+        backgroundColor: 'rgba(245, 158, 11, 0.08)',
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: warningColor,
+        pointBorderWidth: 2,
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        borderDash: [6, 5],
+        borderWidth: 2,
+        tension: 0.35,
+        fill: false,
+      },
+      {
+        type: 'bar',
+        label: 'Reject',
+        data: rejectData,
+        borderColor: dangerColor,
+        backgroundColor: 'rgba(220, 38, 38, 0.18)',
+        borderRadius: 6,
+        maxBarThickness: 18,
+      },
+    ],
+  };
+
+  if (!operatorTrendChart) {
+    operatorTrendChart = new Chart(operatorTrendChartCanvas.value, {
+      type: 'line',
+      data: chartData,
+      options: {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.92)',
+            displayColors: true,
+            padding: 10,
+            titleFont: {
+              size: 12,
+              weight: '700',
+            },
+            bodyFont: {
+              size: 12,
+              weight: '700',
+            },
+            callbacks: {
+              label(context) {
+                return `${context.dataset.label}: ${formatNumber(context.parsed.y)}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              color: textSecondary,
+              font: {
+                size: 11,
+                weight: '700',
+              },
+              maxRotation: 0,
+              autoSkip: false,
+            },
+          },
+          y: {
+            beginAtZero: true,
+            grace: '8%',
+            border: {
+              display: false,
+            },
+            grid: {
+              color: gridColor,
+            },
+            ticks: {
+              color: textSecondary,
+              font: {
+                size: 11,
+                weight: '700',
+              },
+              callback(value) {
+                return formatCompact(Number(value || 0));
+              },
+            },
+          },
+        },
+      },
+    });
+    return;
+  }
+
+  operatorTrendChart.data = chartData;
+  operatorTrendChart.update('none');
+}
+
+function setOperatorDonutCanvas(element, index) {
+  if (element) {
+    operatorDonutChartCanvases.value[index] = element;
+  }
+}
+
+function destroyOperatorDonutCharts() {
+  operatorDonutCharts.forEach((chart) => chart?.destroy());
+  operatorDonutCharts.length = 0;
+}
+
+function renderOperatorDonutCharts() {
+  const rootStyles = window.getComputedStyle(document.documentElement);
+  const successColor = rootStyles.getPropertyValue('--success').trim() || '#16a34a';
+  const dangerColor = rootStyles.getPropertyValue('--danger').trim() || '#dc2626';
+  const textPrimary = rootStyles.getPropertyValue('--text-primary').trim() || '#111827';
+  const items = operatorComparisonDonuts.value;
+
+  items.forEach((item, index) => {
+    const canvas = operatorDonutChartCanvases.value[index];
+    if (!canvas) {
+      return;
+    }
+
+    if (operatorDonutCharts[index] && operatorDonutCharts[index].canvas !== canvas) {
+      operatorDonutCharts[index].destroy();
+      operatorDonutCharts[index] = null;
+    }
+
+    const chartData = {
+      labels: ['OK', 'Reject'],
+      datasets: [
+        {
+          data: [item.ok, item.reject],
+          backgroundColor: [successColor, dangerColor],
+          borderColor: '#ffffff',
+          borderWidth: 5,
+          borderRadius: 8,
+          hoverOffset: 2,
+        },
+      ],
+    };
+
+    if (!operatorDonutCharts[index]) {
+      operatorDonutCharts[index] = new Chart(canvas, {
+        type: 'doughnut',
+        data: chartData,
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '56%',
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              backgroundColor: 'rgba(17, 24, 39, 0.92)',
+              displayColors: true,
+              padding: 10,
+              titleColor: '#ffffff',
+              bodyColor: '#ffffff',
+              titleFont: {
+                size: 12,
+                weight: '700',
+              },
+              bodyFont: {
+                size: 12,
+                weight: '700',
+              },
+              callbacks: {
+                label(context) {
+                  return `${context.label}: ${formatNumber(context.parsed)}`;
+                },
+                afterBody() {
+                  return [
+                    `Realisasi: ${formatNumber(item.actual)}`,
+                    `Target: ${formatNumber(item.target)}`,
+                    `Capaian: ${item.achievementPercentLabel}`,
+                    `Komposisi OK: ${formatPercent(item.okSharePercent)}%`,
+                  ];
+                },
+              },
+            },
+          },
+        },
+      });
+      operatorDonutCharts[index].options.color = textPrimary;
+      return;
+    }
+
+    operatorDonutCharts[index].data = chartData;
+    operatorDonutCharts[index].options.color = textPrimary;
+    operatorDonutCharts[index].update('none');
+  });
+
+  operatorDonutCharts.slice(items.length).forEach((chart) => chart?.destroy());
+  operatorDonutCharts.length = items.length;
+}
+
+function showMetricHelp(metric) {
+  const content = metricHelpContent[metric.label];
+
+  if (!content) {
+    return;
+  }
+
+  Swal.fire({
+    icon: content.icon,
+    title: content.title,
+    html: content.html,
+    confirmButtonText: 'Mengerti',
+    buttonsStyling: false,
+    customClass: {
+      popup: 'metric-help-popup',
+      title: 'metric-help-title',
+      htmlContainer: 'metric-help-body',
+      confirmButton: 'metric-help-confirm',
+    },
+  });
 }
 
 function getSafeErrorMessage(error) {
@@ -961,10 +1450,36 @@ onMounted(() => {
   hydrate();
   ensureVisibleActiveView();
   refreshSessionContext();
+  refreshDefectCategories();
+  refreshOperatorDashboard();
+  renderOperatorTrendChart();
+  renderOperatorDonutCharts();
   window.addEventListener('keydown', handleKeydown);
 });
 
+watch(operatorComparisonDonuts, async () => {
+  await nextTick();
+  renderOperatorDonutCharts();
+}, {
+  deep: true,
+  flush: 'post',
+});
+
+watch(operatorTrendHistory, async () => {
+  await nextTick();
+  renderOperatorTrendChart();
+}, {
+  deep: true,
+  flush: 'post',
+});
+
+watch(operatorTrendPeriod, () => {
+  refreshOperatorDashboard();
+});
+
 onBeforeUnmount(() => {
+  operatorTrendChart?.destroy();
+  destroyOperatorDonutCharts();
   operatorStore.dispose();
   window.removeEventListener('keydown', handleKeydown);
 });
@@ -1077,16 +1592,51 @@ function persistVisibleRoles(roles) {
       </button>
     </nav>
 
+    <div class="operator-progress">
+      <div>
+        <span>Progress OK</span>
+        <strong>{{ formatNumber(operatorDashboardSummary.ok_today) }} / {{ formatNumber(operatorDashboardSummary.target_today) }}</strong>
+      </div>
+      <div class="progress-track">
+        <span :style="{ width: `${operatorOkPercent}%` }"></span>
+      </div>
+    </div>
+
     <section v-if="activeView === 'operator' && activeFeatureId === 'operator-dashboard'" class="metric-strip" aria-label="Ringkasan produksi">
-      <article v-for="metric in metrics" :key="metric.label" :class="['metric', metric.tone]">
+      <template v-if="operatorDashboardPending">
+        <article
+          v-for="item in skeletonItems"
+          :key="`metric-skeleton-${item}`"
+          class="metric skeleton-card"
+          aria-hidden="true"
+        >
+          <span class="skeleton-line short"></span>
+          <strong class="skeleton-line metric-value"></strong>
+        </article>
+      </template>
+      <button
+        v-else
+        v-for="metric in operatorDashboardMetrics"
+        :key="metric.label"
+        type="button"
+        :class="['metric', metric.tone]"
+        :aria-label="`Lihat penjelasan ${metric.label}`"
+        @click="showMetricHelp(metric)"
+      >
         <span>{{ metric.label }}</span>
         <strong>{{ metric.value }}</strong>
-      </article>
+      </button>
     </section>
 
     <div :class="['workspace', `view-${activeView}`, activeView === 'operator' ? `operator-${activeFeatureId}` : '']">
       <section v-if="activeView === 'operator'" class="panel operator-context-panel" aria-label="Header shift aktif">
-        <div class="operator-context-grid">
+        <div v-if="operatorDashboardPending" class="operator-context-grid" aria-hidden="true">
+          <article v-for="item in skeletonItems" :key="`context-skeleton-${item}`" class="skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line"></strong>
+          </article>
+        </div>
+        <div v-else class="operator-context-grid">
           <article v-for="item in operatorContextItems" :key="item.label">
             <span>{{ item.label }}</span>
             <strong>{{ item.value }}</strong>
@@ -1178,6 +1728,8 @@ function persistVisibleRoles(roles) {
                 {{ option.label }}
               </option>
             </select>
+            <small v-if="defectCatalogLoading">Memuat kategori dari master defect.</small>
+            <small v-if="defectCatalogError" class="field-error">{{ defectCatalogError }}</small>
             <small v-if="formErrors.defect_category_id" class="field-error">{{ formErrors.defect_category_id }}</small>
           </label>
           <label class="field">
@@ -1228,18 +1780,32 @@ function persistVisibleRoles(roles) {
             <p class="eyebrow">Riwayat</p>
             <h2 id="history-title">Submit terakhir hari ini</h2>
           </div>
-          <span class="badge">{{ queueItems.length }} lokal</span>
+          <span class="badge">{{ operatorRecentSubmissions.length }} item</span>
         </div>
 
         <div v-if="submitMessage" class="inline-info" role="status">
           {{ submitMessage }}
         </div>
 
-        <ul class="queue-list">
-          <li v-for="item in queueItems" :key="item.id">
+        <div v-if="operatorDashboardError" class="inline-error" role="alert">
+          {{ operatorDashboardError }}
+        </div>
+
+        <ul v-if="operatorDashboardPending" class="queue-list" aria-hidden="true">
+          <li v-for="item in skeletonRows.slice(0, 3)" :key="`history-skeleton-${item}`" class="skeleton-card">
             <div>
-              <strong>{{ item.id }}</strong>
-              <span>{{ item.time }}</span>
+              <strong class="skeleton-line wide"></strong>
+              <span class="skeleton-line"></span>
+            </div>
+            <span class="skeleton-pill"></span>
+          </li>
+        </ul>
+
+        <ul v-else class="queue-list">
+          <li v-for="item in operatorRecentSubmissions" :key="item.transaction_id">
+            <div>
+              <strong>{{ item.transaction_id }}</strong>
+              <span>{{ item.line_id }} / {{ item.shift_id }} / {{ item.machine_id }} - OK {{ formatNumber(item.perolehan_ok) }}, Reject {{ formatNumber(item.perolehan_reject) }}</span>
             </div>
             <span :class="['status', item.status === 'CONFLICT_PENDING' ? 'conflict' : 'warning']">
               {{ item.status }}
@@ -1247,7 +1813,7 @@ function persistVisibleRoles(roles) {
           </li>
         </ul>
 
-        <div v-if="queueItems.length === 0" class="empty-state">
+        <div v-if="!operatorDashboardPending && operatorRecentSubmissions.length === 0" class="empty-state">
           Belum ada antrean submit lokal untuk hari ini.
         </div>
       </section>
@@ -1261,68 +1827,84 @@ function persistVisibleRoles(roles) {
           <span class="badge">Hari ini vs kemarin</span>
         </div>
 
-        <div class="performance-grid" aria-label="Performa hari ini dan kemarin">
-          <article v-for="item in operatorPerformanceCards" :key="item.label" :class="['performance-card', item.tone]">
-            <span>{{ item.label }}</span>
+        <div v-if="operatorDashboardError" class="inline-error" role="alert">
+          {{ operatorDashboardError }}
+        </div>
+
+        <div v-if="operatorDashboardPending" class="performance-grid" aria-hidden="true">
+          <article v-for="item in skeletonItems.slice(0, 2)" :key="`performance-skeleton-${item}`" class="performance-donut-card skeleton-card">
+            <span class="skeleton-line short"></span>
             <div>
-              <strong>{{ formatNumber(item.today) }}</strong>
-              <small>Hari ini</small>
+              <strong class="skeleton-line metric-value"></strong>
+              <small class="skeleton-line tiny"></small>
             </div>
             <div>
-              <strong>{{ formatNumber(item.yesterday) }}</strong>
-              <small>Kemarin</small>
+              <strong class="skeleton-line metric-value"></strong>
+              <small class="skeleton-line tiny"></small>
             </div>
           </article>
         </div>
 
-        <div class="line-chart-card" aria-label="History target dan realisasi satu minggu">
+        <div v-else class="performance-grid" aria-label="Komposisi perolehan hari ini dan kemarin">
+          <article v-for="(item, index) in operatorComparisonDonuts" :key="item.label" class="performance-donut-card">
+            <div class="donut-chart-frame">
+              <canvas
+                :ref="(element) => setOperatorDonutCanvas(element, index)"
+                class="performance-donut-chart"
+                role="img"
+                :aria-label="`Donut OK dan Reject ${item.label}`"
+              ></canvas>
+              <span>{{ item.achievementPercentLabel }}</span>
+            </div>
+            <div class="donut-detail">
+              <span>{{ item.label }}</span>
+              <strong>{{ formatNumber(item.actual) }} / {{ formatNumber(item.target) }}</strong>
+              <small>{{ item.status }} ({{ item.gap > 0 ? '+' : '' }}{{ formatNumber(item.gap) }})</small>
+              <div class="donut-breakdown">
+                <span class="status success">OK {{ formatNumber(item.ok) }}</span>
+                <span class="status danger">Reject {{ formatNumber(item.reject) }}</span>
+                <span class="status warning">Tandon {{ formatNumber(item.tandon) }}</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="line-chart-card" aria-label="History target dan realisasi">
           <div class="chart-head">
             <div>
-              <span>History 1 minggu</span>
-              <strong>Target vs realisasi</strong>
+              <span>History {{ operatorTrendPeriodLabel }}</span>
+              <strong>Target, realisasi, OK, reject</strong>
             </div>
-            <div class="chart-legend" aria-label="Legenda chart">
-              <span><i class="target-line"></i>Target</span>
-              <span><i class="actual-line"></i>Realisasi</span>
+            <div class="chart-tools">
+              <div class="chart-period-control" aria-label="Periode trend operator">
+                <button
+                  v-for="period in operatorTrendPeriods"
+                  :key="period.value"
+                  type="button"
+                  :class="{ active: operatorTrendPeriod === period.value }"
+                  @click="operatorTrendPeriod = period.value"
+                >
+                  {{ period.label }}
+                </button>
+              </div>
+              <div class="chart-legend" aria-label="Legenda chart">
+                <span><i class="target-line"></i>Target</span>
+                <span><i class="actual-line"></i>Realisasi</span>
+                <span><i class="ok-line"></i>OK</span>
+                <span><i class="reject-line"></i>Reject</span>
+              </div>
             </div>
           </div>
-          <svg class="line-chart" viewBox="0 0 300 150" role="img" aria-label="Line chart target dan realisasi per hari">
-            <line x1="0" y1="120" x2="300" y2="120" class="chart-axis" />
-            <line x1="0" y1="80" x2="300" y2="80" class="chart-grid-line" />
-            <line x1="0" y1="40" x2="300" y2="40" class="chart-grid-line" />
-            <polyline :points="operatorTargetLinePoints" class="chart-line target" />
-            <polyline :points="operatorActualLinePoints" class="chart-line actual" />
-            <g v-for="point in operatorWeeklyChartLabels" :key="point.label">
-              <text :x="point.x" y="145" text-anchor="middle" class="chart-label">{{ point.label }}</text>
-            </g>
-          </svg>
-        </div>
-
-        <div class="operator-progress">
-          <div>
-            <span>Progress OK</span>
-            <strong>{{ formatNumber(form.perolehan_ok) }} / {{ formatNumber(form.target_harian) }}</strong>
+          <div v-if="operatorDashboardPending" class="chart-canvas-frame skeleton-chart" aria-hidden="true">
+            <span class="skeleton-line wide"></span>
           </div>
-          <div class="progress-track">
-            <span :style="{ width: `${operatorOkPercent}%` }"></span>
+          <div v-else class="chart-canvas-frame">
+            <canvas ref="operatorTrendChartCanvas" class="line-chart" role="img" aria-label="Line chart Target vs Realisasi"></canvas>
           </div>
-        </div>
-
-        <div class="operator-chart-grid">
-          <article class="chart-card">
-            <span>OK vs Reject</span>
-            <div class="donut-chart" :style="operatorDonutStyle"></div>
-            <strong>{{ formatNumber(totalOutput) }} total</strong>
-          </article>
-          <article class="chart-card">
-            <span>Tandon</span>
-            <strong>{{ formatNumber(form.tandon) }}</strong>
-            <p>Kemarin {{ formatNumber(operatorYesterdaySnapshot.tandon) }}. Cadangan ikut dihitung dalam batas perolehan.</p>
-          </article>
         </div>
 
         <div class="hint-box">
-          Data kemarin memakai snapshot lokal/demo sampai endpoint histori operator tersedia.
+          Data dashboard mengikuti response mock GAS `getOperatorDashboard` saat development lokal.
         </div>
       </section>
 
@@ -1356,6 +1938,12 @@ function persistVisibleRoles(roles) {
               <span>Reference</span>
               <strong>Kategori defect aktif</strong>
             </div>
+            <button class="button secondary compact-button" type="button" @click="refreshDefectCategories">
+              Refresh
+            </button>
+          </div>
+          <div v-if="defectCatalogError" class="inline-error" role="alert">
+            {{ defectCatalogError }}
           </div>
           <table>
             <thead>
@@ -1388,7 +1976,8 @@ function persistVisibleRoles(roles) {
         </div>
 
         <div class="sync-summary" role="status">
-          {{ syncStatus }}
+          {{ operatorSyncSummary.status }} - Draft {{ operatorSyncSummary.draft_status }} - Queue {{ operatorSyncSummary.queue_count }}
+          <span v-if="operatorSyncSummary.last_sync_at"> - Last sync {{ formatDateTime(operatorSyncSummary.last_sync_at) }}</span>
         </div>
 
         <div class="task-kicker compact-flow">
@@ -1565,7 +2154,15 @@ function persistVisibleRoles(roles) {
           <span class="badge">{{ supervisorLoading ? 'Memuat' : 'Server-side view' }}</span>
         </div>
 
-        <div v-if="activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-alerts'" class="task-strip" aria-label="Prioritas kontrol Supervisor">
+        <div v-if="supervisorPending && (activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-alerts')" class="task-strip" aria-hidden="true">
+          <article v-for="item in skeletonItems.slice(0, 3)" :key="`supervisor-task-skeleton-${item}`" class="task-card skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line metric-value"></strong>
+            <p class="skeleton-line"></p>
+          </article>
+        </div>
+
+        <div v-else-if="activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-alerts'" class="task-strip" aria-label="Prioritas kontrol Supervisor">
           <article v-for="card in supervisorAlertCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1597,7 +2194,14 @@ function persistVisibleRoles(roles) {
           <button class="button secondary" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
         </div>
 
-        <div v-if="activeFeatureId === 'supervisor-dashboard'" class="mini-metrics" aria-label="Ringkasan control center">
+        <div v-if="supervisorPending && activeFeatureId === 'supervisor-dashboard'" class="mini-metrics" aria-hidden="true">
+          <article v-for="item in skeletonItems" :key="`supervisor-metric-skeleton-${item}`" class="mini-metric skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line metric-value"></strong>
+          </article>
+        </div>
+
+        <div v-else-if="activeFeatureId === 'supervisor-dashboard'" class="mini-metrics" aria-label="Ringkasan control center">
           <article v-for="tile in supervisorTiles" :key="tile.label" :class="['mini-metric', tile.tone]">
             <span>{{ tile.label }}</span>
             <strong>{{ tile.value }}</strong>
@@ -1624,7 +2228,10 @@ function persistVisibleRoles(roles) {
                 <strong>Raw logs</strong>
               </div>
             </div>
-            <table>
+            <div v-if="supervisorPending" class="table-skeleton" aria-hidden="true">
+              <span v-for="item in skeletonRows" :key="`raw-skeleton-${item}`" class="skeleton-line wide"></span>
+            </div>
+            <table v-else>
               <thead>
                 <tr>
                   <th>Transaction</th>
@@ -1656,7 +2263,10 @@ function persistVisibleRoles(roles) {
                 <strong>Quarantine</strong>
               </div>
             </div>
-            <table>
+            <div v-if="supervisorPending" class="table-skeleton" aria-hidden="true">
+              <span v-for="item in skeletonRows" :key="`quarantine-skeleton-${item}`" class="skeleton-line wide"></span>
+            </div>
+            <table v-else>
               <thead>
                 <tr>
                   <th>Case</th>
@@ -1702,7 +2312,15 @@ function persistVisibleRoles(roles) {
           <span class="badge">{{ dashboardLoading ? 'Memuat' : 'MASTER_RECAP' }}</span>
         </div>
 
-        <div v-if="activeFeatureId === 'management-dashboard'" class="task-strip" aria-label="Insight utama Management">
+        <div v-if="dashboardPending && activeFeatureId === 'management-dashboard'" class="task-strip" aria-hidden="true">
+          <article v-for="item in skeletonItems.slice(0, 3)" :key="`management-task-skeleton-${item}`" class="task-card skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line metric-value"></strong>
+            <p class="skeleton-line"></p>
+          </article>
+        </div>
+
+        <div v-else-if="activeFeatureId === 'management-dashboard'" class="task-strip" aria-label="Insight utama Management">
           <article v-for="card in managementInsightCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1736,7 +2354,14 @@ function persistVisibleRoles(roles) {
           <button class="button primary" type="button" @click="runRecapAndDashboard">Run recap</button>
         </div>
 
-        <div class="mini-metrics" aria-label="Ringkasan dashboard">
+        <div v-if="dashboardPending" class="mini-metrics" aria-hidden="true">
+          <article v-for="item in skeletonItems" :key="`dashboard-metric-skeleton-${item}`" class="mini-metric skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line metric-value"></strong>
+          </article>
+        </div>
+
+        <div v-else class="mini-metrics" aria-label="Ringkasan dashboard">
           <article v-for="tile in dashboardTiles" :key="tile.label" :class="['mini-metric', tile.tone]">
             <span>{{ tile.label }}</span>
             <strong>{{ tile.value }}</strong>
@@ -1760,7 +2385,10 @@ function persistVisibleRoles(roles) {
                 <strong>Recap rows</strong>
               </div>
             </div>
-            <table>
+            <div v-if="dashboardPending" class="table-skeleton" aria-hidden="true">
+              <span v-for="item in skeletonRows" :key="`recap-skeleton-${item}`" class="skeleton-line wide"></span>
+            </div>
+            <table v-else>
               <thead>
                 <tr>
                   <th>Line</th>
@@ -1792,7 +2420,10 @@ function persistVisibleRoles(roles) {
                 <strong>Pareto defect</strong>
               </div>
             </div>
-            <table>
+            <div v-if="dashboardPending" class="table-skeleton" aria-hidden="true">
+              <span v-for="item in skeletonRows" :key="`pareto-skeleton-${item}`" class="skeleton-line wide"></span>
+            </div>
+            <table v-else>
               <thead>
                 <tr>
                   <th>Defect</th>
@@ -1833,10 +2464,24 @@ function persistVisibleRoles(roles) {
             <p class="eyebrow">HRD</p>
             <h2 id="hrd-title">User access audit</h2>
           </div>
-          <span class="badge">PII guarded</span>
+          <button class="button secondary compact-button" type="button" @click="refreshHrdAccessDashboard">
+            {{ hrdLoading ? 'Memuat' : 'Refresh' }}
+          </button>
         </div>
 
-        <div v-if="activeFeatureId === 'hrd-dashboard'" class="task-strip" aria-label="Prioritas HRD">
+        <div v-if="hrdError" class="inline-error" role="alert">
+          {{ hrdError }}
+        </div>
+
+        <div v-if="hrdPending && activeFeatureId === 'hrd-dashboard'" class="task-strip" aria-hidden="true">
+          <article v-for="item in skeletonItems" :key="`hrd-card-skeleton-${item}`" class="task-card skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line metric-value"></strong>
+            <p class="skeleton-line"></p>
+          </article>
+        </div>
+
+        <div v-else-if="activeFeatureId === 'hrd-dashboard'" class="task-strip" aria-label="Prioritas HRD">
           <article v-for="card in hrdAccessCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -1845,30 +2490,85 @@ function persistVisibleRoles(roles) {
         </div>
 
         <div v-if="activeFeatureId !== 'hrd-dashboard'" class="hrd-workflow">
-          <article v-if="activeFeatureId === 'hrd-users' || activeFeatureId === 'hrd-roles' || activeFeatureId === 'hrd-audit'" class="task-panel">
+          <article v-if="activeFeatureId === 'hrd-users'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Work Queue</span>
-                <strong>Role readiness</strong>
+                <span>Directory</span>
+                <strong>User access masked</strong>
+              </div>
+            </div>
+            <div v-if="hrdPending" class="table-skeleton" aria-hidden="true">
+              <span v-for="item in skeletonRows" :key="`hrd-user-skeleton-${item}`" class="skeleton-line wide"></span>
+            </div>
+            <table v-else>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Last login</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in hrdUsers" :key="user.user_id">
+                  <td>{{ user.email_masked }}</td>
+                  <td>{{ user.role }}</td>
+                  <td>
+                    <span :class="['status', user.is_deleted ? 'danger' : user.status_aktif ? 'success' : 'warning']">
+                      {{ user.is_deleted ? 'Deleted' : user.status_aktif ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>{{ user.last_login ? formatDateTime(user.last_login) : '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article v-if="activeFeatureId === 'hrd-roles'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>RBAC</span>
+                <strong>Permission readiness</strong>
               </div>
             </div>
             <ul class="readiness-list">
-              <li><span class="status success">Ready</span><strong>USER_ROLES menjadi sumber role utama.</strong></li>
-              <li><span class="status warning">Guarded</span><strong>Email dan PII hanya tampil dalam bentuk masked.</strong></li>
-              <li><span class="status success">Audited</span><strong>Perubahan role wajib tercatat di AUDIT_LOGS.</strong></li>
+              <li v-for="role in hrdRoleMatrix" :key="role.role">
+                <span :class="['status', role.readiness === 'READY' ? 'success' : 'warning']">{{ role.readiness }}</span>
+                <strong>{{ role.role }} - {{ role.permission_count }} permission - {{ role.resources.join(', ') || 'no resource' }}</strong>
+              </li>
             </ul>
           </article>
 
-          <article v-if="activeFeatureId === 'hrd-privacy' || activeFeatureId === 'hrd-roles' || activeFeatureId === 'hrd-audit'" class="task-panel">
+          <article v-if="activeFeatureId === 'hrd-audit'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Detail/Action</span>
-                <strong>HRD boundary</strong>
+                <span>Audit</span>
+                <strong>Safe event summary</strong>
               </div>
             </div>
-            <div class="hint-box">
-              Workspace HRD disiapkan untuk review user dan role audit tanpa membuka secret, Script Properties, atau PII mentah dari UI normal.
+            <div class="mini-metrics">
+              <article class="mini-metric success"><span>Session</span><strong>{{ formatNumber(hrdAuditSummary.session) }}</strong></article>
+              <article class="mini-metric warning"><span>RBAC</span><strong>{{ formatNumber(hrdAuditSummary.rbac) }}</strong></article>
+              <article class="mini-metric neutral"><span>User role</span><strong>{{ formatNumber(hrdAuditSummary.user_role) }}</strong></article>
+              <article class="mini-metric neutral"><span>Other</span><strong>{{ formatNumber(hrdAuditSummary.other) }}</strong></article>
             </div>
+            <div class="hint-box">
+              Metadata audit mentah tidak ditampilkan. Event terakhir: {{ hrdAuditSummary.last_event_at ? formatDateTime(hrdAuditSummary.last_event_at) : '-' }}.
+            </div>
+          </article>
+
+          <article v-if="activeFeatureId === 'hrd-privacy'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Privacy</span>
+                <strong>PII boundary</strong>
+              </div>
+            </div>
+            <ul class="readiness-list">
+              <li><span class="status success">Masked</span><strong>Email tampil sebagai `xx***@domain`.</strong></li>
+              <li><span class="status danger">Blocked</span><strong>Nama, telepon, encrypted PII, blind index, dan Script Properties tidak dikirim ke UI.</strong></li>
+              <li><span class="status warning">Audit</span><strong>HRD melihat ringkasan event, bukan `metadata_json` mentah.</strong></li>
+            </ul>
           </article>
         </div>
       </section>
@@ -1882,7 +2582,15 @@ function persistVisibleRoles(roles) {
           <span class="badge">{{ sessionModeLabel }}</span>
         </div>
 
-        <div class="settings-grid">
+        <div v-if="sessionPending" class="settings-grid" aria-hidden="true">
+          <article v-for="item in [1, 2]" :key="`session-skeleton-${item}`" class="settings-card skeleton-card">
+            <span class="skeleton-line short"></span>
+            <strong class="skeleton-line wide"></strong>
+            <p class="skeleton-line"></p>
+          </article>
+        </div>
+
+        <div v-else class="settings-grid">
           <article class="settings-card">
             <span>Session aktif</span>
             <strong>{{ currentSessionLabel }}</strong>
@@ -1910,9 +2618,6 @@ function persistVisibleRoles(roles) {
           </button>
         </div>
 
-        <div v-if="sessionLoading" class="inline-info" role="status">
-          Memuat session context.
-        </div>
         <div v-if="sessionMessage" class="inline-info" role="status">
           {{ sessionMessage }}
         </div>
@@ -1956,7 +2661,10 @@ function persistVisibleRoles(roles) {
         </div>
 
         <div class="table-wrap">
-          <table>
+          <div v-if="maintenancePending" class="table-skeleton" aria-hidden="true">
+            <span v-for="item in skeletonRows" :key="`property-skeleton-${item}`" class="skeleton-line wide"></span>
+          </div>
+          <table v-else>
             <thead>
               <tr>
                 <th>Key</th>

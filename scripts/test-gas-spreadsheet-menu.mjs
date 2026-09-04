@@ -209,6 +209,8 @@ const files = [
   'gas/productionLogs.gs',
   'gas/recap.gs',
   'gas/dashboard.gs',
+  'gas/defectCategories.gs',
+  'gas/hrd.gs',
   'gas/spreadsheetMenu.gs',
   'gas/test_runner.gs',
   'Code.js',
@@ -224,6 +226,9 @@ if (menuCalls.length !== 1 || menuCalls[0].name !== '⚙️ OPTIFLOW Admin') {
 }
 if (!menuCalls[0].items.some((item) => item.functionName === 'menuOpenProjectLinks')) {
   throw new Error('Expected project links menu item.');
+}
+if (!menuCalls[0].items.some((item) => item.functionName === 'menuSeedDefectCategories')) {
+  throw new Error('Expected defect category seed menu item.');
 }
 
 vm.runInNewContext('menuBootstrapSheets()', context);
@@ -250,8 +255,44 @@ const permissionRows = context.OptiflowSheets.getRows('ROLE_PERMISSIONS');
 if (!userRows.some((row) => row.email === 'superadmin@example.com')) {
   throw new Error('Expected dummy SuperAdmin user.');
 }
+const hrdUser = userRows.find((row) => row.email === 'hrd@example.com');
+if (!hrdUser
+  || hrdUser.username !== 'hrd.demo'
+  || !hrdUser.nama_lengkap_encrypted
+  || !hrdUser.alamat_encrypted
+  || !hrdUser.nomor_telepon_encrypted
+  || !hrdUser.phone_blind_index
+  || !String(hrdUser.profile_base64 || '').startsWith('data:image/svg+xml;base64,')) {
+  throw new Error('Expected complete HRD dummy user seed with encrypted placeholders and profile base64.');
+}
 if (!permissionRows.some((row) => row.permission_id === 'SuperAdmin.test_runner.run')) {
   throw new Error('Expected dummy test_runner permission.');
+}
+if (!permissionRows.some((row) => row.permission_id === 'Operator.defect_category.read')) {
+  throw new Error('Expected Operator defect category read permission.');
+}
+if (!permissionRows.some((row) => row.permission_id === 'HRD.user_role.read')
+  || !permissionRows.some((row) => row.permission_id === 'HRD.audit_log.read')) {
+  throw new Error('Expected HRD read-only user role and audit log permissions.');
+}
+
+const defectSheet = spreadsheet.getSheetByName('DEFECT_CATEGORIES');
+defectSheet.rows = [defectSheet.rows[0]];
+vm.runInNewContext('menuSeedDefectCategories()', context);
+const defectRows = context.OptiflowSheets.getRows('DEFECT_CATEGORIES');
+if (!defectRows.some((row) => row.defect_category_id === 'DEF-COLD-SOLDER')) {
+  throw new Error('Expected defect category seed menu to insert default categories.');
+}
+
+const hrdDashboard = vm.runInNewContext("getHrdAccessDashboard({ session: { simulated_role: 'HRD' }, page: 1, page_size: 10 })", context);
+if (!hrdDashboard.ok || hrdDashboard.data.summary.active_users <= 0) {
+  throw new Error('Expected HRD access dashboard response.');
+}
+if (JSON.stringify(hrdDashboard.data).includes('operator@example.com')
+  || JSON.stringify(hrdDashboard.data).includes('phone_blind_index')
+  || JSON.stringify(hrdDashboard.data).includes('profile_base64')
+  || JSON.stringify(hrdDashboard.data).includes('alamat_encrypted')) {
+  throw new Error('Expected HRD dashboard to avoid raw PII fields.');
 }
 
 vm.runInNewContext('menuRunGasSmokeTest()', context);

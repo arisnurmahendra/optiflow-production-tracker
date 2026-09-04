@@ -1001,6 +1001,43 @@
         "npm test passed",
         "npm run prepare:gas passed"
       ]
+    },
+    {
+      "id": "OPT-034",
+      "title": "Move defect category master data to Spreadsheet-backed CRUD",
+      "status": "Closed",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:frontend",
+        "area:data",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M4 - Offline Sync & Conflict Control",
+      "github_issue": 28,
+      "closed_at": "2026-09-04",
+      "scope": [
+        "Use DEFECT_CATEGORIES spreadsheet rows as the production source of truth for defect options.",
+        "Expose validated GAS endpoints for listing, upserting, deactivating, and seeding defect categories.",
+        "Load defect categories through the frontend API adapter with mock/default fallback for local development."
+      ],
+      "acceptance_criteria": [
+        "Contract docs updated before code for defect master data source, validation, and workflow behavior.",
+        "GAS validates and authorizes defect category CRUD endpoints.",
+        "Frontend Kategori defect reads spreadsheet-backed/mock GAS data instead of hardcode-only options.",
+        "Seed mechanism adds default defect categories without deleting existing spreadsheet data.",
+        "Relevant tests and build verification pass."
+      ],
+      "verification": [
+        "GitHub issue #28 closed with state_reason completed",
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "git diff --check passed",
+        "Commit hash pending until user-approved push"
+      ]
     }
   ]
 }

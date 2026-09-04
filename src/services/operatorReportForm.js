@@ -2,15 +2,19 @@ import { z } from 'zod';
 import {
   createParetoRejectSummary,
   defectOptions,
+  getDefectOptions,
   getDefectCategory,
   isActiveDefectCategory,
+  setDefectCategories,
 } from './defectCategories.js';
 
 export const CLIENT_VERSION = 'v0.1.0';
 export {
   createParetoRejectSummary,
   defectOptions,
+  getDefectOptions,
   getDefectCategory,
+  setDefectCategories,
 };
 
 export const lineOptions = Object.freeze([

@@ -56,6 +56,13 @@ function menuSeedDummyMasterData() {
   return OptiflowSpreadsheetMenu.seedDummyMasterDataFromMenu();
 }
 
+function menuSeedDefectCategories() {
+  // Input Validation & Sanitization
+  OptiflowValidation.assertNoInput(arguments, 'menuSeedDefectCategories');
+
+  return OptiflowSpreadsheetMenu.seedDefectCategoriesFromMenu();
+}
+
 function menuShowSchemaHealth() {
   // Input Validation & Sanitization
   OptiflowValidation.assertNoInput(arguments, 'menuShowSchemaHealth');
@@ -162,6 +169,50 @@ function submitProductionReport(request) {
   });
 
   return OptiflowProductionLogs.submit(payload, session);
+}
+
+function getDefectCategories(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateDefectCategoryListRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'defect_category',
+    action: 'read',
+  });
+
+  return OptiflowDefectCategories.list(payload, session);
+}
+
+function upsertDefectCategory(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateDefectCategoryUpsertRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'defect_category',
+    action: 'update',
+  });
+
+  return OptiflowDefectCategories.upsert(payload, session);
+}
+
+function deactivateDefectCategory(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateDefectCategoryDeactivateRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'defect_category',
+    action: 'soft_delete',
+  });
+
+  return OptiflowDefectCategories.deactivate(payload, session);
+}
+
+function seedDefectCategories(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateDefectCategorySeedRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'defect_category',
+    action: 'seed',
+  });
+
+  return OptiflowDefectCategories.seedDefaults(payload, session);
 }
 
 function approveQuarantine(request) {
@@ -283,6 +334,30 @@ function getManagementDashboard(request) {
   });
 
   return OptiflowDashboard.getManagementDashboard(payload, session);
+}
+
+function getOperatorDashboard(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateOperatorDashboardRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'production_report',
+    action: 'read',
+  });
+
+  return OptiflowDashboard.getOperatorDashboard(payload, session);
+}
+
+function getHrdAccessDashboard(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateHrdAccessDashboardRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'user_role',
+    action: 'read',
+  });
+
+  OptiflowAuth.requirePermission(session, 'audit_log', 'read');
+
+  return OptiflowHrd.getAccessDashboard(payload, session);
 }
 
 function runGasTestRunner(request) {

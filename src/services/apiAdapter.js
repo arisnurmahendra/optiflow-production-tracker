@@ -7,9 +7,13 @@ const CALLABLES = Object.freeze({
   checkPermission: 'checkPermission',
   closeDailyClosing: 'closeDailyClosing',
   createAdjustment: 'createAdjustment',
+  deactivateDefectCategory: 'deactivateDefectCategory',
   deleteScriptProperty: 'deleteScriptProperty',
+  getDefectCategories: 'getDefectCategories',
   getHealthCheck: 'getHealthCheck',
+  getHrdAccessDashboard: 'getHrdAccessDashboard',
   getManagementDashboard: 'getManagementDashboard',
+  getOperatorDashboard: 'getOperatorDashboard',
   getSchemaHealthCheck: 'getSchemaHealthCheck',
   getScriptPropertiesStatus: 'getScriptPropertiesStatus',
   getSessionContext: 'getSessionContext',
@@ -20,7 +24,9 @@ const CALLABLES = Object.freeze({
   rotateSecretProperty: 'rotateSecretProperty',
   runMasterRecap: 'runMasterRecap',
   setScriptProperty: 'setScriptProperty',
+  seedDefectCategories: 'seedDefectCategories',
   submitProductionReport: 'submitProductionReport',
+  upsertDefectCategory: 'upsertDefectCategory',
 });
 
 export class ApiAdapterError extends Error {
@@ -57,9 +63,13 @@ export function createApiAdapter(options = {}) {
     checkPermission: (request) => call(CALLABLES.checkPermission, request),
     closeDailyClosing: (request) => call(CALLABLES.closeDailyClosing, request),
     createAdjustment: (request) => call(CALLABLES.createAdjustment, request),
+    deactivateDefectCategory: (request) => call(CALLABLES.deactivateDefectCategory, request),
     deleteScriptProperty: (request) => call(CALLABLES.deleteScriptProperty, request),
+    getDefectCategories: (request = {}) => call(CALLABLES.getDefectCategories, request),
     getHealthCheck: () => call(CALLABLES.getHealthCheck),
+    getHrdAccessDashboard: (request = {}) => call(CALLABLES.getHrdAccessDashboard, request),
     getManagementDashboard: (request = {}) => call(CALLABLES.getManagementDashboard, request),
+    getOperatorDashboard: (request = {}) => call(CALLABLES.getOperatorDashboard, request),
     getSchemaHealthCheck: (request = {}) => call(CALLABLES.getSchemaHealthCheck, request),
     getScriptPropertiesStatus: (request = {}) => call(CALLABLES.getScriptPropertiesStatus, request),
     getSessionContext: (request = {}) => call(CALLABLES.getSessionContext, request),
@@ -70,7 +80,9 @@ export function createApiAdapter(options = {}) {
     rotateSecretProperty: (request) => call(CALLABLES.rotateSecretProperty, request),
     runMasterRecap: (request = {}) => call(CALLABLES.runMasterRecap, request),
     setScriptProperty: (request) => call(CALLABLES.setScriptProperty, request),
+    seedDefectCategories: (request = {}) => call(CALLABLES.seedDefectCategories, request),
     submitProductionReport: (request) => call(CALLABLES.submitProductionReport, request),
+    upsertDefectCategory: (request) => call(CALLABLES.upsertDefectCategory, request),
   });
 }
 
