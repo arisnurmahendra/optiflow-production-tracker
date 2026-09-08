@@ -14,9 +14,9 @@ Before code changes, use the Low-Token Context Protocol:
 3. Escalate to a full documentation sweep only when the change is cross-cutting, a contract conflict appears, or targeted reading is insufficient.
 4. Do not use `chatgpt_snapshot.py` or generated snapshot folders as the active context source for agent-mode work unless the user explicitly requests it.
 
-Current implementation baseline as of 2026-09-03:
-- Completed runtime scope: `OPT-001` through `OPT-027`.
-- Implemented: Vite single-file frontend, safe deploy staging, modular GAS, sheet bootstrap/health, spreadsheet admin toolbar with project links, auth/session, RBAC, validation audit, API adapter, mock GAS, operator mobile form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, backend quarantine approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch, supervisor control center, management read-only dashboard, Pareto-ready defect capture, hidden Script Properties console, `APP_ACTIVE_UNTIL` and registered-user render access gates, native `test_runner.gs`, production hardening checklist, deployment checklist, pilot rollout plan, and QCC report package template.
+Current implementation baseline as of 2026-09-05:
+- Runtime scope implemented locally: `OPT-001` through `OPT-034`; GitHub closure/sync may lag for review-stage items and must follow the issue closure protocol.
+- Implemented: Vite single-file frontend, safe deploy staging, modular GAS, sheet bootstrap/health with additive header migration, spreadsheet admin toolbar with project links, auth/session, RBAC, validation audit, API adapter, mock GAS, operator mobile form, ChartJS operator dashboards, SweetAlert2 metric help, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, backend quarantine approval mutation, daily closing, adjustment log, `MASTER_RECAP` batch, supervisor control center, management read-only dashboard, spreadsheet-backed defect category CRUD/seed, HRD read-only access dashboard with masked user directory, hidden Script Properties console, `APP_ACTIVE_UNTIL` and registered-user render access gates, native `test_runner.gs`, production hardening checklist, deployment checklist, pilot rollout plan, and QCC report package template.
 - Not yet complete: production pilot execution and actual QCC benefit validation from pilot evidence.
 
 ## 2. Core Principles
@@ -36,7 +36,8 @@ Current implementation baseline as of 2026-09-03:
 - Use top workflow navigation on desktop and bottom nav buttons on mobile.
 - Mobile bottom nav inactive items should show large icons only; the active item shows icon and label while workflow badges stay hidden so dock height remains stable.
 - User Settings should open from the top floating session button, not from mobile bottom nav. Try Role must update the UI instantly for `AUTH_MODE=OFF`, role buttons are multi-select for visible workflow menus, and backend must still ignore `simulated_role` when `AUTH_MODE=ON`.
-- Heavy workflow views such as Supervisor and Management should lazy-load their API data when opened.
+- Heavy workflow views such as Supervisor, Management, and HRD should lazy-load their API data when opened.
+- HRD workspace is privacy-first and read-only until a dedicated HRD maintenance workflow is contract-approved; the access dashboard must not expose raw email, encrypted PII, blind index, raw audit metadata, Script Properties, or profile base64.
 - Primary actions must use solid high-contrast buttons; critical statuses need color, text, and icon treatment.
 - State is handled with composables, not Vuex or Pinia.
 - UI components must not read from or write to IndexedDB directly.
@@ -96,6 +97,8 @@ The required sheets are:
 Any column, enum, payload, or validation change must start in `docs/DATA_SCHEMA.md`.
 
 Every GAS function that receives external input must start with an `Input Validation & Sanitization` block. The block validates allowlisted fields, types, enums, date formats, numeric boundaries, and data relationships against `docs/DATA_SCHEMA.md`. Invalid input must be rejected before business logic runs; Vue validation is never considered sufficient protection.
+
+`USER_ROLES` may include development seed fields for username, encrypted-placeholder name/address/phone, phone blind index, and profile base64. Normal workspace responses must still return only the minimum fields allowed by the callable contract.
 
 Offline sync uses event sourcing. Data from IndexedDB must append a new `RAW_LOGS` row with UUID `transaction_id` and device-side `device_timestamp`; it must never overwrite existing Google Sheets cells. Machine/operator/time collisions must become `CONFLICT_PENDING` and wait for Human-in-the-Loop approval.
 

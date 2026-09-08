@@ -31,13 +31,12 @@ deploy/gas/*.gs
 
 ## 3. Post-Deploy
 
-1. Buka web app sebagai `SuperAdmin`, `Mandor`, `Operator`, dan `Management`.
+1. Buka web app sebagai `SuperAdmin`, `Mandor`, `Operator`, `Management`, dan `HRD`.
 2. Jalankan smoke test `runGasTestRunner`.
 3. Cek hidden Script Properties console status-only.
 4. Submit satu data dummy pilot bila memakai sheet staging.
-5. Jalankan closing, adjustment, recap, dan dashboard read-only di scope pilot.
+5. Jalankan closing, adjustment, recap, dashboard read-only, defect category read, dan HRD access dashboard di scope pilot/staging.
 
 ## 4. Rollback
 
 Rollback memakai versi deployment Apps Script terakhir yang stabil. Jangan menghapus data Google Sheets untuk rollback aplikasi; data produksi tetap append-only dan koreksi dilakukan lewat `ADJUSTMENT_LOGS`.
-

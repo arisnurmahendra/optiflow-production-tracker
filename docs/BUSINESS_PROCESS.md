@@ -20,10 +20,10 @@ Target OPTIFLOW:
 - Anomali ditangani melalui approval, bukan koreksi manual diam-diam.
 - Sistem bersifat Offline-Tolerant: aplikasi butuh internet untuk loading awal, tetapi data input tetap aman jika koneksi putus setelah aplikasi terbuka.
 
-Status implementasi 2026-09-03:
+Status implementasi 2026-09-09:
 - Alur operator sampai queue, sync, append-only submit, duplicate handling, conflict routing, dan Pareto-ready defect capture sudah tersedia.
 - Mandor approval inbox sudah terhubung ke backend approval mutation dengan fallback staged lokal saat environment deploy belum memuat endpoint terbaru.
-- Daily closing, adjustment, batch recap, supervisor control center, dan management dashboard read-only sudah tersedia untuk scope M5.
+- Daily closing, adjustment, batch recap, supervisor control center, management dashboard read-only, ChartJS Operator dashboard, spreadsheet-backed defect CRUD/seed, dan HRD read-only access dashboard sudah tersedia untuk scope runtime lokal.
 - Native GAS test runner, checklist deployment, checklist hardening, pilot plan, dan template paket QCC sudah tersedia sebagai artefak M6/M7.
 
 ## 2. Role Dan Hak Akses
@@ -33,7 +33,7 @@ Status implementasi 2026-09-03:
 | `Operator` | Submit laporan produksi miliknya sendiri dan melihat status sync. |
 | `Mandor` | Melihat antrian konflik, approve/reject/request correction, closing harian, membaca rekap lini. |
 | `Management` | Membaca dashboard dan rekap tanpa edit. |
-| `HRD` | Mengelola data PII pekerja sesuai kebutuhan administrasi. |
+| `HRD` | Membaca kesiapan akses user, role, dan audit secara privacy-first; pengelolaan detail PII penuh menunggu workflow terpisah yang disahkan kontrak. |
 | `SuperAdmin` | Mengelola konfigurasi, role, dan troubleshooting tingkat lanjut. |
 
 ## 3. Alur Submit Produksi
@@ -376,7 +376,7 @@ Spreadsheet-bound Apps Script boleh menambahkan menu toolbar `⚙️ OPTIFLOW Ad
 Menu yang tersedia:
 - `🏗️ Bootstrap Sheets`: membuat sheet/header default secara non-destruktif.
 - `🔐 Set Default Script Properties`: mengisi property yang masih kosong saja, termasuk `AUTH_MODE=OFF`, `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE` untuk setup demo/trial, `SPREADSHEET_ID` dari active spreadsheet, `APP_ACTIVE_UNTIL`, dan `ENCRYPTION_SALT`.
-- `🧪 Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, dan shift dummy hanya ketika `AUTH_MODE` bukan `ON`.
+- `🧪 Seed Dummy Master Data (Dev Only)`: membuat master role, permission, line, shift, dan user dummy lintas role hanya ketika `AUTH_MODE` bukan `ON`; seed `USER_ROLES` mencakup username, placeholder nama/alamat/telepon terenkripsi, blind index, status aktif/nonaktif, dan profile base64.
 - `✅ Run GAS Smoke Test`: menjalankan native test runner dan menampilkan ringkasan aman.
 - `📋 Show Schema Health`: menampilkan status health schema.
 - `🔗 Open Project Links`: membuka dialog berisi link allowlisted ke Apps Script editor, web app dev, web app production, dan folder Drive proyek.

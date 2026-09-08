@@ -34,6 +34,7 @@ Conditional controls for future custom password auth:
 - `ENCRYPTION_SALT` tidak boleh keluar dari backend.
 - PII disimpan dalam bentuk terenkripsi bila tidak perlu dibaca langsung.
 - Pencarian PII menggunakan blind index, bukan dekripsi massal.
+- Profile/avatar base64 di `USER_ROLES` diperlakukan sebagai data pribadi dan tidak boleh dikirim ke workspace non-HRD; HRD dashboard read-only tetap tidak menerima profile base64 sampai workflow detail disetujui.
 - Data sensitif tidak boleh dikirim dalam clear text melalui channel non-terenkripsi.
 - Deployment produksi wajib memakai HTTPS/TLS dari Google.
 
@@ -106,6 +107,9 @@ Implemented and locally tested:
 - `REQUIRE_REGISTERED_EMAIL_LOGIN` render gate for production registered-email enforcement and controlled demo/trial bypass.
 - Single-file frontend build verification.
 - Backend quarantine approval mutation, daily closing, adjustment approval, idempotent `MASTER_RECAP`, supervisor control center, and management read-only dashboard.
+- Spreadsheet-backed defect category CRUD/seed with active-category validation.
+- HRD read-only access dashboard with masked user directory, role permission matrix, safe audit summary, and privacy boundary.
+- Development user seed for `USER_ROLES` with encrypted placeholders, blind index, and profile base64 without exposing those fields through normal HRD dashboard responses.
 
 Still required before production rollout:
 - Set production Script Properties in the target Apps Script project.

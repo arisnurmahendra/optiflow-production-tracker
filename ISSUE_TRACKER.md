@@ -57,7 +57,7 @@ Status:
 
 ## 4. Issue Backlog
 
-Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Roadmap berikutnya berfokus pada pemisahan workspace per role agar UI lebih production-ready dan tidak terasa seperti satu halaman berisi semua fitur.
+Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Snapshot 2026-09-09: runtime lokal sudah mencakup implementasi sampai `OPT-034`; item berstatus `Review` tetap menunggu verifikasi/closure GitHub sesuai protokol sebelum ditandai `Closed`.
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -127,7 +127,7 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-025` | #25 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; pilot rollout plan pushed in commit `2c943f1`; field evidence remains external. |
 | `OPT-026` | #26 | 2026-09-02 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `npm audit --audit-level=moderate` passed; QCC report package template pushed in commit `2c943f1`; actual benefits wait for pilot data. |
 | `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
-| `OPT-034` | #28 | 2026-09-04 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `git diff --check` passed; spreadsheet-backed defect category CRUD implemented locally; commit hash pending until user-approved push. |
+| `OPT-034` | #28 | 2026-09-04 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `git diff --check` passed; spreadsheet-backed defect category CRUD implemented locally in commit `80ec100`. |
 
 ## 6. Issue Template
 

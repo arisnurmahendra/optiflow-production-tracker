@@ -23,6 +23,8 @@ OPTIFLOW menargetkan:
 - Database: Google Sheets multi-sheet.
 - Offline mode: IndexedDB queue di sisi client.
 - Validasi client: Zod.
+- Visualisasi: Chart.js.
+- Dialog bantuan pengguna: SweetAlert2.
 - Integrasi BI: Looker Studio atau dashboard internal HTML.
 
 Catatan offline: OPTIFLOW bersifat Offline-Tolerant, bukan Offline-First penuh. Aplikasi membutuhkan koneksi untuk loading awal dari Google Apps Script HTML Service, lalu IndexedDB menjaga draft, cache referensi, dan queue sinkronisasi jika koneksi operator terputus saat input.
@@ -77,7 +79,7 @@ Upgrade proses setelah MVP:
 
 ## Status Saat Ini
 
-Repo sudah melewati implementasi `OPT-001` sampai `OPT-027`. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, daily closing, adjustment, recap, dashboard, hidden SuperAdmin maintenance console, native GAS test runner, dan artefak production readiness sudah tersedia.
+Repo sudah memiliki implementasi runtime lokal `OPT-001` sampai `OPT-034`. Beberapa item review-stage masih perlu sinkronisasi/closure GitHub sesuai protokol issue. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, daily closing, adjustment, recap, dashboard, hidden SuperAdmin maintenance console, native GAS test runner, dan artefak production readiness sudah tersedia.
 
 Yang sudah terimplementasi:
 - Vue 3 app shell multi-view dengan Industrial Soft UI 70/20/10, form produksi mobile-friendly, autosave draft, queue status, dan preview Pareto defect.
@@ -87,8 +89,8 @@ Yang sudah terimplementasi:
 - Global State/composable untuk hydrate draft, autosave background, enqueue submit, dan sync queue.
 - IndexedDB persistence untuk `drafts` dan `queue`; UI tidak membaca/menulis IndexedDB langsung.
 - GAS modular di `gas/*.gs` dengan `Code.js` sebagai entrypoint tipis.
-- Bootstrap dan health check semua sheet kontrak, termasuk seed awal `DEFECT_CATEGORIES`.
-- Toolbar spreadsheet `⚙️ OPTIFLOW Admin` untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
+- Bootstrap dan health check semua sheet kontrak, termasuk additive header migration untuk kolom schema baru dan seed awal `DEFECT_CATEGORIES`.
+- Toolbar spreadsheet `⚙️ OPTIFLOW Admin` untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, project links, seed defect categories, dan GAS smoke test.
 - `AUTH_MODE` session context, role simulation untuk development, dan production lookup via Google account.
 - RBAC exact match berbasis `ROLE_PERMISSIONS`; tidak ada implicit allow untuk `SuperAdmin`.
 - Input Validation & Sanitization pada callable wrapper sebelum auth, sheet access, atau business logic.
@@ -98,7 +100,7 @@ Yang sudah terimplementasi:
 - Hidden SuperAdmin maintenance console untuk Script Properties allowlisted, termasuk `APP_ACTIVE_UNTIL`.
 - Expiry gate `APP_ACTIVE_UNTIL`; aplikasi expired/invalid menampilkan halaman akses ditolak.
 - Backend approval mutation untuk quarantine, daily closing, adjustment workflow, batch `MASTER_RECAP`, supervisor control center, dan management read-only dashboard.
-- Test scripts untuk frontend adapter, operator form, IndexedDB, GAS sheet, auth, permission, production logs, Script Properties, dan native GAS test runner.
+- Test scripts untuk frontend adapter, approval, defect categories, M5 services, operator form, IndexedDB, GAS sheet, auth, permission, production logs, Script Properties, spreadsheet menu, dan native GAS test runner.
 - Production hardening checklist, deployment checklist, pilot rollout plan, dan QCC report package.
 
 Yang belum menjadi implementasi penuh:
@@ -172,7 +174,7 @@ Setelah sheet foundational tersedia, `bootstrapSheets()` kembali wajib melewati 
 
 Menu spreadsheet:
 - Saat project terhubung ke Google Sheets, `onOpen()` menambahkan menu `⚙️ OPTIFLOW Admin`.
-- Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, GAS smoke test, dan shortcut link proyek.
+- Menu ini bisa dipakai untuk bootstrap sheet, set default Script Properties yang masih kosong, seed dummy master data dev, schema health, seed defect categories, GAS smoke test, dan shortcut link proyek.
 - Dummy master data ditolak saat `AUTH_MODE=ON`, dan default Script Properties tidak menimpa nilai yang sudah ada.
 - Halaman akses ditolak menyediakan aksi ganti akun Google, kelola izin Google, dan reload aplikasi tanpa membocorkan detail internal.
 
@@ -207,7 +209,9 @@ gas/
 |-- config.gs
 |-- dailyClosing.gs
 |-- dashboard.gs
+|-- defectCategories.gs
 |-- health.gs
+|-- hrd.gs
 |-- permissions.gs
 |-- productionLogs.gs
 |-- quarantine.gs
@@ -242,7 +246,7 @@ Di production `AUTH_MODE=ON`, jalankan dengan akun SuperAdmin yang terdaftar dan
 
 ## Frontend API Adapter
 
-Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. Untuk Operator, mock menyediakan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, histori 1 minggu, recent submissions, status sync, dan Pareto defect sehingga dashboard dapat diuji cukup dengan `npm run dev`.
+Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. Untuk Operator, mock menyediakan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori user masked, role matrix, dan audit summary aman sehingga workspace dapat diuji cukup dengan `npm run dev`.
 
 ## Verifikasi Lokal
 

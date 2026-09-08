@@ -22,11 +22,11 @@ OPTIFLOW menggunakan beberapa sheet yang dipisahkan berdasarkan fungsi agar tran
 
 Bootstrap backend wajib membuat sheet wajib jika belum ada dan menulis header dari kontrak ini hanya ketika sheet masih kosong. Health check schema wajib melaporkan sheet hilang, kolom hilang, urutan kolom tidak sesuai, kolom ekstra, dan formula pada `RAW_LOGS`.
 
-Status implementasi 2026-09-03:
-- `OptiflowSheets.bootstrap()` membuat sheet/header kontrak dan men-seed `DEFECT_CATEGORIES` saat kosong.
+Status implementasi 2026-09-05:
+- `OptiflowSheets.bootstrap()` membuat sheet/header kontrak, menambahkan kolom schema baru yang hilang di ujung header tanpa menghapus data lama, dan men-seed `DEFECT_CATEGORIES` saat kosong.
 - `submitProductionReport` sudah menulis append-only ke `RAW_LOGS`, menolak duplicate `transaction_id`, memvalidasi kategori defect aktif, dan merutekan konflik mesin/operator/waktu ke `QUARANTINE`.
 - `DAILY_CLOSING`, `ADJUSTMENT_LOGS`, dan `MASTER_RECAP` sudah memiliki workflow backend M5, termasuk closing/reopen append-only, adjustment approval, dan recap idempotent.
-- `ROLE_PERMISSIONS` sudah mencakup resource `test_runner:run` untuk native smoke runner Apps Script.
+- `ROLE_PERMISSIONS` sudah mencakup resource `test_runner:run` untuk native smoke runner Apps Script dan `audit_log:read` untuk ringkasan audit aman HRD.
 
 ## 2. Schema `USER_ROLES`
 
@@ -420,7 +420,7 @@ Callable recap/dashboard:
   - `pareto`: ringkasan defect Operator berisi `defect_category_id`, `defect_name`, `reject_total`, `pareto_percent`, `qcc_factor`, dan `severity`.
 
 Callable HRD:
-- `getHrdAccessDashboard({ session, filter?, page?, page_size? })` membutuhkan permission `user_role:read`.
+- `getHrdAccessDashboard({ session, filter?, page?, page_size? })` membutuhkan permission `user_role:read` dan `audit_log:read`.
 - Response hanya boleh memuat `summary`, `users`, `role_matrix`, dan `audit_summary`.
 - `users.items[]` memuat `user_id`, `email_masked`, `role`, `status_aktif`, `is_deleted`, `last_login`, `created_at`, dan `updated_at`; tidak boleh memuat `email` mentah, `nama_lengkap_encrypted`, `alamat_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, atau `profile_base64` pada dashboard akses read-only.
 - `role_matrix[]` memuat role, total permission aktif, resource aktif, dan flag readiness.

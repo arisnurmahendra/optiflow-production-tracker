@@ -15,10 +15,10 @@ Komposisi visual wajib mengikuti rasio arah desain:
 
 Rasio ini adalah batas arah desain, bukan ukuran matematis per halaman. Jika ada konflik antara estetika dan keterbacaan operasional, keterbacaan, kontras, dan kecepatan input selalu menang.
 
-Status implementasi 2026-09-03:
-- App shell multi-view, Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
-- Scope M5 sudah menambahkan control center desktop, daily closing action, adjustment review, dan management dashboard read-only sebagai view terpisah.
-- Scope M6/M7 menambahkan artefak readiness dan QCC; tidak menambah permukaan UI baru di luar hidden console, supervisor control center, dan dashboard yang sudah ada.
+Status implementasi 2026-09-09:
+- App shell multi-view, workspace navigation per role, Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, ChartJS Operator dashboard, SweetAlert2 metric help, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
+- Scope M5/M6 runtime lokal sudah menambahkan control center desktop, daily closing action, adjustment review, management dashboard read-only, dan HRD read-only access dashboard sebagai view terpisah.
+- Artefak readiness dan QCC sudah tersedia; permukaan UI produksi yang belum lengkap tetap harus masuk kontrak/issue sebelum diimplementasikan.
 
 ## 2. Prinsip Visual
 

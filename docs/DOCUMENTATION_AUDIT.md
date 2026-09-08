@@ -2,7 +2,7 @@
 
 > Issue: `OPT-001` / GitHub `#1`  
 > Scope: audit keselarasan dokumen kontrak sebelum implementasi runtime dimulai.  
-> Status: Passed for planning baseline; refreshed against implemented runtime through `OPT-027` on 2026-09-03.
+> Status: Passed for planning baseline; refreshed against local implemented runtime through `OPT-034` on 2026-09-09.
 
 ## 1. Audit Objective
 
@@ -49,6 +49,9 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 | Soft-delete and audit trail | Yes | Yes | Yes | Yes | Yes | Yes | `POL.ISMS.001.md` | Pass |
 | Daily closing and adjustment | Yes | Yes | Yes | Yes | Yes | Yes | N/A | Pass |
 | Dashboard data isolation | Yes | Yes | Yes | Yes | Yes | Yes | `UI_UX_CONTRACT.md` | Pass |
+| Spreadsheet-backed defect categories | Yes | Yes | Yes | Yes | Yes | Yes | `mock_gas.js` | Pass |
+| HRD masked access dashboard | Yes | Yes | Yes | Yes | Yes | Yes | `POL.ISMS.001.md` | Pass |
+| Additive sheet header migration | Yes | Yes | Yes | Yes | N/A | N/A | `OptiflowSheets.bootstrap()` | Pass |
 | Native GAS test runner | Yes | Yes | Yes | Yes | Yes | Yes | `PRODUCTION_HARDENING_CHECKLIST.md` | Pass |
 | Production readiness artifacts | Yes | Yes | Yes | N/A | Yes | Yes | `PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `PILOT_ROLLOUT_PLAN.md`, `QCC_REPORT_PACKAGE.md` | Pass |
 | QCC 8 Steps and 7 Tools | Yes | Yes | Yes | N/A | Yes | Yes | `QCC_8_STEPS_7_TOOLS.md` | Pass |
@@ -64,13 +67,13 @@ Audit ini memastikan kontrak dokumentasi OPTIFLOW sudah cukup konsisten untuk me
 - Management dashboard isolation is consistent: dashboard reads `MASTER_RECAP`, not `RAW_LOGS`, and excludes unapproved conflict data.
 - Security baseline is consistent with Google Workspace identity: `AUTH_MODE` is an environment toggle, while role truth remains in `USER_ROLES`.
 - UI/UX contract is aligned with operational needs: mobile prioritizes fast input, desktop prioritizes scan/review/dashboard control.
-- Runtime implementation now matches completed tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, Pareto-ready defect capture, safe Script Properties maintenance, expiry, registered-user/demo render access gates, spreadsheet admin toolbar with project links, native GAS test runner, and production readiness artifacts.
+- Runtime implementation now matches completed/local review tracker items through operator reporting, offline-tolerant queue, append-only submit, conflict quarantine, approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, ChartJS operator dashboard, spreadsheet-backed defect category CRUD/seed, HRD masked access dashboard, safe Script Properties maintenance, expiry, registered-user/demo render access gates, spreadsheet admin toolbar with project links, native GAS test runner, and production readiness artifacts.
 
 ## 4A. Current Code Alignment Snapshot
 
 Implemented and verified modules:
 - Frontend: `src/App.vue`, `src/composables/useOperatorReportStore.js`, `src/services/apiAdapter.js`, `src/services/mock_gas.js`, `src/services/indexedDbPersistence.js`, `src/services/operatorReportForm.js`, `src/services/approvalInbox.js`, `src/services/defectCategories.js`, `src/services/supervisorControlCenter.js`, and `src/services/managementDashboard.js`.
-- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/health.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, `gas/spreadsheetMenu.gs`, `gas/test_runner.gs`, and `gas/validation.gs`.
+- Backend GAS: `Code.js`, `gas/accessGate.gs`, `gas/adjustments.gs`, `gas/audit.gs`, `gas/auth.gs`, `gas/config.gs`, `gas/dailyClosing.gs`, `gas/dashboard.gs`, `gas/defectCategories.gs`, `gas/health.gs`, `gas/hrd.gs`, `gas/permissions.gs`, `gas/productionLogs.gs`, `gas/quarantine.gs`, `gas/recap.gs`, `gas/response.gs`, `gas/scriptProperties.gs`, `gas/sheets.gs`, `gas/spreadsheetMenu.gs`, `gas/test_runner.gs`, and `gas/validation.gs`.
 - Verification scripts: frontend adapter/state/form/approval/defect/M5 tests, GAS validation audit, sheets/auth/permissions/production logs/M5/script properties/test-runner/spreadsheet-menu tests, singlefile build verification, and GAS deploy preparation.
 
 Known remaining evidence gaps:

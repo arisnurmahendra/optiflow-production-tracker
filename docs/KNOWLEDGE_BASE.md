@@ -52,14 +52,15 @@ Ringkasan langkah:
 
 ## 5. Snapshot Implementasi Saat Ini
 
-Per 2026-09-03, implementasi sudah mencakup:
-- Frontend Vue 3 mobile operator dengan autosave draft, IndexedDB queue, sync status, dan preview Pareto defect.
-- Backend GAS modular untuk health check, sheet bootstrap, spreadsheet admin toolbar dengan project links, auth/session, RBAC, validation, audit, production logs, quarantine, daily closing, adjustment, recap, dashboard, expiry/registered-email/demo access gate, Script Properties maintenance, dan native test runner.
+Per 2026-09-05, implementasi runtime lokal sudah mencakup:
+- Frontend Vue 3 mobile/desktop workspace dengan autosave draft, IndexedDB queue, sync status, preview Pareto defect, ChartJS dashboard Operator, SweetAlert2 metric help, Mandor approval UI, Supervisor control center, Management dashboard, HRD access/audit surface, dan hidden SuperAdmin console.
+- Backend GAS modular untuk health check, sheet bootstrap dengan additive header migration, spreadsheet admin toolbar dengan project links, auth/session, RBAC, validation, audit, production logs, quarantine, daily closing, adjustment, recap, dashboard, HRD access dashboard, expiry/registered-email/demo access gate, Script Properties maintenance, defect category CRUD/seed, dan native test runner.
 - Append-only `RAW_LOGS` dengan idempotency `transaction_id`.
 - Conflict detection untuk mesin sama/operator berbeda/waktu berdekatan ke `CONFLICT_PENDING`.
-- Default `DEFECT_CATEGORIES` untuk Pareto awal: solder tipis, solder bridge, komponen missing, dan visual scratch.
+- Default `DEFECT_CATEGORIES` untuk Pareto awal: solder tipis, solder bridge, komponen missing, visual scratch, polaritas terbalik, dan cold solder.
 - Hidden SuperAdmin console untuk key Script Properties yang disahkan, tanpa membuka secret mentah ke frontend; demo/trial tanpa registered-email gate hanya boleh lewat `REQUIRE_REGISTERED_EMAIL_LOGIN=FALSE`.
 - Workflow Mandor untuk approval mutation, daily closing, adjustment, recap batch, supervisor control center, dan dashboard management read-only.
+- HRD workspace saat ini read-only untuk access readiness: direktori user masked, role permission matrix, audit summary aman, dan privacy boundary. Seed dummy `USER_ROLES` mengisi email, username, placeholder terenkripsi untuk nama/alamat/telepon, blind index, status aktif/nonaktif, dan profile base64, tetapi response HRD normal tetap masked/status-only.
 - Artefak M6/M7 sudah tersedia: production hardening checklist, deployment checklist, pilot rollout plan, dan QCC report package template.
 
 Fokus berikutnya bergeser ke eksekusi smoke test di GAS target, pilot rollout, dan validasi benefit QCC aktual.

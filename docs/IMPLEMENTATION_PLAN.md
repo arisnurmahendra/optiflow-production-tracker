@@ -17,10 +17,10 @@
 
 ## 1A. Snapshot Implementasi Saat Ini
 
-Status per 2026-09-03:
-- Selesai: `OPT-001` sampai `OPT-027`.
-- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, defect catalog Pareto-ready, hidden Script Properties console, expiry gate, registered-email/demo render gate, native GAS test runner, hardening checklist, deployment checklist, pilot plan, dan QCC package template.
-- M5 selesai: backend quarantine approval mutation, daily closing, adjustment, recap, supervisor control center, dan management dashboard.
+Status per 2026-09-05:
+- Runtime lokal sudah mencakup `OPT-001` sampai `OPT-034`; item review-stage tetap harus mengikuti closure/sync GitHub sebelum dianggap selesai administratif.
+- Fondasi selesai: kontrak docs, Vue/Vite single-file, deploy staging `deploy/`, GAS modular, sheet bootstrap dengan additive header migration, schema health, auth/session, RBAC, validation audit, API adapter, mock GAS, operator form, ChartJS operator dashboard, SweetAlert2 metric help, IndexedDB draft/queue, append-only `RAW_LOGS`, offline sync queue, conflict quarantine, approval inbox UI, spreadsheet-backed defect catalog CRUD/seed, HRD read-only access dashboard, hidden Script Properties console, expiry gate, registered-email/demo render gate, native GAS test runner, hardening checklist, deployment checklist, pilot plan, dan QCC package template.
+- M5/M6 runtime selesai lokal: backend quarantine approval mutation, daily closing, adjustment, recap, supervisor control center, management dashboard, HRD access/audit workspace, Script Properties console, access gates, dan production-readiness artifacts.
 - Setelah M6/M7 artifact closure, sisa pekerjaan utama adalah eksekusi smoke test di GAS target, pilot lapangan, dan validasi benefit QCC aktual dari data pilot.
 
 ## 2. Fase 0 - Baseline Repository
@@ -83,6 +83,7 @@ Kriteria selesai:
 - Backend dapat mendeteksi sheet hilang atau kolom tidak cocok.
 - Tidak ada formula di `RAW_LOGS`.
 - Backend dapat membuat sheet wajib dan header awal tanpa menghapus data yang sudah ada.
+- Backend dapat menambahkan kolom schema baru di ujung header tanpa menghapus data lama.
 - `bootstrapSheets()` memutus circular dependency first-run: jika sheet foundational auth/RBAC/audit belum ada, schema bootstrap boleh berjalan tanpa session; setelah foundational sheet ada, endpoint kembali wajib RBAC `schema:bootstrap`.
 
 ## 4. Fase 2 - Auth, RBAC, Dan Session Bootstrap
@@ -106,7 +107,8 @@ Kriteria selesai:
 - User tidak terdaftar ditolak saat auth aktif.
 - Endpoint menolak aksi tanpa permission eksplisit.
 - Operator tidak menerima PII mentah.
-- HRD dan SuperAdmin dapat membaca field PII sesuai kebutuhan role.
+- HRD access dashboard hanya membaca status akses user yang dimasking; akses detail PII HRD penuh memerlukan workflow dan kontrak terpisah.
+- SuperAdmin tetap mengikuti least privilege dan tidak menerima secret/PII di frontend kecuali endpoint allowlisted mengizinkan bentuk aman.
 - Fungsi GAS yang menerima input eksternal memiliki blok awal `Input Validation & Sanitization`.
 - `AUTH_MODE=OFF` mengembalikan daftar role simulasi dan memvalidasi role yang dipilih.
 - `AUTH_MODE=ON` mengabaikan request simulasi role dan memakai `Session.getActiveUser().getEmail()`.
@@ -222,7 +224,8 @@ Deliverables:
 - Ringkasan per line dan shift.
 - Dashboard Pareto defect dari `DEFECT_CATEGORIES`.
 - Pareto memakai agregasi `reject_total` per kategori defect aktif, dilengkapi `qcc_factor`, `severity`, dan persentase kontribusi.
-- Snapshot performa operator untuk target, OK, reject, defect rate, dan status submit.
+- Snapshot performa operator untuk target, OK, reject, tandon, defect rate, dan status submit.
+- Dashboard Operator memakai ChartJS untuk doughnut `OK vs Reject` hari ini/kemarin dan trend `Target`, `Realisasi`, `OK`, dan `Reject` dengan periode Daily/Weekly/Monthly.
 - Dashboard internal read-only atau sumber data Looker Studio.
 
 Kriteria selesai:
@@ -263,6 +266,7 @@ Deliverables:
 - Checklist Script Properties.
 - Hidden maintenance console SuperAdmin untuk status/update/delete/rotate Script Properties berbasis allowlist.
 - Spreadsheet toolbar admin untuk bootstrap sheet, default Script Properties, dummy master data dev, schema health, dan GAS smoke test.
+- Seed dummy master data dev mengisi `USER_ROLES` lintas role dengan email, username, placeholder nama/alamat/telepon terenkripsi, blind index, status aktif/nonaktif, dan profile base64.
 - Expiry gate berbasis `APP_ACTIVE_UNTIL` yang menampilkan halaman akses ditolak saat aplikasi sudah melewati masa aktif.
 - Demo/trial render gate berbasis `REQUIRE_REGISTERED_EMAIL_LOGIN` dan halaman akses ditolak dengan aksi ganti akun, kelola izin Google, dan reload.
 - Production API wrapper memakai `google.script.run.withSuccessHandler().withFailureHandler()`.

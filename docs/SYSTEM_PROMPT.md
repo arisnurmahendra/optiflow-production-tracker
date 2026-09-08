@@ -39,15 +39,15 @@ Primary contracts:
 - Vue 3 components, styling, and base64 assets must be bundled into `Index.html` for Google Apps Script HTML Service.
 - Backend calls must go through `apiAdapter.js`.
 - Local development uses `mock_gas.js`.
-- Database uses `USER_ROLES`, `ROLE_PERMISSIONS`, `RAW_LOGS`, `QUARANTINE`, `MASTER_RECAP`, and `AUDIT_LOGS`.
+- Database uses `USER_ROLES`, `ROLE_PERMISSIONS`, `LINE_MASTER`, `SHIFT_MASTER`, `DEFECT_CATEGORIES`, `RAW_LOGS`, `QUARANTINE`, `MASTER_RECAP`, `DAILY_CLOSING`, `ADJUSTMENT_LOGS`, and `AUDIT_LOGS`.
 - Treat the frontend as Offline-Tolerant, not Offline-First.
 - Do not depend on Service Workers/PWA because GAS HTML Service runs in a sandbox iframe.
 - Production GAS calls are wrapped through `google.script.run.withSuccessHandler().withFailureHandler()`.
 
 Current implementation baseline:
-- Completed runtime scope covers `OPT-001` through `OPT-027`.
-- Existing frontend modules include API adapter, mock GAS, IndexedDB persistence, operator report store, operator report form, approval inbox UI helpers, defect/Pareto helpers, supervisor control center helpers, and management dashboard helpers.
-- Existing GAS modules include access gate, adjustments, audit, auth, config, daily closing, dashboard, health, permissions, production logs, quarantine, recap, response, script properties, sheets, spreadsheet menu, test runner, and validation.
+- Runtime implementation is present locally for `OPT-001` through `OPT-034`; issue closure/sync may lag and must follow the tracker protocol.
+- Existing frontend modules include API adapter, mock GAS, IndexedDB persistence, operator report store, operator report form, approval inbox UI helpers, defect/Pareto helpers, ChartJS operator dashboard rendering, SweetAlert2 metric help, supervisor control center helpers, management dashboard helpers, HRD read-only access UI, and hidden SuperAdmin settings UI.
+- Existing GAS modules include access gate, adjustments, audit, auth, config, daily closing, dashboard, defect categories, health, HRD access dashboard, permissions, production logs, quarantine, recap, response, script properties, sheets, spreadsheet menu, test runner, and validation.
 - Do not claim production pilot results or final QCC benefits are actual until pilot evidence exists.
 - Native `test_runner.gs`, production hardening checklist, deployment checklist, pilot plan, and QCC package template are implementation artifacts; target-environment execution evidence must still be recorded during rollout.
 
@@ -57,6 +57,7 @@ Current implementation baseline:
 - Never loop-decrypt PII for search.
 - Use blind indexing for searchable PII.
 - Mask PII unless role allows full view.
+- HRD access dashboard currently returns masked/status-only user access data; raw email, encrypted PII, blind index, profile base64, raw audit metadata, Script Properties, and secrets stay out of normal HRD frontend responses.
 - Never hard-delete operational or master data.
 - Validate input on both client and server.
 - Every GAS function that receives external input must start with `Input Validation & Sanitization` before business logic.

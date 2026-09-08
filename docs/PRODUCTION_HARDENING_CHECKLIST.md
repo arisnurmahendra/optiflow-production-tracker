@@ -14,6 +14,8 @@ Semua item P0 wajib selesai sebelum production rollout:
 | Secrets | Tidak ada secret di frontend, docs publik, logs, atau Git. | `npm audit --audit-level=moderate` dan review diff. | Ready |
 | API Boundary | Vue tidak memanggil `google.script.run` langsung. | Direct-access scan. | Ready |
 | Data Integrity | Submit append-only, idempotency UUID, quarantine, closing, adjustment, dan recap diuji. | `npm test`. | Ready |
+| Reference Data | `DEFECT_CATEGORIES` aktif tersedia dan seed/admin update terkontrol. | Spreadsheet menu atau `seedDefectCategories`. | Ready |
+| HRD Privacy | HRD access dashboard tidak mengirim raw email, encrypted PII, blind index, profile base64, raw audit metadata, atau Script Properties. | `npm run test:frontend:api` dan `npm run test:gas:spreadsheet-menu`. | Ready |
 | GAS Smoke | Native runner menghasilkan `PASS` di project GAS target. | `runGasTestRunner`. | Pending deployed GAS |
 
 ## 2. Production Smoke Sequence
