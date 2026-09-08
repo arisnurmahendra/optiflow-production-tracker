@@ -41,10 +41,12 @@ var OptiflowSpreadsheetMenu = (function () {
 
   function bootstrapSheetsFromMenu() {
     var response = OptiflowSheets.bootstrap();
+    var inserted = seedDummyMasterDataWhenAllowed(false);
     showAlert('Bootstrap Sheets', [
       'Status: OK',
       'Created sheets: ' + response.data.created_sheets.length,
       'Initialized headers: ' + response.data.initialized_headers.length,
+      'Dummy master rows inserted: ' + inserted.length,
       'Schema valid: ' + String(response.data.schema_health.valid).toUpperCase(),
     ].join('\n'));
     return response;
@@ -89,20 +91,9 @@ var OptiflowSpreadsheetMenu = (function () {
   }
 
   function seedDummyMasterDataFromMenu() {
-    var authMode = String(PropertiesService.getScriptProperties().getProperty('AUTH_MODE') || '').trim().toUpperCase();
-
-    if (authMode === OPTIFLOW_AUTH_MODES.ON) {
-      showAlert('Seed Dummy Master Data', 'Ditolak: AUTH_MODE=ON. Dummy data hanya untuk development/staging.');
-      throw new Error('Dummy master data is not allowed when AUTH_MODE=ON.');
-    }
-
     OptiflowSheets.bootstrap();
 
-    var inserted = []
-      .concat(seedUserRoles())
-      .concat(seedRolePermissions())
-      .concat(seedLineMaster())
-      .concat(seedShiftMaster());
+    var inserted = seedDummyMasterDataWhenAllowed(true);
 
     showAlert('Seed Dummy Master Data', [
       'Inserted rows: ' + inserted.length,
@@ -112,6 +103,25 @@ var OptiflowSpreadsheetMenu = (function () {
     return OptiflowResponse.success({
       inserted: inserted,
     });
+  }
+
+  function seedDummyMasterDataWhenAllowed(throwWhenProduction) {
+    var authMode = String(PropertiesService.getScriptProperties().getProperty('AUTH_MODE') || '').trim().toUpperCase();
+
+    if (authMode === OPTIFLOW_AUTH_MODES.ON) {
+      if (!throwWhenProduction) {
+        return [];
+      }
+
+      showAlert('Seed Dummy Master Data', 'Ditolak: AUTH_MODE=ON. Dummy data hanya untuk development/staging.');
+      throw new Error('Dummy master data is not allowed when AUTH_MODE=ON.');
+    }
+
+    return []
+      .concat(seedUserRoles())
+      .concat(seedRolePermissions())
+      .concat(seedLineMaster())
+      .concat(seedShiftMaster());
   }
 
   function seedDefectCategoriesFromMenu() {

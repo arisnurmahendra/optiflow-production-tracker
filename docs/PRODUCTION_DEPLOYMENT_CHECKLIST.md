@@ -11,6 +11,7 @@ Purpose: menjaga push GAS tetap bersih, repeatable, dan bisa di-rollback.
 | Single-file build pass. | `npm run build:verify`. | Required |
 | Deploy staging dibuat ulang. | `npm run prepare:gas`. | Required |
 | Dependency audit aman. | `npm audit --audit-level=moderate`. | Required |
+| Production seed aman. | Pastikan `AUTH_MODE=ON` sebelum memakai sheet production agar dummy master data tidak dibuat otomatis. | Required |
 
 ## 2. Deploy
 

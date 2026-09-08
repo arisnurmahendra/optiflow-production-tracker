@@ -235,6 +235,12 @@ vm.runInNewContext('menuBootstrapSheets()', context);
 if (spreadsheet.sheets.size !== context.OPTIFLOW_REQUIRED_SHEETS.length) {
   throw new Error('Expected menu bootstrap to create required sheets.');
 }
+if (context.OptiflowSheets.getRows('USER_ROLES').length === 0
+  || context.OptiflowSheets.getRows('ROLE_PERMISSIONS').length === 0
+  || context.OptiflowSheets.getRows('LINE_MASTER').length === 0
+  || context.OptiflowSheets.getRows('SHIFT_MASTER').length === 0) {
+  throw new Error('Expected menu bootstrap to seed missing dummy master data when AUTH_MODE is not ON.');
+}
 
 vm.runInNewContext('menuSetDefaultScriptProperties()', context);
 if (properties.AUTH_MODE !== 'OFF'
