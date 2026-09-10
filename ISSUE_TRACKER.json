@@ -1036,7 +1036,43 @@
         "npm run build:verify passed",
         "npm run prepare:gas passed",
         "git diff --check passed",
-      "Implemented locally in commit 80ec100"
+        "Implemented locally in commit 80ec100"
+      ]
+    },
+    {
+      "id": "OPT-035",
+      "title": "Build role-authorized daily target master and multi-user scope control",
+      "status": "Review",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": "TBD",
+      "scope": [
+        "Create TARGET_MASTER as the source of truth for daily production targets.",
+        "Allow Mandor and above to set targets with explicit scope: all users, operator-only, line/shift, or machine scope.",
+        "Auto-fill Operator target from backend and keep manual target input as warning fallback only.",
+        "Preserve RAW_LOGS.target_harian as immutable submit-time snapshot."
+      ],
+      "acceptance_criteria": [
+        "Contract docs define TARGET_MASTER, target scope resolution, and role authorization before code.",
+        "Backend validates and audits all target create/update/bulk_update/soft_delete actions.",
+        "Frontend lets authorized roles preview whether a target change affects all users or one user only.",
+        "Operator cannot freely change target when an active master target exists.",
+        "Relevant tests and build verification pass."
+      ],
+      "verification": [
+        "npm test passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "git diff --check passed with CRLF warnings only"
       ]
     }
   ]

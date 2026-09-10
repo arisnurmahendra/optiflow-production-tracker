@@ -162,6 +162,8 @@ const files = [
   'gas/dashboard.gs',
   'gas/defectCategories.gs',
   'gas/hrd.gs',
+  'gas/referenceData.gs',
+  'gas/targetMaster.gs',
   'gas/spreadsheetMenu.gs',
   'gas/test_runner.gs',
   'Code.js',

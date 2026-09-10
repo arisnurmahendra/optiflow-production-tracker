@@ -55,6 +55,28 @@ if (queue.length !== 0) {
   throw new Error('Expected IndexedDB queue remove to persist.');
 }
 
+await persistence.saveDraft({
+  ...initialOperatorReportForm,
+  perolehan_ok: 88,
+});
+await persistence.enqueueReport(queueItem);
+await persistence.clearAll();
+const clearedSnapshot = await persistence.loadSnapshot();
+if (clearedSnapshot.draft || clearedSnapshot.queue.length !== 0) {
+  throw new Error('Expected IndexedDB clearAll to remove draft and queue.');
+}
+
+await persistence.saveDraft({
+  ...initialOperatorReportForm,
+  perolehan_ok: 77,
+});
+await persistence.enqueueReport(queueItem);
+await persistence.resetDatabase();
+const resetSnapshot = await persistence.loadSnapshot();
+if (resetSnapshot.draft || resetSnapshot.queue.length !== 0) {
+  throw new Error('Expected IndexedDB resetDatabase to delete and recreate empty stores.');
+}
+
 const unavailable = createIndexedDbPersistence({ indexedDB: null });
 let rejected = false;
 try {
@@ -74,6 +96,20 @@ const memory = createMemoryPersistence({
 const snapshot = await memory.loadSnapshot();
 if (!snapshot.draft || snapshot.queue.length !== 1) {
   throw new Error('Expected memory persistence to mirror persistence contract.');
+}
+
+await memory.clearAll();
+const clearedMemorySnapshot = await memory.loadSnapshot();
+if (clearedMemorySnapshot.draft || clearedMemorySnapshot.queue.length !== 0) {
+  throw new Error('Expected memory persistence clearAll to remove draft and queue.');
+}
+
+await memory.saveDraft(initialOperatorReportForm);
+await memory.enqueueReport(queueItem);
+await memory.resetDatabase();
+const resetMemorySnapshot = await memory.loadSnapshot();
+if (resetMemorySnapshot.draft || resetMemorySnapshot.queue.length !== 0) {
+  throw new Error('Expected memory persistence resetDatabase to remove draft and queue.');
 }
 
 console.log('indexeddb persistence test ok');

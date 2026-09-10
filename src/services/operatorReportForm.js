@@ -24,9 +24,9 @@ export const lineOptions = Object.freeze([
 ]);
 
 export const shiftOptions = Object.freeze([
-  { value: 'SHIFT-1', label: 'Pagi' },
-  { value: 'SHIFT-2', label: 'Siang' },
-  { value: 'SHIFT-3', label: 'Malam' },
+  { value: 'SHIFT-1', label: 'Shift 1' },
+  { value: 'SHIFT-2', label: 'Shift 2' },
+  { value: 'SHIFT-3', label: 'Shift 3' },
 ]);
 
 export const machineOptions = Object.freeze([
@@ -40,7 +40,7 @@ export const initialOperatorReportForm = Object.freeze({
   shift_id: 'SHIFT-1',
   machine_id: 'SLD-14',
   target_harian: 1200,
-  tandon: 80,
+  tandon: 0,
   perolehan_ok: 1164,
   perolehan_reject: 36,
   defect_category_id: 'DEF-SOLDER-THIN',
@@ -79,13 +79,7 @@ export const operatorReportSchema = z.object({
     });
   }
 
-  if (value.perolehan_ok + value.perolehan_reject > value.target_harian + value.tandon) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['perolehan_ok'],
-      message: 'OK + Reject tidak boleh melebihi Target + Tandon.',
-    });
-  }
+  // Target hanya dibandingkan dengan OK + Reject. Tandon tetap data konteks terpisah.
 });
 
 export function validateOperatorReport(form) {

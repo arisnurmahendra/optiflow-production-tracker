@@ -659,7 +659,8 @@ h2 {
 .workspace.view-operator .operator-context-panel,
 .workspace.view-operator .operator-history-panel,
 .workspace.view-operator .operator-dashboard-panel,
-.workspace.view-operator .operator-defect-panel {
+.workspace.view-operator .operator-defect-panel,
+.workspace.view-operator .help-panel {
   grid-area: auto;
 }
 
@@ -680,6 +681,10 @@ h2 {
 }
 
 .settings-panel {
+  grid-area: main;
+}
+
+.help-panel {
   grid-area: main;
 }
 
@@ -990,6 +995,20 @@ input:focus,
   font-size: 12px;
   font-weight: 800;
   line-height: 1.35;
+}
+
+.field-info {
+  min-height: 16px;
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.number-field input[readonly] {
+  border-color: #bfdbfe;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
 }
 
 .check-row {
@@ -1332,6 +1351,26 @@ td:nth-child(4) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.target-management {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+}
+
+.target-field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.inline-actions {
+  position: static;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
 .row-button {
   min-height: 34px;
   border: 0;
@@ -1437,6 +1476,58 @@ td:nth-child(4) {
   color: var(--text-primary);
   font-size: 13px;
   line-height: 1.35;
+}
+
+.help-hero {
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(255, 255, 255, 0.92)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.help-hero strong {
+  color: var(--text-primary);
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.help-hero p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.help-card {
+  min-height: 220px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(248, 250, 252, 0.94);
+  box-shadow: var(--shadow-soft);
+}
+
+.help-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
 }
 
 .operator-progress {
@@ -1844,6 +1935,118 @@ td:nth-child(4) {
   border-color: #fb923c;
 }
 
+.superadmin-local-reset {
+  margin-top: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  background: #fff7f7;
+  box-shadow: var(--shadow-soft);
+}
+
+.superadmin-local-reset span {
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.superadmin-local-reset strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.superadmin-local-reset p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.superadmin-local-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.superadmin-local-reset .inline-error,
+.local-data-preview {
+  grid-column: 1 / -1;
+}
+
+.local-data-preview {
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.94);
+  color: #e5e7eb;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.superadmin-maintenance-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.superadmin-maintenance-card {
+  min-height: 172px;
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(255, 255, 255, 0.94)),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.superadmin-maintenance-card span {
+  color: #075985;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.superadmin-maintenance-card strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-primary);
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.superadmin-maintenance-card p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.superadmin-maintenance-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .inline-error,
 .inline-info {
   border-radius: 8px;
@@ -1921,12 +2124,12 @@ td:nth-child(4) {
     top: auto;
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     height: 62px;
     min-height: 62px;
     align-items: center;
     margin: 44px 6px 0;
-    padding: 0 18px;
+    padding: 0 12px;
     border-color: rgba(186, 230, 253, 0.78);
     border-radius: 18px;
     background:
@@ -1940,7 +2143,7 @@ td:nth-child(4) {
 
   .nav-item {
     position: relative;
-    flex: 0 0 48px;
+    flex: 0 0 36px;
     min-width: 0;
     min-height: 62px;
     height: 62px;
@@ -1999,7 +2202,7 @@ td:nth-child(4) {
 
   .nav-item.active {
     flex: 1 1 104px;
-    max-width: 126px;
+    max-width: 116px;
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     justify-items: center;
@@ -2048,6 +2251,10 @@ td:nth-child(4) {
   .chart-canvas-frame {
     height: clamp(168px, 34vh, 220px);
     min-height: 168px;
+  }
+
+  .help-grid {
+    grid-template-columns: 1fr;
   }
 
   .chart-head {
@@ -2102,6 +2309,10 @@ td:nth-child(4) {
   .defect-insight,
   .task-strip,
   .hrd-workflow,
+  .target-management,
+  .target-field-grid,
+  .superadmin-local-reset,
+  .superadmin-maintenance-grid,
   .operator-context-grid,
   .number-grid {
     grid-template-columns: 1fr;
@@ -2134,6 +2345,14 @@ td:nth-child(4) {
 
   .panel {
     padding: 14px;
+  }
+
+  .superadmin-local-actions {
+    justify-content: stretch;
+  }
+
+  .superadmin-local-actions .button {
+    flex: 1 1 120px;
   }
 
   .action-row {

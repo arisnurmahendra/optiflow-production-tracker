@@ -125,12 +125,36 @@ export function createIndexedDbPersistence(options = {}) {
     );
   }
 
+  async function clearAll() {
+    const db = await getDb();
+    const transaction = db.transaction([DRAFT_STORE, QUEUE_STORE], 'readwrite');
+    const draftStore = transaction.objectStore(DRAFT_STORE);
+    const queueStore = transaction.objectStore(QUEUE_STORE);
+
+    await Promise.all([
+      requestToPromise(draftStore.clear()),
+      requestToPromise(queueStore.clear()),
+    ]);
+  }
+
+  async function resetDatabase() {
+    if (dbPromise) {
+      const db = await dbPromise;
+      db.close();
+      dbPromise = null;
+    }
+
+    await requestToPromise(indexedDb.deleteDatabase(dbName));
+  }
+
   return Object.freeze({
+    clearAll,
     enqueueReport,
     getDraft,
     listQueue,
     loadSnapshot,
     removeQueueItem,
+    resetDatabase,
     saveDraft,
     updateQueueItem,
   });
@@ -165,6 +189,14 @@ export function createMemoryPersistence(initialState = {}) {
     },
     async removeQueueItem(id) {
       queue = queue.filter((item) => item.id !== id);
+    },
+    async clearAll() {
+      draft = null;
+      queue = [];
+    },
+    async resetDatabase() {
+      draft = null;
+      queue = [];
     },
     async saveDraft(nextDraft) {
       draft = structuredCloneSafe(nextDraft);
@@ -239,11 +271,13 @@ function createUnavailablePersistence() {
   }
 
   return Object.freeze({
+    clearAll: rejectUnavailable,
     enqueueReport: rejectUnavailable,
     getDraft: rejectUnavailable,
     listQueue: rejectUnavailable,
     loadSnapshot: rejectUnavailable,
     removeQueueItem: rejectUnavailable,
+    resetDatabase: rejectUnavailable,
     saveDraft: rejectUnavailable,
     updateQueueItem: rejectUnavailable,
   });

@@ -95,6 +95,7 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-032` | Build Management read-only KPI dashboard task flow | Review | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
 | `OPT-033` | Build HRD user access and role audit workspace | Review | P2 | `type:feature`, `type:security`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
 | `OPT-034` | Move defect category master data to Spreadsheet-backed CRUD | Closed | P1 | `type:feature`, `area:backend`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #28 |
+| `OPT-035` | Build role-authorized daily target master and multi-user scope control | Review | P1 | `type:feature`, `area:backend`, `area:frontend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
 
 ## 5. Closed Issue Log
 

@@ -79,13 +79,13 @@ Upgrade proses setelah MVP:
 
 ## Status Saat Ini
 
-Repo sudah memiliki implementasi runtime lokal `OPT-001` sampai `OPT-034`. Beberapa item review-stage masih perlu sinkronisasi/closure GitHub sesuai protokol issue. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, defect capture Pareto-ready, daily closing, adjustment, recap, dashboard, hidden SuperAdmin maintenance console, native GAS test runner, dan artefak production readiness sudah tersedia.
+Repo sudah memiliki implementasi runtime lokal `OPT-001` sampai `OPT-035`. Beberapa item review-stage masih perlu sinkronisasi/closure GitHub sesuai protokol issue. Fondasi kontrak, frontend, backend GAS modular, auth/RBAC, offline-tolerant queue, conflict quarantine, approval inbox, target master, defect capture Pareto-ready, daily closing, adjustment, recap, dashboard, hidden SuperAdmin maintenance console, native GAS test runner, dan artefak production readiness sudah tersedia.
 
 Yang sudah terimplementasi:
 - Vue 3 app shell multi-view dengan Industrial Soft UI 70/20/10, form produksi mobile-friendly, autosave draft, queue status, dan preview Pareto defect.
 - Vite single-file build dengan `vite-plugin-singlefile`; `/dist` hanya boleh menghasilkan `Index.html`.
 - `apiAdapter.js` sebagai satu-satunya jalur frontend ke GAS, dengan allowlist callable, timeout, safe structured response, dan safe error.
-- `mock_gas.js` untuk development lokal dengan latency, failure simulation, idempotency, dan conflict simulation.
+- `mock_gas.js` untuk development lokal dengan latency, failure simulation, idempotency, reference dataset, target master, dashboard, dan conflict simulation.
 - Global State/composable untuk hydrate draft, autosave background, enqueue submit, dan sync queue.
 - IndexedDB persistence untuk `drafts` dan `queue`; UI tidak membaca/menulis IndexedDB langsung.
 - GAS modular di `gas/*.gs` dengan `Code.js` sebagai entrypoint tipis.
@@ -115,8 +115,10 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Arah desain UI adalah 70% Minimalist Operational UI, 20% Neumorphism / Soft UI, dan 10% Claymorphism / Glass accent.
 - Latar memakai app-like blue depth background dan shell translucent agar terasa modern, sementara form, tabel, dan status tetap memakai surface terang yang mudah dibaca.
 - Workflow besar dipisah sebagai view aplikasi: Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan; hidden SuperAdmin console tetap tidak muncul di navigasi normal.
+- Setiap role memiliki menu Help/Cara Penggunaan yang menjelaskan langkah kerja, proses bisnis, dan troubleshooting sesuai workspace aktif agar user awam bisa langsung memahami tindakan berikutnya.
 - Workflow role sekarang memakai pola production workspace: Overview, Work Queue, dan Detail/Action agar setiap role melihat tugas relevan, bukan satu halaman berisi semua fitur.
-- Nav utama menampilkan menu fitur untuk workspace aktif di desktop dan mobile; pemilihan workspace pindah ke dropdown nav. Semua workspace default ke Dashboard, dan Operator memakai Dashboard, Input, Riwayat, Defect, dan Status.
+- Nav utama menampilkan menu fitur untuk workspace aktif di desktop dan mobile; pemilihan workspace pindah ke dropdown nav. Semua workspace default ke Dashboard, dan Operator memakai Dashboard, Input, Riwayat, Defect, Status, dan Help.
+- Penyebutan `shift` seragam di UI/payload/dokumen; opsi line/shift/mesin/operator runtime diambil dari `getOperatorReferenceData`, dengan fallback lokal hanya untuk development/offline.
 - Dashboard Operator menampilkan metric Target, OK, Reject, Queue dari response dashboard, ChartJS doughnut OK vs Reject untuk Hari ini/Kemarin, serta ChartJS trend Target, Realisasi, OK, dan Reject dengan pilihan Daily, Weekly, dan Monthly. Angka tengah doughnut berarti capaian `Realisasi / Target`, sedangkan realisasi berarti OK + Reject. Tandon tetap informasi terpisah; mode development memakai dummy `getOperatorDashboard` dari `src/services/mock_gas.js` agar UI bisa diperiksa tanpa upload ke GAS.
 - Kategori defect production berasal dari sheet `DEFECT_CATEGORIES`, bukan hardcode-only UI. Jalankan menu Spreadsheet `Seed Defect Categories` untuk mengisi default seed, lalu tambah defect baru sebagai row spreadsheet atau melalui callable terotorisasi `upsertDefectCategory`; frontend mengambilnya lewat `getDefectCategories` dengan fallback mock/default saat development lokal.
 - Hak akses master defect mengikuti separation of duties: Operator dan Management `read` saja; Mandor boleh `create/update/soft_delete`; Supervisor baru mendapat hak kelola jika sudah menjadi role resmi backend; SuperAdmin memegang full access termasuk `seed`.
@@ -124,10 +126,12 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Mobile bottom nav menampilkan icon besar untuk semua menu; teks penuh hanya muncul pada menu aktif.
 - View Pengaturan dibuka dari top floating button dan menyediakan Try Role instan/multi-select untuk demo/trial saat `AUTH_MODE=OFF`, sehingga tester tidak perlu berganti email dan bisa menentukan menu workflow yang tampil.
+- Saat role aktif `SuperAdmin`, View Pengaturan menyediakan card maintenance untuk membuka console Script Properties allowlisted, melihat pengingat bootstrap/diagnostics, melihat snapshot IndexedDB/localStorage `optiflow.*`, mengosongkan draft/queue, reset database IndexedDB, reset semua preferensi lokal, dan reload aplikasi tanpa menyentuh Google Sheets atau Script Properties.
 - View Supervisor dan Management dimuat lazy-load saat dibuka agar startup Operator tetap ringan.
 - Frontend tidak boleh memanggil `google.script.run` langsung; semua call melewati `apiAdapter.js`.
 - Setiap payload submit membawa `transaction_id` UUID, `device_timestamp` UTC dari device, `client_version`, dan data produksi sesuai schema.
-- `perolehan_ok + perolehan_reject` tidak boleh melebihi `target_harian + tandon`.
+- Target hanya dibandingkan dengan `perolehan_ok + perolehan_reject`. Barang Reject tetap masuk perhitungan realisasi target, sedangkan `tandon` tidak masuk perhitungan target dan boleh ada atau kosong walaupun target sudah tercapai.
+- Target harian berasal dari `TARGET_MASTER`, bukan angka bebas operator. Penggantian target dilakukan oleh Mandor atau role di atasnya dengan scope eksplisit: semua operator, satu operator, line/shift, atau machine scope. `RAW_LOGS.target_harian` tetap menjadi snapshot saat submit dan tidak boleh ditimpa oleh perubahan target berikutnya.
 - Jika `perolehan_reject > 0`, `defect_category_id` wajib ada dan harus aktif di `DEFECT_CATEGORIES`.
 - Submit ke GAS bersifat append-only ke `RAW_LOGS`; retry dengan `transaction_id` sama tidak boleh menggandakan data.
 - Queue IndexedDB hanya dihapus setelah response GAS success yang tervalidasi.
@@ -246,7 +250,7 @@ Di production `AUTH_MODE=ON`, jalankan dengan akun SuperAdmin yang terdaftar dan
 
 ## Frontend API Adapter
 
-Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. Untuk Operator, mock menyediakan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori user masked, role matrix, dan audit summary aman sehingga workspace dapat diuji cukup dengan `npm run dev`.
+Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. Untuk Operator, mock menyediakan `getOperatorReferenceData`, `getProductionTarget`, submit/sync IndexedDB, dan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori user masked, role matrix, dan audit summary aman sehingga workspace dapat diuji cukup dengan `npm run dev`.
 
 ## Verifikasi Lokal
 

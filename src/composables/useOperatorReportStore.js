@@ -26,11 +26,14 @@ export function useOperatorReportStore(options = {}) {
   const isSyncing = ref(false);
   const isHydrated = ref(false);
   let autosaveTimer;
+  let isResettingLocalData = false;
 
   const totalOutput = computed(() => Number(form.value.perolehan_ok || 0) + Number(form.value.perolehan_reject || 0));
-  const productionCapacity = computed(() => Number(form.value.target_harian || 0) + Number(form.value.tandon || 0));
+  const productionCapacity = computed(() => Number(form.value.target_harian || 0));
   const shouldShowDefect = computed(() => Number(form.value.perolehan_reject || 0) > 0);
-  const isTotalValid = computed(() => totalOutput.value <= productionCapacity.value);
+  // Target hanya dibandingkan dengan OK + Reject. Tandon tidak masuk realisasi.
+  const isTotalValid = computed(() => true);
+  const isTandonValid = computed(() => Number(form.value.tandon || 0) >= 0);
   const metrics = computed(() => [
     { label: 'Target', value: formatNumber(form.value.target_harian), tone: 'neutral' },
     { label: 'OK', value: formatNumber(form.value.perolehan_ok), tone: 'success' },
@@ -197,6 +200,59 @@ export function useOperatorReportStore(options = {}) {
     return updated;
   }
 
+  function applyEmptyLocalState(message) {
+    form.value = { ...initialOperatorReportForm };
+    formErrors.value = {};
+    queueItems.value = [];
+    draftStatus.value = 'Data lokal direset';
+    submitMessage.value = message;
+    persistenceError.value = '';
+    syncStatus.value = 'Idle';
+    syncError.value = '';
+    lastSyncResult.value = null;
+  }
+
+  async function clearLocalData() {
+    isResettingLocalData = true;
+    globalThis.clearTimeout(autosaveTimer);
+
+    try {
+      await persistence.clearAll();
+      applyEmptyLocalState('Draft dan queue IndexedDB sudah dikosongkan dari device ini.');
+    } catch (error) {
+      draftStatus.value = 'Reset lokal gagal';
+      persistenceError.value = getPersistenceMessage(error);
+    } finally {
+      isResettingLocalData = false;
+      isHydrated.value = true;
+    }
+  }
+
+  async function resetLocalDatabase() {
+    isResettingLocalData = true;
+    globalThis.clearTimeout(autosaveTimer);
+
+    try {
+      await persistence.resetDatabase();
+      applyEmptyLocalState('Database IndexedDB lokal sudah dihapus dan akan dibuat ulang saat diperlukan.');
+    } catch (error) {
+      draftStatus.value = 'Reset database gagal';
+      persistenceError.value = getPersistenceMessage(error);
+    } finally {
+      isResettingLocalData = false;
+      isHydrated.value = true;
+    }
+  }
+
+  async function inspectLocalData() {
+    const snapshot = await persistence.loadSnapshot();
+    return {
+      draft: snapshot.draft || null,
+      queue: snapshot.queue || [],
+      queue_count: (snapshot.queue || []).length,
+    };
+  }
+
   function clearFieldError(field) {
     if (!formErrors.value[field]) {
       return;
@@ -218,7 +274,7 @@ export function useOperatorReportStore(options = {}) {
   }
 
   function scheduleDraftPersist() {
-    if (!isHydrated.value) {
+    if (!isHydrated.value || isResettingLocalData) {
       return;
     }
 
@@ -241,6 +297,7 @@ export function useOperatorReportStore(options = {}) {
     hydrate,
     isHydrated,
     isSyncing,
+    isTandonValid,
     isTotalValid,
     lastSyncResult,
     metrics,
@@ -248,6 +305,10 @@ export function useOperatorReportStore(options = {}) {
     persistenceError,
     productionCapacity,
     queueItems,
+    clearLocalData,
+    inspectLocalData,
+    resetLocalData: clearLocalData,
+    resetLocalDatabase,
     saveDraft,
     shouldShowDefect,
     submitMessage,
@@ -258,6 +319,7 @@ export function useOperatorReportStore(options = {}) {
     totalOutput,
     clearFieldError,
     dispose,
+
   };
 }
 

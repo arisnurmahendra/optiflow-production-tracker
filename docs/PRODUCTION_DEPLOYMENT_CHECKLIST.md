@@ -36,7 +36,7 @@ deploy/gas/*.gs
 2. Jalankan smoke test `runGasTestRunner`.
 3. Cek hidden Script Properties console status-only.
 4. Submit satu data dummy pilot bila memakai sheet staging.
-5. Jalankan closing, adjustment, recap, dashboard read-only, defect category read, dan HRD access dashboard di scope pilot/staging.
+5. Jalankan closing, adjustment, recap, dashboard read-only, defect category read, target master read/update, dan HRD access dashboard di scope pilot/staging.
 
 ## 4. Rollback
 

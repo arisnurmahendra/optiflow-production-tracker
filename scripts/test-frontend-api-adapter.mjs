@@ -80,6 +80,85 @@ if (!defectCategories.data.categories.some((category) => category.defect_categor
   throw new Error('Expected mock GAS to expose seeded defect categories.');
 }
 
+const shiftOptions = await api.getShiftOptions({ session: { simulated_role: 'Operator' } });
+if (!shiftOptions.data.shifts.some((shift) => shift.value === 'SHIFT-1' && shift.label === 'Shift 1')) {
+  throw new Error('Expected mock GAS to expose SHIFT_MASTER shift options.');
+}
+
+const operatorReferences = await api.getOperatorReferenceData({ session: { simulated_role: 'Operator' } });
+if (!operatorReferences.data.lines.some((line) => line.value === 'SMT-02')
+  || !operatorReferences.data.machines.some((machine) => machine.value === 'SLD-14')
+  || !operatorReferences.data.operators.some((operator) => operator.value === 'operator@example.com')) {
+  throw new Error('Expected mock GAS to expose operator reference datasets.');
+}
+
+const productionTarget = await api.getProductionTarget({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-03',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'operator@example.com',
+  },
+});
+if (!productionTarget.data.active_target || productionTarget.data.active_target.target_harian !== 1200) {
+  throw new Error('Expected Operator to read active mock production target.');
+}
+
+await api.upsertProductionTarget({
+  session: { simulated_role: 'Mandor' },
+  target: {
+    factory_date: '',
+    effective_from: '2026-09-03',
+    effective_until: '',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-19',
+    operator_email: 'ALL',
+    target_harian: 1250,
+    scope_type: 'MACHINE_SCOPE',
+    status_aktif: true,
+  },
+});
+const scopedTarget = await api.getProductionTarget({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-03',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-19',
+    operator_email: 'operator@example.com',
+  },
+});
+if (!scopedTarget.data.active_target || scopedTarget.data.active_target.target_harian !== 1250) {
+  throw new Error('Expected Mandor-created machine-scope target to resolve for Operator.');
+}
+
+rejected = false;
+try {
+  await api.upsertProductionTarget({
+    session: { simulated_role: 'Operator' },
+    target: {
+      factory_date: '',
+      effective_from: '2026-09-03',
+      effective_until: '',
+      line_id: 'SMT-02',
+      shift_id: 'SHIFT-1',
+      machine_id: 'SLD-20',
+      operator_email: 'ALL',
+      target_harian: 1250,
+      scope_type: 'MACHINE_SCOPE',
+      status_aktif: true,
+    },
+  });
+} catch {
+  rejected = true;
+}
+if (!rejected) {
+  throw new Error('Expected Operator production target upsert to be rejected.');
+}
+
 await api.upsertDefectCategory({
   session: { simulated_role: 'SuperAdmin' },
   category: {

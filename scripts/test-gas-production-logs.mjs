@@ -177,7 +177,7 @@ const baseRequest = {
     shift_id: 'SHIFT-1',
     machine_id: 'SLD-14',
     target_harian: 1200,
-    tandon: 80,
+    tandon: 0,
     perolehan_ok: 1164,
     perolehan_reject: 36,
     defect_category_id: 'DEF-SOLDER-THIN',

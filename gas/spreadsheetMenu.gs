@@ -121,7 +121,8 @@ var OptiflowSpreadsheetMenu = (function () {
       .concat(seedUserRoles())
       .concat(seedRolePermissions())
       .concat(seedLineMaster())
-      .concat(seedShiftMaster());
+      .concat(seedShiftMaster())
+      .concat(seedTargetMaster());
   }
 
   function seedDefectCategoriesFromMenu() {
@@ -308,21 +309,28 @@ var OptiflowSpreadsheetMenu = (function () {
       Operator: {
         defect_category: ['read'],
         production_report: ['create', 'read'],
+        production_target: ['read'],
+        reference_data: ['read'],
       },
       Mandor: {
         defect_category: ['read', 'create', 'update', 'soft_delete', 'seed'],
         production_report: ['create', 'read'],
+        production_target: ['read', 'create', 'update', 'bulk_update', 'soft_delete'],
         quarantine: ['read', 'approve', 'reject', 'request_correction'],
         daily_closing: ['create', 'read', 'reopen'],
         adjustment: ['create', 'read', 'approve', 'reject'],
         dashboard: ['read'],
+        reference_data: ['read'],
       },
       Management: {
         dashboard: ['read'],
         defect_category: ['read'],
+        production_target: ['read'],
+        reference_data: ['read'],
       },
       HRD: {
         audit_log: ['read'],
+        reference_data: ['read'],
         user_role: ['read'],
       },
       SuperAdmin: OPTIFLOW_PERMISSION_CATALOG,
@@ -370,6 +378,46 @@ var OptiflowSpreadsheetMenu = (function () {
         timezone: OPTIFLOW_APP.timezone,
         status_aktif: true,
         updated_at: new Date().toISOString(),
+      },
+    ]);
+  }
+
+  function seedTargetMaster() {
+    var now = new Date().toISOString();
+    return appendMissingRecords('TARGET_MASTER', 'target_id', [
+      {
+        target_id: '00000000-0000-4000-8000-000000000351',
+        factory_date: '',
+        effective_from: '2026-09-01',
+        effective_until: '',
+        line_id: 'SMT-02',
+        shift_id: 'SHIFT-1',
+        machine_id: 'SLD-14',
+        operator_email: 'ALL',
+        target_harian: 1200,
+        scope_type: 'MACHINE_SCOPE',
+        status_aktif: true,
+        created_by: 'seed@optiflow.local',
+        updated_by: 'seed@optiflow.local',
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        target_id: '00000000-0000-4000-8000-000000000352',
+        factory_date: '',
+        effective_from: '2026-09-01',
+        effective_until: '',
+        line_id: 'SMT-02',
+        shift_id: 'SHIFT-1',
+        machine_id: 'SLD-18',
+        operator_email: 'operator@example.com',
+        target_harian: 1180,
+        scope_type: 'OPERATOR_ONLY',
+        status_aktif: true,
+        created_by: 'seed@optiflow.local',
+        updated_by: 'seed@optiflow.local',
+        created_at: now,
+        updated_at: now,
       },
     ]);
   }

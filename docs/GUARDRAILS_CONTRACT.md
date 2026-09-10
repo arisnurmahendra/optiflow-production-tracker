@@ -149,7 +149,7 @@ Per 2026-09-09, guardrail berikut sudah memiliki implementasi dan test lokal:
 - Callable wrapper `Code.js` diaudit oleh `npm run audit:gas:validation`.
 - API adapter memakai callable allowlist, timeout, normalisasi response, dan safe error.
 - IndexedDB hanya diakses melalui `src/services/indexedDbPersistence.js`; UI melewati `useOperatorReportStore`.
-- `mock_gas.js` meniru response GAS untuk health, session, Script Properties, submit produksi, approval/quarantine, closing, adjustment, recap, dashboard, defect categories, dan HRD access dashboard.
+- `mock_gas.js` meniru response GAS untuk health, session, Script Properties, reference data, target master, submit produksi, approval/quarantine, closing, adjustment, recap, dashboard, defect categories, dan HRD access dashboard.
 - Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, recap, dashboard APIs, active defect validation, defect category CRUD/seed, HRD masked access dashboard, Script Properties maintenance, and native GAS test runner memiliki test script.
 
 Guardrail yang sudah tersedia sebagai artefak M6/M7:

@@ -56,16 +56,31 @@ if (negative.valid || !negative.errors.tandon) {
   throw new Error('Expected negative tandon to fail.');
 }
 
-const overCapacity = validateOperatorReport({
+// Rule baru: target hanya dibandingkan dengan OK + Reject; tandon tetap konteks terpisah.
+const tandonAllowedWhenMet = validateOperatorReport({
   ...initialOperatorReportForm,
   target_harian: 100,
-  tandon: 0,
+  tandon: 10,
   perolehan_ok: 120,
   perolehan_reject: 1,
+  defect_category_id: 'DEF-SOLDER-THIN',
 });
 
-if (overCapacity.valid || !overCapacity.errors.perolehan_ok) {
-  throw new Error('Expected output above target plus tandon to fail.');
+if (!tandonAllowedWhenMet.valid) {
+  throw new Error('Expected tandon to be allowed even when OK+Reject meets target.');
+}
+
+const overTargetWithTandon = validateOperatorReport({
+  ...initialOperatorReportForm,
+  target_harian: 100,
+  tandon: 25,
+  perolehan_ok: 120,
+  perolehan_reject: 1,
+  defect_category_id: 'DEF-SOLDER-THIN',
+});
+
+if (!overTargetWithTandon.valid) {
+  throw new Error('Expected OK+Reject > target with tandon to be valid.');
 }
 
 const zeroReject = createOperatorReportPayload({

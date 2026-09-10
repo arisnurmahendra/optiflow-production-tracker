@@ -2,7 +2,7 @@
 
 > Issue: `OPT-001` / GitHub `#1`  
 > Scope: audit keselarasan dokumen kontrak sebelum implementasi runtime dimulai.  
-> Status: Passed for planning baseline; refreshed against local implemented runtime through `OPT-034` on 2026-09-09.
+> Status: Passed for planning baseline; refreshed against local implemented runtime through `OPT-035` on 2026-09-10.
 
 ## 1. Audit Objective
 

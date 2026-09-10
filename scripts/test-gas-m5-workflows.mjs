@@ -166,6 +166,8 @@ const files = [
   'gas/dashboard.gs',
   'gas/defectCategories.gs',
   'gas/hrd.gs',
+  'gas/referenceData.gs',
+  'gas/targetMaster.gs',
   'Code.js',
 ];
 
@@ -188,7 +190,46 @@ appendPermission('Mandor', 'adjustment', 'create', true);
 appendPermission('Mandor', 'adjustment', 'approve', true);
 appendPermission('Mandor', 'adjustment', 'reject', true);
 appendPermission('Mandor', 'dashboard', 'read', true);
+appendPermission('Mandor', 'production_target', 'read', true);
+appendPermission('Mandor', 'production_target', 'create', true);
+appendPermission('Mandor', 'production_target', 'update', true);
+appendPermission('Mandor', 'production_target', 'bulk_update', true);
+appendPermission('Mandor', 'production_target', 'soft_delete', true);
 appendPermission('Management', 'dashboard', 'read', true);
+appendPermission('Operator', 'production_target', 'read', true);
+
+const newTarget = vm.runInNewContext(`upsertProductionTarget(${JSON.stringify({
+  session: { simulated_role: 'Mandor' },
+  target: {
+    factory_date: '',
+    effective_from: '2026-09-02',
+    effective_until: '',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'ALL',
+    target_harian: 1200,
+    scope_type: 'MACHINE_SCOPE',
+    status_aktif: true,
+  },
+})})`, context);
+if (!newTarget.ok || !newTarget.data.created) {
+  throw new Error('Expected Mandor to create scoped production target.');
+}
+
+const resolvedTarget = vm.runInNewContext(`getProductionTarget(${JSON.stringify({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-02',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'operator@example.com',
+  },
+})})`, context);
+if (!resolvedTarget.ok || !resolvedTarget.data.active_target || resolvedTarget.data.active_target.target_harian !== 1200) {
+  throw new Error('Expected Operator to resolve active production target from TARGET_MASTER.');
+}
 
 const baseRequest = {
   session: { simulated_role: 'Operator' },

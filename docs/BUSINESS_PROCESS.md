@@ -23,24 +23,25 @@ Target OPTIFLOW:
 Status implementasi 2026-09-09:
 - Alur operator sampai queue, sync, append-only submit, duplicate handling, conflict routing, dan Pareto-ready defect capture sudah tersedia.
 - Mandor approval inbox sudah terhubung ke backend approval mutation dengan fallback staged lokal saat environment deploy belum memuat endpoint terbaru.
-- Daily closing, adjustment, batch recap, supervisor control center, management dashboard read-only, ChartJS Operator dashboard, spreadsheet-backed defect CRUD/seed, dan HRD read-only access dashboard sudah tersedia untuk scope runtime lokal.
+- Daily closing, adjustment, batch recap, supervisor control center, management dashboard read-only, ChartJS Operator dashboard, Help/Cara penggunaan per role, spreadsheet-backed defect CRUD/seed, dan HRD read-only access dashboard sudah tersedia untuk scope runtime lokal.
 - Native GAS test runner, checklist deployment, checklist hardening, pilot plan, dan template paket QCC sudah tersedia sebagai artefak M6/M7.
 
 ## 2. Role Dan Hak Akses
 
 | Role | Hak akses utama |
 | :--- | :--- |
-| `Operator` | Submit laporan produksi miliknya sendiri dan melihat status sync. |
-| `Mandor` | Melihat antrian konflik, approve/reject/request correction, closing harian, membaca rekap lini. |
-| `Management` | Membaca dashboard dan rekap tanpa edit. |
+| `Operator` | Submit laporan produksi miliknya sendiri, membaca target aktif, dan melihat status sync. |
+| `Mandor` | Melihat antrian konflik, approve/reject/request correction, closing harian, membaca rekap lini, dan mengatur target harian dalam scope line/shift yang menjadi tanggung jawabnya. |
+| `Management` | Membaca dashboard, target, dan rekap tanpa edit. |
 | `HRD` | Membaca kesiapan akses user, role, dan audit secara privacy-first; pengelolaan detail PII penuh menunggu workflow terpisah yang disahkan kontrak. |
-| `SuperAdmin` | Mengelola konfigurasi, role, dan troubleshooting tingkat lanjut. |
+| `SuperAdmin` | Mengelola konfigurasi, role, target lintas scope, dan troubleshooting tingkat lanjut. |
 
 ## 3. Alur Submit Produksi
 
 1. Operator membuka aplikasi.
 2. Backend mengirim session context sesuai `AUTH_MODE`.
-3. Operator memilih line, shift, machine ID, target harian, tandon, OK, dan reject.
+3. Operator memilih line, shift, machine ID, operator demo, tandon, OK, dan reject. Target harian dibaca otomatis dari `TARGET_MASTER`; field target manual hanya menjadi fallback warning jika target aktif belum ditemukan.
+   Dalam mode development/demo, pilihan line, shift, mesin, dan operator wajib berasal dari dataset referensi backend/mock yang meniru struktur spreadsheet.
 4. Frontend menjalankan validasi Zod.
 5. Jika reject lebih dari 0, operator wajib memilih kategori defect.
 6. Kategori defect berasal dari sheet `DEFECT_CATEGORIES` melalui backend GAS, dengan fallback cache/default hanya untuk development/offline.
@@ -59,7 +60,7 @@ Tahap `OPT-010` hanya menstandardisasi form operator, validasi Zod, pembuatan pa
 ## 4. Alur Offline
 
 1. Operator membuka aplikasi saat masih memiliki koneksi internet untuk memuat `Index.html` dari GAS HTML Service.
-2. Setelah aplikasi terbuka, data referensi seperti pekerja, line, shift, tandon, dan target dapat dibaca dari cache IndexedDB.
+2. Setelah aplikasi terbuka, data referensi seperti pekerja, line, shift, mesin, dan target dapat dibaca dari cache IndexedDB atau response GAS/mock GAS.
 3. Jika koneksi gagal saat input atau submit, payload disimpan di IndexedDB.
 4. UI menampilkan status pending.
 5. Sync worker mencoba ulang saat koneksi membaik.
@@ -193,11 +194,13 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - `Operator`: fokus pada input produksi cepat, draft lokal, status sync, dan submit terakhir. Operator tidak boleh melihat approval, management recap, atau maintenance backend.
 - Navigasi utama menampilkan menu fitur untuk workspace yang sedang aktif, bukan daftar role. Pemilihan workspace dilakukan melalui trigger/dropdown di area nav.
 - Semua workspace default ke menu `Dashboard` saat pertama dipilih.
-- Untuk `Operator`, navigasi fitur berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
+- Untuk `Operator`, navigasi fitur berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, `Status`, dan `Help`.
+- Semua role wajib memiliki menu `Help` yang menjelaskan cara penggunaan aplikasi, urutan proses bisnis role aktif, dan troubleshooting operasional. Help harus mengikuti workspace aktif dan tidak boleh bercampur dengan panel kerja utama ketika sedang dibuka, kecuali konteks shift Operator yang memang wajib selalu tampil.
 - Dashboard Operator menampilkan statistik performa pekerjaan hari ini vs kemarin untuk `Target`, `Tandon`, `OK`, dan `Reject`, komposisi ChartJS doughnut `OK vs Reject` untuk `Hari ini` dan `Kemarin`, serta ChartJS trend detail `Target`, `Realisasi`, `OK`, dan `Reject` dengan pilihan `Daily`, `Weekly`, dan `Monthly`. Angka tengah doughnut berarti capaian `Realisasi / Target`; `Realisasi` pada chart berarti `OK + Reject`; `Tandon` tidak dihitung dalam chart, tetapi tetap ditampilkan sebagai informasi cadangan. Default periode adalah `Daily` dengan 7 hari terakhir. Di development lokal, data ini boleh berasal dari `mock_gas.js` selama response meniru kontrak callable `getOperatorDashboard`.
 - Riwayat Operator menampilkan `recent_submissions` dari response `getOperatorDashboard` ditambah antrean lokal IndexedDB bila ada, sehingga user dapat melihat contoh data lengkap tanpa upload ke GAS.
 - Status Operator menampilkan status draft, queue, sync lokal, dan ringkasan mock/backend tanpa membuka approval atau data manajemen.
 - Header shift aktif Operator berisi line, shift, mesin, dan operator; header ini wajib tampil di semua menu fitur Operator.
+- Penyebutan `shift` harus seragam di UI, dokumen, payload, dan sheet. Opsi shift wajib diambil dari `SHIFT_MASTER` melalui backend ketika tersedia; opsi lokal hanya boleh menjadi fallback development/offline.
 - Menu `Defect` menjadi permukaan khusus untuk kategori reject, QCC factor, severity, dan Pareto mini agar informasi cacat tidak bercampur dengan form input.
 - `Mandor`: fokus pada pending approval, conflict queue, dan daily closing. Default Mandor harus menonjolkan item yang membutuhkan keputusan Human-in-the-Loop.
 - `Supervisor`: fokus pada alert-first control center: conflict, closing terbuka, raw log anomali, dan adjustment. Data berat tetap lazy-load saat view dibuka.
@@ -217,11 +220,17 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 ## 11. Aturan Integritas Bisnis
 
 - `target_harian`, `tandon`, `perolehan_ok`, dan `perolehan_reject` harus integer non-negatif.
+- Target hanya dibandingkan dengan `perolehan_ok + perolehan_reject`. Reject tetap dihitung sebagai realisasi produksi, sedangkan `tandon` adalah konteks buffer/sisa dan tidak boleh mengubah status capaian target.
 - `transaction_id` wajib unik.
 - Koreksi data tidak boleh menghapus transaksi asal.
 - Setiap perubahan keputusan harus punya audit trail.
 - Role menentukan data dan aksi yang boleh diakses.
 - Data setelah closing tidak boleh diubah langsung.
+- Target harian bukan angka bebas operator. Operator hanya membaca target aktif; penggantian target dilakukan oleh Mandor atau role di atasnya sesuai permission dan scope.
+- Penggantian target harus memilih scope eksplisit: semua operator dalam line/shift/mesin, satu operator tertentu, satu line/shift, atau satu machine scope.
+- Bulk update target semua operator tidak boleh memakai asumsi implisit; UI/backend wajib menampilkan dan memvalidasi scope sebelum perubahan disimpan.
+- Update target untuk satu operator tidak boleh mengubah target operator lain.
+- Perubahan target setelah submit tidak boleh menimpa `RAW_LOGS.target_harian` historis karena kolom tersebut adalah snapshot target saat transaksi dibuat.
 - Reject wajib punya kategori defect jika `perolehan_reject > 0`.
 - Kategori defect untuk reject wajib aktif di `DEFECT_CATEGORIES`.
 - Tambah/ubah/nonaktif kategori defect dilakukan di master spreadsheet atau endpoint SuperAdmin/Mandor, harus tervalidasi, audit-log, dan tidak mengubah transaksi historis.
@@ -234,6 +243,15 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Kombinasi `operator_email + factory_date + line_id + shift_id + machine_id` dipakai sebagai sinyal duplicate detection tambahan.
 - Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.
+
+Kontrak target harian:
+1. `Operator` membaca target aktif dan memakai fallback input manual hanya jika master target belum tersedia.
+2. `Mandor` boleh membuat/mengubah target untuk scope line/shift/mesin yang menjadi tanggung jawabnya.
+3. `Supervisor` boleh mengatur target lintas line/shift sesuai permission resmi.
+4. `Management` default read-only agar KPI tidak dipengaruhi oleh pihak pembaca laporan, kecuali perusahaan memberi permission planning eksplisit.
+5. `SuperAdmin` boleh mengatur target lintas scope untuk bootstrap, koreksi administratif, atau troubleshooting.
+6. Jika beberapa target cocok, prioritas resolusi wajib dari paling spesifik: `OPERATOR_ONLY`, `MACHINE_SCOPE`, `LINE_SHIFT`, lalu `ALL_USERS`.
+7. Setiap perubahan target wajib diaudit dengan pembuat/pengubah, waktu, nilai lama/baru, dan scope.
 
 ## 12. Kontrak Session Context Dan Auth Mode
 
@@ -274,14 +292,16 @@ Alur pengaturan user:
 5. Satu role terpilih tetap menjadi `selectedRole` untuk payload session saat ini.
 6. Role pilihan dan visible-role preference boleh disimpan lokal sebagai preferensi demo/trial, tetapi tidak boleh ditulis ke Sheet atau Script Properties.
 7. Semua aksi frontend berikutnya mengirim `session.simulated_role` sesuai `selectedRole`.
-8. Jika `AUTH_MODE=ON`, backend mengabaikan simulated role dan tetap memakai email Google aktif.
+8. Jika role aktif adalah `SuperAdmin`, Pengaturan sesi boleh menyediakan card maintenance untuk membuka console Script Properties allowlisted, melihat pengingat bootstrap/diagnostics, melihat snapshot data lokal, mengosongkan draft/queue IndexedDB, reset/delete database IndexedDB, reload aplikasi, dan menjalankan reset semua data lokal termasuk preferensi Try Role pada browser/device tersebut.
+9. Local-device maintenance SuperAdmin tidak boleh mengubah data Google Sheets, Script Properties, audit backend, atau master data. Viewer localStorage hanya boleh membuka key namespace aplikasi `optiflow.*`.
+10. Jika `AUTH_MODE=ON`, backend mengabaikan simulated role dan tetap memakai email Google aktif.
 
 ## 13. Alur Hidden Maintenance Console SuperAdmin
 
 Hidden maintenance console hanya dipakai untuk troubleshooting konfigurasi production/development oleh `SuperAdmin`.
 
 Aturan akses:
-1. UI console disembunyikan dari navigasi normal dan hanya muncul lewat hidden trigger yang disepakati.
+1. UI console tidak tampil di navigasi operasional normal dan hanya muncul lewat card SuperAdmin di Pengaturan sesi atau hidden trigger yang disepakati.
 2. Console tetap wajib memanggil backend; UI tidak boleh menyimpan, membaca, atau menebak nilai Script Properties.
 3. Backend memvalidasi session dan permission `script_property` sebelum membaca status, update, delete, atau rotate.
 4. `SuperAdmin` tetap membutuhkan permission eksplisit di `ROLE_PERMISSIONS`; tidak ada bypass role.
@@ -294,7 +314,7 @@ Aturan akses:
 11. Semua aksi maintenance wajib dicatat ke `AUDIT_LOGS` dengan metadata tanpa secret.
 
 Alur operasional:
-1. SuperAdmin membuka hidden console.
+1. SuperAdmin membuka maintenance console dari card SuperAdmin di Pengaturan sesi atau hidden trigger emergency.
 2. Frontend meminta status allowlisted Script Properties melalui `apiAdapter.js`.
 3. Backend mengirim status aman dan masked preview untuk config non-secret.
 4. SuperAdmin memilih update, delete, atau rotate.

@@ -45,7 +45,7 @@ Primary contracts:
 - Production GAS calls are wrapped through `google.script.run.withSuccessHandler().withFailureHandler()`.
 
 Current implementation baseline:
-- Runtime implementation is present locally for `OPT-001` through `OPT-034`; issue closure/sync may lag and must follow the tracker protocol.
+- Runtime implementation is present locally for `OPT-001` through `OPT-035`; issue closure/sync may lag and must follow the tracker protocol.
 - Existing frontend modules include API adapter, mock GAS, IndexedDB persistence, operator report store, operator report form, approval inbox UI helpers, defect/Pareto helpers, ChartJS operator dashboard rendering, SweetAlert2 metric help, supervisor control center helpers, management dashboard helpers, HRD read-only access UI, and hidden SuperAdmin settings UI.
 - Existing GAS modules include access gate, adjustments, audit, auth, config, daily closing, dashboard, defect categories, health, HRD access dashboard, permissions, production logs, quarantine, recap, response, script properties, sheets, spreadsheet menu, test runner, and validation.
 - Do not claim production pilot results or final QCC benefits are actual until pilot evidence exists.

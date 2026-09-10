@@ -67,6 +67,11 @@ Resource `test_runner` hanya memiliki action `run` dan ditujukan untuk smoke tes
 
 Resource `audit_log` hanya memiliki action `read` untuk ringkasan audit aman. HRD boleh membaca ringkasan audit akses dan role tanpa payload mentah atau PII mentah.
 
+Resource `reference_data` hanya memiliki action `read` untuk master data non-PII seperti `LINE_MASTER`, `SHIFT_MASTER`, mesin dari data produksi/target, dan daftar operator aktif yang dimasking. Frontend wajib memakai response backend sebagai sumber opsi line/shift/mesin/operator ketika tersedia; fallback lokal hanya boleh dipakai untuk development/offline sementara.
+Mode development/demo wajib memakai response mock GAS dengan shape yang sama agar pertukaran data, queue IndexedDB, dan transaksi submit terasa seperti runtime GAS.
+
+Resource `production_target` memiliki action `read`, `create`, `update`, `bulk_update`, dan `soft_delete`. Operator hanya boleh membaca target aktif. Mandor dan role di atasnya boleh mengatur target sesuai scope permission. Management tetap read-only kecuali diberi permission eksplisit untuk perencanaan target.
+
 ## 4. Schema `RAW_LOGS`
 
 | Kolom | Tipe | Keterangan |
@@ -88,6 +93,41 @@ Resource `audit_log` hanya memiliki action `read` untuk ringkasan audit aman. HR
 | `defect_category_id` | String atau kosong | Kategori defect dominan jika ada reject. |
 | `defect_notes` | String atau kosong | Catatan reject singkat, tidak boleh berisi PII. |
 | `status` | Enum | `ACCEPTED`, `CONFLICT_PENDING`, `QUARANTINED`, `DUPLICATE`, `REJECTED`. |
+
+Catatan target:
+- `target_harian` pada `RAW_LOGS` adalah snapshot target yang berlaku saat operator submit, bukan master target yang diedit langsung di log transaksi.
+- Realisasi target hanya dihitung dari `perolehan_ok + perolehan_reject`; `tandon` tidak masuk pembanding target dan boleh bernilai 0 atau lebih selama tetap integer non-negatif.
+- Frontend Operator wajib membaca target dari backend berdasarkan scope aktif dan tidak menjadikan input manual sebagai sumber utama.
+- Jika target belum ditemukan, fallback manual hanya boleh tampil dengan status warning dan tetap tunduk validasi backend.
+
+## 4A. Schema `TARGET_MASTER`
+
+`TARGET_MASTER` adalah sheet wajib runtime dan menjadi sumber kebenaran target harian.
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `target_id` | String UUID | ID unik target. |
+| `factory_date` | String | Tanggal operasional `YYYY-MM-DD` atau kosong jika memakai range. |
+| `effective_from` | String | Tanggal mulai berlaku `YYYY-MM-DD`. |
+| `effective_until` | String atau kosong | Tanggal akhir berlaku inclusive. |
+| `line_id` | String | Referensi ke `LINE_MASTER`. |
+| `shift_id` | String | Referensi ke `SHIFT_MASTER`. |
+| `machine_id` | String atau `ALL` | Mesin spesifik atau semua mesin dalam scope. |
+| `operator_email` | String atau `ALL` | Operator spesifik atau semua operator dalam scope. |
+| `target_harian` | Integer | Target produksi yang berlaku untuk scope tersebut. |
+| `scope_type` | Enum | `ALL_USERS`, `OPERATOR_ONLY`, `LINE_SHIFT`, atau `MACHINE_SCOPE`. |
+| `status_aktif` | Boolean | `TRUE` jika target masih berlaku. |
+| `created_by` | String | Email/ID role pembuat target. |
+| `updated_by` | String | Email/ID role pengubah terakhir. |
+| `created_at` | String UTC | Waktu dibuat. |
+| `updated_at` | String UTC | Waktu diperbarui. |
+
+Aturan `TARGET_MASTER`:
+- Penggantian target harian hanya boleh dilakukan oleh `Mandor` atau role di atasnya melalui permission `production_target`.
+- Setiap perubahan wajib memilih scope eksplisit: berlaku ke semua operator dalam line/shift/mesin, atau hanya satu operator tertentu.
+- Perubahan target wajib append/audit-friendly: target lama dinonaktifkan atau diakhiri masa berlakunya; jangan mengubah snapshot `target_harian` pada `RAW_LOGS` historis.
+- Jika ada target lebih dari satu yang cocok, prioritas resolusi adalah `OPERATOR_ONLY`, lalu `MACHINE_SCOPE`, lalu `LINE_SHIFT`, lalu `ALL_USERS`.
+- Semua create/update/bulk update/soft delete wajib tervalidasi, diaudit, dan menolak target negatif atau scope ambigu.
 
 ## 5. Schema `LINE_MASTER`
 
@@ -425,3 +465,10 @@ Callable HRD:
 - `users.items[]` memuat `user_id`, `email_masked`, `role`, `status_aktif`, `is_deleted`, `last_login`, `created_at`, dan `updated_at`; tidak boleh memuat `email` mentah, `nama_lengkap_encrypted`, `alamat_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, atau `profile_base64` pada dashboard akses read-only.
 - `role_matrix[]` memuat role, total permission aktif, resource aktif, dan flag readiness.
 - `audit_summary` memuat hitungan action login/RBAC/user-role dan timestamp terakhir; tidak boleh memuat `AUDIT_LOGS.metadata_json` mentah.
+
+Callable reference data:
+- `getShiftOptions({ session, include_inactive? })` membutuhkan permission `reference_data:read`.
+- Response memuat `shifts[]` dari `SHIFT_MASTER` dengan `value`, `label`, `shift_id`, `shift_name`, `start_time`, `end_time`, `timezone`, dan `status_aktif`.
+- `getOperatorReferenceData({ session, include_inactive? })` membutuhkan permission `reference_data:read`.
+- Response memuat `lines[]` dari `LINE_MASTER`, `shifts[]` dari `SHIFT_MASTER`, `machines[]` dari `TARGET_MASTER`/`RAW_LOGS`, dan `operators[]` dari `USER_ROLES` aktif dengan label aman/masked. Ini dipakai Operator di mode development/demo untuk mengganti Line, Shift, Mesin, dan Operator tanpa upload ke GAS.
+- Default response hanya mengembalikan shift aktif. `include_inactive=true` hanya untuk role yang tetap memiliki permission `reference_data:read`.

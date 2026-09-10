@@ -211,6 +211,8 @@ const files = [
   'gas/dashboard.gs',
   'gas/defectCategories.gs',
   'gas/hrd.gs',
+  'gas/referenceData.gs',
+  'gas/targetMaster.gs',
   'gas/spreadsheetMenu.gs',
   'gas/test_runner.gs',
   'Code.js',
@@ -238,7 +240,8 @@ if (spreadsheet.sheets.size !== context.OPTIFLOW_REQUIRED_SHEETS.length) {
 if (context.OptiflowSheets.getRows('USER_ROLES').length === 0
   || context.OptiflowSheets.getRows('ROLE_PERMISSIONS').length === 0
   || context.OptiflowSheets.getRows('LINE_MASTER').length === 0
-  || context.OptiflowSheets.getRows('SHIFT_MASTER').length === 0) {
+  || context.OptiflowSheets.getRows('SHIFT_MASTER').length === 0
+  || context.OptiflowSheets.getRows('TARGET_MASTER').length === 0) {
   throw new Error('Expected menu bootstrap to seed missing dummy master data when AUTH_MODE is not ON.');
 }
 
@@ -277,9 +280,45 @@ if (!permissionRows.some((row) => row.permission_id === 'SuperAdmin.test_runner.
 if (!permissionRows.some((row) => row.permission_id === 'Operator.defect_category.read')) {
   throw new Error('Expected Operator defect category read permission.');
 }
+if (!permissionRows.some((row) => row.permission_id === 'Operator.reference_data.read')) {
+  throw new Error('Expected Operator reference_data read permission.');
+}
 if (!permissionRows.some((row) => row.permission_id === 'HRD.user_role.read')
   || !permissionRows.some((row) => row.permission_id === 'HRD.audit_log.read')) {
   throw new Error('Expected HRD read-only user role and audit log permissions.');
+}
+if (!permissionRows.some((row) => row.permission_id === 'Operator.production_target.read')
+  || !permissionRows.some((row) => row.permission_id === 'Mandor.production_target.bulk_update')
+  || !permissionRows.some((row) => row.permission_id === 'Management.production_target.read')) {
+  throw new Error('Expected role permissions for production target master.');
+}
+
+const shiftOptionsResponse = vm.runInNewContext("getShiftOptions({ session: { simulated_role: 'Operator' } })", context);
+if (!shiftOptionsResponse.ok
+  || !shiftOptionsResponse.data.shifts.some((shift) => shift.value === 'SHIFT-1' && shift.label === 'Shift 1')) {
+  throw new Error('Expected getShiftOptions to return active SHIFT_MASTER options.');
+}
+
+const operatorReferencesResponse = vm.runInNewContext("getOperatorReferenceData({ session: { simulated_role: 'Operator' } })", context);
+if (!operatorReferencesResponse.ok
+  || !operatorReferencesResponse.data.lines.some((line) => line.value === 'SMT-02')
+  || !operatorReferencesResponse.data.machines.some((machine) => machine.value === 'SLD-14')
+  || !operatorReferencesResponse.data.operators.some((operator) => operator.value === 'operator@example.com')) {
+  throw new Error('Expected getOperatorReferenceData to return line, machine, and operator options.');
+}
+
+const targetResponse = vm.runInNewContext(`getProductionTarget(${JSON.stringify({
+  session: { simulated_role: 'Operator' },
+  filter: {
+    factory_date: '2026-09-03',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'operator@example.com',
+  },
+})})`, context);
+if (!targetResponse.ok || !targetResponse.data.active_target || targetResponse.data.active_target.target_harian !== 1200) {
+  throw new Error('Expected seeded TARGET_MASTER row to resolve for Operator.');
 }
 
 const defectSheet = spreadsheet.getSheetByName('DEFECT_CATEGORIES');

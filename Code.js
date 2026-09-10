@@ -182,6 +182,58 @@ function getDefectCategories(request) {
   return OptiflowDefectCategories.list(payload, session);
 }
 
+function getShiftOptions(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateShiftOptionsRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'reference_data',
+    action: 'read',
+  });
+
+  return OptiflowReferenceData.getShiftOptions(payload, session);
+}
+
+function getOperatorReferenceData(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateOperatorReferenceDataRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'reference_data',
+    action: 'read',
+  });
+
+  return OptiflowReferenceData.getOperatorReferenceData(payload, session);
+}
+
+function getProductionTarget(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateProductionTargetGetRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'production_target',
+    action: 'read',
+  });
+
+  return OptiflowTargetMaster.get(payload, session);
+}
+
+function upsertProductionTarget(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateProductionTargetUpsertRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {});
+
+  return OptiflowTargetMaster.upsert(payload, session);
+}
+
+function deactivateProductionTarget(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateProductionTargetDeactivateRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'production_target',
+    action: 'soft_delete',
+  });
+
+  return OptiflowTargetMaster.deactivate(payload, session);
+}
+
 function upsertDefectCategory(request) {
   // Input Validation & Sanitization
   var payload = OptiflowValidation.validateDefectCategoryUpsertRequest(arguments, request);

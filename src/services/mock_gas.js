@@ -17,17 +17,94 @@ const DEFAULT_ROLE_PERMISSIONS = [
   ['Operator', 'production_report', 'create'],
   ['Operator', 'production_report', 'read'],
   ['Operator', 'defect_category', 'read'],
+  ['Operator', 'production_target', 'read'],
+  ['Operator', 'reference_data', 'read'],
   ['Mandor', 'quarantine', 'read'],
   ['Mandor', 'quarantine', 'approve'],
   ['Mandor', 'daily_closing', 'create'],
   ['Mandor', 'dashboard', 'read'],
+  ['Mandor', 'production_target', 'read'],
+  ['Mandor', 'production_target', 'create'],
+  ['Mandor', 'production_target', 'update'],
+  ['Mandor', 'production_target', 'bulk_update'],
+  ['Mandor', 'production_target', 'soft_delete'],
+  ['Mandor', 'reference_data', 'read'],
   ['Management', 'dashboard', 'read'],
   ['Management', 'defect_category', 'read'],
+  ['Management', 'production_target', 'read'],
+  ['Management', 'reference_data', 'read'],
   ['HRD', 'user_role', 'read'],
   ['HRD', 'audit_log', 'read'],
+  ['HRD', 'reference_data', 'read'],
   ['SuperAdmin', 'script_property', 'read_status'],
   ['SuperAdmin', 'test_runner', 'run'],
 ].map(([role, resource, action]) => ({ role, resource, action, is_allowed: true }));
+
+const DEFAULT_SHIFT_MASTER = [
+  { shift_id: 'SHIFT-1', shift_name: 'Shift 1', start_time: '07:00', end_time: '15:00', timezone: 'Asia/Jakarta', status_aktif: true },
+  { shift_id: 'SHIFT-2', shift_name: 'Shift 2', start_time: '15:00', end_time: '23:00', timezone: 'Asia/Jakarta', status_aktif: true },
+  { shift_id: 'SHIFT-3', shift_name: 'Shift 3', start_time: '23:00', end_time: '07:00', timezone: 'Asia/Jakarta', status_aktif: false },
+];
+
+const DEFAULT_LINE_MASTER = [
+  { line_id: 'SMT-01', line_name: 'Surface Mount 01', area: 'Produksi Elektronik', mandor_email: 'mandor@example.com', status_aktif: true },
+  { line_id: 'SMT-02', line_name: 'Surface Mount 02', area: 'Produksi Elektronik', mandor_email: 'mandor@example.com', status_aktif: true },
+  { line_id: 'ASSY-01', line_name: 'Assembly 01', area: 'Final Assembly', mandor_email: 'mandor@example.com', status_aktif: true },
+];
+
+const DEFAULT_TARGET_MASTER = [
+  {
+    target_id: '00000000-0000-4000-8000-000000000351',
+    factory_date: '',
+    effective_from: '2026-09-01',
+    effective_until: '',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-14',
+    operator_email: 'ALL',
+    target_harian: 1200,
+    scope_type: 'MACHINE_SCOPE',
+    status_aktif: true,
+    created_by: 'mandor@example.com',
+    updated_by: 'mandor@example.com',
+    created_at: '2026-09-01T00:00:00.000Z',
+    updated_at: '2026-09-01T00:00:00.000Z',
+  },
+  {
+    target_id: '00000000-0000-4000-8000-000000000352',
+    factory_date: '',
+    effective_from: '2026-09-01',
+    effective_until: '',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-1',
+    machine_id: 'SLD-18',
+    operator_email: 'operator@example.com',
+    target_harian: 1180,
+    scope_type: 'OPERATOR_ONLY',
+    status_aktif: true,
+    created_by: 'mandor@example.com',
+    updated_by: 'mandor@example.com',
+    created_at: '2026-09-01T00:00:00.000Z',
+    updated_at: '2026-09-02T00:00:00.000Z',
+  },
+  {
+    target_id: '00000000-0000-4000-8000-000000000353',
+    factory_date: '',
+    effective_from: '2026-09-01',
+    effective_until: '',
+    line_id: 'SMT-02',
+    shift_id: 'SHIFT-2',
+    machine_id: 'ALL',
+    operator_email: 'ALL',
+    target_harian: 1100,
+    scope_type: 'LINE_SHIFT',
+    status_aktif: true,
+    created_by: 'mandor@example.com',
+    updated_by: 'mandor@example.com',
+    created_at: '2026-09-01T00:00:00.000Z',
+    updated_at: '2026-09-01T00:00:00.000Z',
+  },
+];
 
 const DEFAULT_AUDIT_LOGS = [
   { action: 'SESSION_SUCCESS', created_at: '2026-09-04T01:30:00.000Z' },
@@ -112,6 +189,9 @@ export function createMockGas(options = {}) {
     defectCategories: structuredCloneSafe(options.defectCategories || defaultDefectCategories),
     userRoles: structuredCloneSafe(options.userRoles || DEFAULT_USER_ROLES),
     rolePermissions: structuredCloneSafe(options.rolePermissions || DEFAULT_ROLE_PERMISSIONS),
+    lineMaster: structuredCloneSafe(options.lineMaster || DEFAULT_LINE_MASTER),
+    shiftMaster: structuredCloneSafe(options.shiftMaster || DEFAULT_SHIFT_MASTER),
+    targetMaster: structuredCloneSafe(options.targetMaster || DEFAULT_TARGET_MASTER),
     auditLogs: structuredCloneSafe(options.auditLogs || DEFAULT_AUDIT_LOGS),
     session: options.session || {
       auth_mode: 'OFF',
@@ -220,6 +300,47 @@ export function createMockGas(options = {}) {
         .map((category) => ({ ...category })),
     }),
     getOperatorDashboard: (request = {}) => respond(buildOperatorDashboard(state, request)),
+    getOperatorReferenceData: (request = {}) => {
+      assertMockPermission(state, request, 'reference_data', 'read');
+      const includeInactive = Boolean(request.include_inactive);
+      return respond({
+        lines: state.lineMaster
+          .filter((line) => includeInactive || isTruthy(line.status_aktif))
+          .map((line) => ({
+            value: line.line_id,
+            label: line.line_name ? `${line.line_id} - ${line.line_name}` : line.line_id,
+            line_id: line.line_id,
+            line_name: line.line_name || '',
+            area: line.area || '',
+            status_aktif: isTruthy(line.status_aktif),
+          })),
+        shifts: state.shiftMaster
+          .filter((shift) => includeInactive || isTruthy(shift.status_aktif))
+          .map((shift) => ({
+            value: shift.shift_id,
+            label: shift.shift_name || shift.shift_id,
+            shift_id: shift.shift_id,
+            shift_name: shift.shift_name || '',
+            start_time: shift.start_time || '',
+            end_time: shift.end_time || '',
+            timezone: shift.timezone || 'Asia/Jakarta',
+            status_aktif: isTruthy(shift.status_aktif),
+          })),
+        machines: buildMockMachineOptions(state, includeInactive),
+        operators: state.userRoles
+          .filter((user) => user.role === 'Operator')
+          .filter((user) => includeInactive || isTruthy(user.status_aktif))
+          .filter((user) => !isTruthy(user.is_deleted))
+          .map((user) => ({
+            value: user.email,
+            label: user.username ? `${user.username} (${maskMockEmail(user.email)})` : maskMockEmail(user.email),
+            email: user.email,
+            username: user.username || '',
+            role: 'Operator',
+            status_aktif: isTruthy(user.status_aktif),
+          })),
+      });
+    },
     getSchemaHealthCheck: () => respond({
       spreadsheet_id: 'mock-spreadsheet-id',
       valid: true,
@@ -241,6 +362,29 @@ export function createMockGas(options = {}) {
       }
 
       return respond(state.session);
+    },
+    getShiftOptions: (request = {}) => respond({
+      shifts: state.shiftMaster
+        .filter((shift) => request.include_inactive || isTruthy(shift.status_aktif))
+        .map((shift) => ({
+          value: shift.shift_id,
+          label: shift.shift_name || shift.shift_id,
+          shift_id: shift.shift_id,
+          shift_name: shift.shift_name || '',
+          start_time: shift.start_time || '',
+          end_time: shift.end_time || '',
+          timezone: shift.timezone || 'Asia/Jakarta',
+          status_aktif: isTruthy(shift.status_aktif),
+        })),
+    }),
+    getProductionTarget: (request = {}) => {
+      assertMockPermission(state, request, 'production_target', 'read');
+      const targets = listMockProductionTargets(state, request.filter || {}, request.include_inactive);
+      return respond({
+        active_target: targets.filter((target) => target.status_aktif)[0] || null,
+        targets,
+        scope: request.filter || {},
+      });
     },
     getSupervisorControlCenter: (request = {}) => respond(buildSupervisorControlCenter(state, request)),
     rejectAdjustment: (request = {}) => decideAdjustment(state, request, 'REJECTED', respond),
@@ -345,6 +489,18 @@ export function createMockGas(options = {}) {
         server_received_at: serverReceivedAt,
       });
     },
+    deactivateProductionTarget: (request = {}) => {
+      assertMockPermission(state, request, 'production_target', 'soft_delete');
+      const target = state.targetMaster.find((item) => item.target_id === request.target_id);
+      if (!target) {
+        throw new Error('Production target was not found.');
+      }
+
+      target.status_aktif = false;
+      target.updated_by = state.session.email;
+      target.updated_at = new Date().toISOString();
+      return respond({ target_id: target.target_id, status_aktif: false });
+    },
     upsertDefectCategory: (request = {}) => {
       const category = normalizeMockDefectCategory(request.category || {});
       const existing = state.defectCategories.find((item) =>
@@ -358,6 +514,33 @@ export function createMockGas(options = {}) {
       }
 
       return respond({ category: { ...findDefectCategory(state, category.defect_category_id) } });
+    },
+    upsertProductionTarget: (request = {}) => {
+      const now = new Date().toISOString();
+      const incoming = normalizeMockProductionTarget(request.target || {});
+      const index = state.targetMaster.findIndex((target) => target.target_id === incoming.target_id);
+      const existing = index >= 0 ? state.targetMaster[index] : null;
+      assertMockPermission(state, request, 'production_target', existing ? 'update' : 'create');
+      if (incoming.scope_type !== 'OPERATOR_ONLY') {
+        assertMockPermission(state, request, 'production_target', 'bulk_update');
+      }
+
+      const target = {
+        ...incoming,
+        target_id: incoming.target_id || crypto.randomUUID(),
+        created_by: existing?.created_by || state.session.email,
+        updated_by: state.session.email,
+        created_at: existing?.created_at || now,
+        updated_at: now,
+      };
+
+      if (index >= 0) {
+        state.targetMaster[index] = target;
+      } else {
+        state.targetMaster.push(target);
+      }
+
+      return respond({ target, created: index < 0 });
     },
   });
 
@@ -399,15 +582,19 @@ function createGoogleScriptRunMock(mockGas) {
     closeDailyClosing(payload) { this.invoke('closeDailyClosing', payload); },
     createAdjustment(payload) { this.invoke('createAdjustment', payload); },
     deactivateDefectCategory(payload) { this.invoke('deactivateDefectCategory', payload); },
+    deactivateProductionTarget(payload) { this.invoke('deactivateProductionTarget', payload); },
     deleteScriptProperty(payload) { this.invoke('deleteScriptProperty', payload); },
     getDefectCategories(payload) { this.invoke('getDefectCategories', payload); },
     getHealthCheck(payload) { this.invoke('getHealthCheck', payload); },
     getHrdAccessDashboard(payload) { this.invoke('getHrdAccessDashboard', payload); },
     getManagementDashboard(payload) { this.invoke('getManagementDashboard', payload); },
     getOperatorDashboard(payload) { this.invoke('getOperatorDashboard', payload); },
+    getOperatorReferenceData(payload) { this.invoke('getOperatorReferenceData', payload); },
+    getProductionTarget(payload) { this.invoke('getProductionTarget', payload); },
     getSchemaHealthCheck(payload) { this.invoke('getSchemaHealthCheck', payload); },
     getScriptPropertiesStatus(payload) { this.invoke('getScriptPropertiesStatus', payload); },
     getSessionContext(payload) { this.invoke('getSessionContext', payload); },
+    getShiftOptions(payload) { this.invoke('getShiftOptions', payload); },
     getSupervisorControlCenter(payload) { this.invoke('getSupervisorControlCenter', payload); },
     rejectAdjustment(payload) { this.invoke('rejectAdjustment', payload); },
     rejectQuarantine(payload) { this.invoke('rejectQuarantine', payload); },
@@ -419,6 +606,7 @@ function createGoogleScriptRunMock(mockGas) {
     setScriptProperty(payload) { this.invoke('setScriptProperty', payload); },
     submitProductionReport(payload) { this.invoke('submitProductionReport', payload); },
     upsertDefectCategory(payload) { this.invoke('upsertDefectCategory', payload); },
+    upsertProductionTarget(payload) { this.invoke('upsertProductionTarget', payload); },
   };
 }
 
@@ -501,6 +689,134 @@ function normalizeMockDefectCategory(category) {
   }
 
   return normalized;
+}
+
+function normalizeMockProductionTarget(target) {
+  const normalized = {
+    target_id: String(target.target_id || '').trim().toLowerCase(),
+    factory_date: String(target.factory_date || '').trim(),
+    effective_from: String(target.effective_from || new Date().toISOString().slice(0, 10)).trim(),
+    effective_until: String(target.effective_until || '').trim(),
+    line_id: String(target.line_id || '').trim().toUpperCase(),
+    shift_id: String(target.shift_id || '').trim().toUpperCase(),
+    machine_id: String(target.machine_id || 'ALL').trim().toUpperCase(),
+    operator_email: normalizeMockWildcardEmail(target.operator_email),
+    target_harian: Number(target.target_harian || 0),
+    scope_type: String(target.scope_type || 'LINE_SHIFT').trim().toUpperCase(),
+    status_aktif: target.status_aktif === undefined ? true : isTruthy(target.status_aktif),
+  };
+
+  if (!normalized.line_id || !normalized.shift_id || !Number.isInteger(normalized.target_harian) || normalized.target_harian < 0) {
+    throw new Error('Production target is invalid.');
+  }
+
+  if (!['ALL_USERS', 'OPERATOR_ONLY', 'LINE_SHIFT', 'MACHINE_SCOPE'].includes(normalized.scope_type)) {
+    throw new Error('Production target scope_type is invalid.');
+  }
+
+  return normalized;
+}
+
+function listMockProductionTargets(state, filter, includeInactive) {
+  const scopePriority = {
+    OPERATOR_ONLY: 1,
+    MACHINE_SCOPE: 2,
+    LINE_SHIFT: 3,
+    ALL_USERS: 4,
+  };
+
+  return state.targetMaster
+    .filter((target) => includeInactive || isTruthy(target.status_aktif))
+    .filter((target) => matchesMockTargetScope(target, filter))
+    .filter((target) => isMockTargetDateActive(target, filter.factory_date))
+    .map((target) => ({ ...target, status_aktif: isTruthy(target.status_aktif) }))
+    .sort((a, b) =>
+      scopePriority[a.scope_type] - scopePriority[b.scope_type]
+      || String(b.effective_from || '').localeCompare(String(a.effective_from || '')),
+    );
+}
+
+function normalizeMockWildcardEmail(value) {
+  const normalized = String(value || 'ALL').trim();
+  return normalized.toUpperCase() === 'ALL' ? 'ALL' : normalized.toLowerCase();
+}
+
+function assertMockPermission(state, request, resource, action) {
+  const role = request.session?.simulated_role || state.session.role;
+  const allowed = state.rolePermissions.some((permission) =>
+    permission.role === role
+    && permission.resource === resource
+    && permission.action === action
+    && isTruthy(permission.is_allowed),
+  );
+
+  if (!allowed) {
+    throw new Error(`Mock RBAC denied for ${role}.${resource}.${action}.`);
+  }
+}
+
+function buildMockMachineOptions(state, includeInactive) {
+  const machines = new Set();
+  state.targetMaster
+    .filter((target) => includeInactive || isTruthy(target.status_aktif))
+    .forEach((target) => {
+      if (target.machine_id && target.machine_id !== 'ALL') {
+        machines.add(target.machine_id);
+      }
+    });
+  state.rawLogs.forEach((row) => {
+    if (row.machine_id) {
+      machines.add(row.machine_id);
+    }
+  });
+
+  return [...machines].sort().map((machineId) => ({
+    value: machineId,
+    label: machineId,
+    machine_id: machineId,
+  }));
+}
+
+function maskMockEmail(email = '') {
+  const [name, domain] = String(email).split('@');
+  if (!name || !domain) {
+    return '';
+  }
+
+  return `${name.slice(0, 2)}***@${domain}`;
+}
+
+function matchesMockTargetScope(target, filter = {}) {
+  if (filter.line_id && target.line_id !== String(filter.line_id).toUpperCase()) {
+    return false;
+  }
+
+  if (filter.shift_id && target.shift_id !== String(filter.shift_id).toUpperCase()) {
+    return false;
+  }
+
+  if (filter.machine_id && target.machine_id !== 'ALL' && target.machine_id !== String(filter.machine_id).toUpperCase()) {
+    return false;
+  }
+
+  if (filter.operator_email && target.operator_email !== 'ALL' && target.operator_email !== String(filter.operator_email).toLowerCase()) {
+    return false;
+  }
+
+  return true;
+}
+
+function isMockTargetDateActive(target, factoryDate) {
+  if (!factoryDate) {
+    return true;
+  }
+
+  if (target.factory_date && target.factory_date !== factoryDate) {
+    return false;
+  }
+
+  return target.effective_from <= factoryDate
+    && (!target.effective_until || target.effective_until >= factoryDate);
 }
 
 function isTruthy(value) {

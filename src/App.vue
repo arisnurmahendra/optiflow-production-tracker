@@ -20,10 +20,10 @@ import {
   createParetoRejectSummary,
   getDefectOptions,
   getDefectCategory,
-  lineOptions,
-  machineOptions,
+  lineOptions as fallbackLineOptions,
+  machineOptions as fallbackMachineOptions,
   setDefectCategories,
-  shiftOptions,
+  shiftOptions as fallbackShiftOptions,
 } from './services/operatorReportForm.js';
 import {
   buildDashboardTiles,
@@ -45,10 +45,15 @@ const {
   form,
   formErrors,
   hydrate,
+  isTandonValid,
   isTotalValid,
   normalizeRejectState,
   persistenceError,
   queueItems,
+  clearLocalData,
+  inspectLocalData,
+  resetLocalData,
+  resetLocalDatabase,
   saveDraft,
   shouldShowDefect,
   submitMessage,
@@ -102,6 +107,10 @@ const hrdData = ref(null);
 const hrdLoading = ref(false);
 const hrdError = ref('');
 const hrdLoaded = ref(false);
+const productionTargetData = ref(null);
+const productionTargetLoading = ref(false);
+const productionTargetError = ref('');
+const productionTargetMessage = ref('');
 const operatorDashboardData = ref(null);
 const operatorDashboardLoading = ref(false);
 const operatorDashboardError = ref('');
@@ -110,7 +119,14 @@ const operatorTrendChartCanvas = ref(null);
 let operatorTrendChart = null;
 const operatorDonutChartCanvases = ref([]);
 const operatorDonutCharts = [];
+const lineOptions = ref(fallbackLineOptions);
+const machineOptions = ref(fallbackMachineOptions);
+const operatorOptions = ref([]);
+const selectedOperatorEmail = ref('operator@example.com');
 const defectOptions = ref(defaultDefectOptions);
+const shiftOptions = ref(fallbackShiftOptions);
+const shiftCatalogLoading = ref(false);
+const shiftCatalogError = ref('');
 const defectCatalogLoading = ref(false);
 const defectCatalogError = ref('');
 const defectCatalogVersion = ref(0);
@@ -122,6 +138,25 @@ const operatorTrendPeriods = Object.freeze([
   { value: 'WEEKLY', label: 'Weekly', hint: '8 minggu' },
   { value: 'MONTHLY', label: 'Monthly', hint: '6 bulan' },
 ]);
+const targetScopeOptions = Object.freeze([
+  { value: 'MACHINE_SCOPE', label: 'Mesin ini', hint: 'Berlaku untuk semua operator pada mesin ini.' },
+  { value: 'OPERATOR_ONLY', label: 'Satu operator', hint: 'Berlaku hanya untuk email operator tertentu.' },
+  { value: 'LINE_SHIFT', label: 'Line/shift', hint: 'Berlaku untuk semua mesin dan operator pada line/shift.' },
+  { value: 'ALL_USERS', label: 'Semua user', hint: 'Berlaku untuk seluruh operator dalam line/shift.' },
+]);
+const targetForm = ref({
+  target_id: '',
+  factory_date: '',
+  effective_from: new Date().toISOString().slice(0, 10),
+  effective_until: '',
+  line_id: 'SMT-02',
+  shift_id: 'SHIFT-1',
+  machine_id: 'SLD-14',
+  operator_email: 'ALL',
+  target_harian: 1200,
+  scope_type: 'MACHINE_SCOPE',
+  status_aktif: true,
+});
 const operatorTrendPeriodLabel = computed(() =>
   operatorTrendPeriods.find((period) => period.value === operatorTrendPeriod.value)?.hint || '7 hari',
 );
@@ -169,6 +204,16 @@ const workflowIconMap = Object.freeze({
   management: roleIcons.Management,
   hrd: roleIcons.HRD,
 });
+const helpFeatureView = Object.freeze({
+  id: 'workspace-help',
+  type: 'role-feature',
+  icon: '?',
+  label: 'Help',
+  title: 'Cara penggunaan aplikasi',
+  subtitle: 'Panduan singkat, proses bisnis, dan troubleshooting sesuai role aktif.',
+  badge: 'Panduan',
+});
+const appendHelpFeature = (views) => Object.freeze([...views, helpFeatureView]);
 const operatorFeatureViews = Object.freeze([
   {
     id: 'operator-dashboard',
@@ -217,33 +262,119 @@ const operatorFeatureViews = Object.freeze([
   },
 ]);
 const roleFeatureViews = Object.freeze({
-  operator: operatorFeatureViews,
-  mandor: Object.freeze([
+  operator: appendHelpFeature(operatorFeatureViews),
+  mandor: appendHelpFeature([
     { id: 'mandor-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Dashboard Mandor', subtitle: 'Ringkasan approval, conflict, dan closing harian.', badge: 'Live' },
     { id: 'mandor-approval', type: 'role-feature', icon: '✅', label: 'Approval', title: 'Approval inbox', subtitle: 'Review submit operator yang membutuhkan keputusan.', badge: 'Inbox' },
     { id: 'mandor-conflict', type: 'role-feature', icon: '⚠️', label: 'Conflict', title: 'Conflict queue', subtitle: 'Isolasi data CONFLICT_PENDING sebelum recap.', badge: 'HITL' },
+    { id: 'mandor-target', type: 'role-feature', icon: '🎯', label: 'Target', title: 'Target harian', subtitle: 'Atur target per scope semua operator atau satu operator.', badge: 'Planning' },
     { id: 'mandor-closing', type: 'role-feature', icon: '🔒', label: 'Closing', title: 'Daily closing', subtitle: 'Tutup line/shift setelah review selesai.', badge: 'Shift' },
   ]),
-  supervisor: Object.freeze([
+  supervisor: appendHelpFeature([
     { id: 'supervisor-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Supervisor dashboard', subtitle: 'Alert-first control center per line dan shift.', badge: 'Live' },
     { id: 'supervisor-alerts', type: 'role-feature', icon: '🚨', label: 'Alerts', title: 'Production alerts', subtitle: 'Conflict, closing terbuka, dan adjustment pending.', badge: 'Prioritas' },
     { id: 'supervisor-raw', type: 'role-feature', icon: '📋', label: 'Raw Logs', title: 'Raw logs', subtitle: 'Transaksi produksi terfilter dari backend.', badge: 'Data' },
     { id: 'supervisor-quarantine', type: 'role-feature', icon: '🧯', label: 'Quarantine', title: 'Quarantine', subtitle: 'Anomali dan conflict yang perlu pengawasan.', badge: 'Control' },
     { id: 'supervisor-adjustment', type: 'role-feature', icon: '🛠️', label: 'Adjustment', title: 'Adjustment', subtitle: 'Koreksi pasca closing dengan audit trail.', badge: 'Audit' },
   ]),
-  management: Object.freeze([
+  management: appendHelpFeature([
     { id: 'management-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Read-only dashboard', subtitle: 'KPI final berbasis MASTER_RECAP.', badge: 'Final' },
     { id: 'management-recap', type: 'role-feature', icon: '📈', label: 'Recap', title: 'Recap rows', subtitle: 'Rekap final approved per line/shift/mesin.', badge: 'MASTER' },
     { id: 'management-pareto', type: 'role-feature', icon: '🧩', label: 'Pareto', title: 'Pareto defect', subtitle: 'Prioritas improvement berdasarkan reject.', badge: 'QCC' },
     { id: 'management-pending', type: 'role-feature', icon: '⏳', label: 'Pending', title: 'Pending status', subtitle: 'Quarantine dan closing yang dikecualikan dari KPI.', badge: 'Guard' },
   ]),
-  hrd: Object.freeze([
+  hrd: appendHelpFeature([
     { id: 'hrd-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'HRD dashboard', subtitle: 'Ringkasan akses user dan audit readiness.', badge: 'PII' },
     { id: 'hrd-users', type: 'role-feature', icon: '👤', label: 'Users', title: 'User access', subtitle: 'Kesiapan USER_ROLES tanpa membuka PII mentah.', badge: 'Masked' },
     { id: 'hrd-roles', type: 'role-feature', icon: '🔐', label: 'Roles', title: 'Role audit', subtitle: 'Role assignment dan permission boundary.', badge: 'RBAC' },
     { id: 'hrd-audit', type: 'role-feature', icon: '🧾', label: 'Audit', title: 'Access audit', subtitle: 'Jejak akses dan perubahan role.', badge: 'Logs' },
     { id: 'hrd-privacy', type: 'role-feature', icon: '🛡️', label: 'Privacy', title: 'PII boundary', subtitle: 'Batas informasi sensitif di UI normal.', badge: 'Safe' },
   ]),
+});
+const roleHelpGuides = Object.freeze({
+  operator: Object.freeze({
+    role: 'Operator',
+    headline: 'Input produksi cepat tanpa kehilangan data saat koneksi tidak stabil.',
+    steps: Object.freeze([
+      'Cek header shift aktif: line, shift, mesin, dan operator.',
+      'Buka Input, isi Target, Tandon, OK, Reject, lalu pilih kategori defect jika Reject lebih dari 0.',
+      'Cek Dashboard untuk melihat Target vs Realisasi, OK, Reject, dan Tandon hari ini maupun kemarin.',
+      'Buka Riwayat untuk memastikan submit terakhir tercatat.',
+      'Buka Status untuk melihat draft lokal, queue IndexedDB, retry sync, dan status online.',
+    ]),
+    process: 'Realisasi produksi dihitung dari OK + Reject. Tandon hanya ditampilkan sebagai konteks buffer dan tidak masuk realisasi. Data offline masuk queue lebih dulu, lalu dikirim ke GAS saat online.',
+    troubleshooting: Object.freeze([
+      'Shift kosong: jalankan menu bootstrap/seed master data atau refresh data master dari spreadsheet.',
+      'Kategori defect tidak muncul: minta Mandor/Supervisor/Management memastikan DEFECT_CATEGORIES aktif.',
+      'Queue tidak kosong: cek koneksi, izin GAS, lalu tekan Retry di menu Status.',
+    ]),
+  }),
+  mandor: Object.freeze({
+    role: 'Mandor',
+    headline: 'Menjaga data operator agar valid sebelum masuk proses final.',
+    steps: Object.freeze([
+      'Buka Dashboard untuk melihat pending approval, conflict, dan kesiapan closing.',
+      'Buka Approval untuk review submit operator yang perlu keputusan.',
+      'Buka Conflict untuk memilih data valid atau menolak data bentrok.',
+      'Buka Closing setelah approval dan conflict selesai.',
+    ]),
+    process: 'Mandor adalah Human-in-the-Loop. Data CONFLICT_PENDING tidak boleh masuk rekap sampai Mandor menyelesaikan keputusan.',
+    troubleshooting: Object.freeze([
+      'Data operator tidak terlihat: pastikan operator sudah sync dan status backend bukan draft lokal.',
+      'Conflict tidak bisa selesai: cek permission role dan audit trail.',
+      'Closing gagal: pastikan tidak ada approval/conflict aktif di line dan shift yang sama.',
+    ]),
+  }),
+  supervisor: Object.freeze({
+    role: 'Supervisor',
+    headline: 'Control center untuk memantau alert, raw logs, quarantine, dan adjustment.',
+    steps: Object.freeze([
+      'Buka Dashboard untuk ringkasan line/shift yang perlu perhatian.',
+      'Gunakan Alerts untuk prioritas conflict, closing terbuka, dan adjustment pending.',
+      'Gunakan Raw Logs untuk inspeksi transaksi terfilter.',
+      'Gunakan Quarantine untuk memantau anomali yang belum boleh masuk KPI.',
+      'Gunakan Adjustment hanya sebagai event koreksi terpisah dengan audit trail.',
+    ]),
+    process: 'Supervisor mengawasi kualitas proses, bukan menimpa transaksi asal. Adjustment selalu append-only dan terpisah dari raw event.',
+    troubleshooting: Object.freeze([
+      'Data filter kosong: cek tanggal, line, shift, dan status seed master data.',
+      'Run action gagal: cek permission role dan response validasi GAS.',
+      'Quarantine membesar: eskalasi ke Mandor untuk penyelesaian conflict.',
+    ]),
+  }),
+  management: Object.freeze({
+    role: 'Management',
+    headline: 'Melihat KPI final yang sudah aman dari conflict dan data pending.',
+    steps: Object.freeze([
+      'Buka Dashboard untuk KPI ringkas berbasis MASTER_RECAP.',
+      'Gunakan Recap untuk melihat baris final per line, shift, dan mesin.',
+      'Gunakan Pareto untuk prioritas improvement defect.',
+      'Gunakan Pending untuk melihat data yang dikecualikan dari KPI final.',
+    ]),
+    process: 'Management bersifat read-only. Dashboard hanya memakai data final; quarantine, conflict, dan closing terbuka tetap dipisahkan.',
+    troubleshooting: Object.freeze([
+      'KPI terlihat lebih kecil dari raw logs: cek Pending karena data belum final memang dikecualikan.',
+      'Pareto kosong: belum ada Reject final dengan kategori defect aktif.',
+      'Recap tidak berubah: jalankan Run recap setelah proses approval/closing selesai.',
+    ]),
+  }),
+  hrd: Object.freeze({
+    role: 'HRD',
+    headline: 'Mengelola kesiapan akses user tanpa membuka PII mentah di UI normal.',
+    steps: Object.freeze([
+      'Buka Dashboard untuk ringkasan user aktif, role, dan audit readiness.',
+      'Buka Users untuk memeriksa user masked dan status akses.',
+      'Buka Roles untuk review permission boundary.',
+      'Buka Audit untuk ringkasan event akses.',
+      'Buka Privacy untuk batas data sensitif yang tidak boleh tampil.',
+    ]),
+    process: 'HRD menjaga user directory dan role assignment. Email tampil masked; data sensitif tetap dibatasi oleh backend dan kontrak PII.',
+    troubleshooting: Object.freeze([
+      'User tidak bisa masuk: cek USER_ROLES, AUTH_REQUIRE_EMAIL_LOGIN, dan status_aktif.',
+      'Role tidak sesuai: update role assignment melalui proses authorized, bukan edit bebas tanpa audit.',
+      'Data PII tidak tampil lengkap: itu perilaku yang benar untuk UI operasional.',
+    ]),
+  }),
 });
 const selectedRole = ref(readPreferredRole());
 const visibleRoles = ref(readVisibleRoles());
@@ -252,6 +383,8 @@ const sessionContext = ref(null);
 const sessionLoading = ref(false);
 const sessionError = ref('');
 const sessionMessage = ref('');
+const localMaintenanceSnapshot = ref(null);
+const localMaintenanceError = ref('');
 const supervisorTiles = computed(() => summarizeControlCenter(supervisorData.value || {}));
 const dashboardTiles = computed(() => buildDashboardTiles(dashboardData.value || {}));
 const supervisorRawRows = computed(() => getFirstPageItems(supervisorData.value?.raw_logs));
@@ -372,11 +505,18 @@ const activeShellMeta = computed(() => {
 
   return activeViewMeta.value;
 });
+const activeHelpGuide = computed(() => roleHelpGuides[activeView.value] || roleHelpGuides.operator);
+const selectedOperatorLabel = computed(() =>
+  operatorOptions.value.find((option) => option.value === selectedOperatorEmail.value)?.label
+  || selectedOperatorEmail.value
+  || selectedRole.value
+  || 'Operator',
+);
 const operatorContextItems = computed(() => [
   { label: 'Line', value: operatorDashboardSummary.value.line_id || form.value.line_id || '-' },
   { label: 'Shift', value: operatorDashboardSummary.value.shift_id || form.value.shift_id || '-' },
   { label: 'Mesin', value: operatorDashboardSummary.value.machine_id || form.value.machine_id || '-' },
-  { label: 'Operator', value: operatorDashboardSummary.value.operator_name_masked || selectedRole.value || 'Operator' },
+  { label: 'Operator', value: operatorDashboardSummary.value.operator_name_masked || selectedOperatorLabel.value },
 ]);
 const operatorDashboardSummary = computed(() => operatorDashboardData.value?.summary || {
   factory_date: new Date().toISOString().slice(0, 10),
@@ -392,6 +532,30 @@ const operatorDashboardSummary = computed(() => operatorDashboardData.value?.sum
   tandon_yesterday: Math.max(0, Math.round(Number(form.value.tandon || 0) * 0.9)),
   ok_yesterday: Math.max(0, Math.round(Number(form.value.perolehan_ok || 0) * 0.94)),
   reject_yesterday: Math.max(0, Math.round(Number(form.value.perolehan_reject || 0) * 1.08)),
+});
+const activeProductionTarget = computed(() => productionTargetData.value?.active_target || null);
+const productionTargetRows = computed(() => productionTargetData.value?.targets || []);
+const isTargetLocked = computed(() => Boolean(activeProductionTarget.value && activeProductionTarget.value.status_aktif));
+const targetStatusLabel = computed(() => {
+  if (productionTargetLoading.value) {
+    return 'Memuat target';
+  }
+
+  if (isTargetLocked.value) {
+    return `${activeProductionTarget.value.scope_type} ${formatNumber(activeProductionTarget.value.target_harian)}`;
+  }
+
+  return 'Manual fallback';
+});
+const targetScopePreview = computed(() => {
+  const scope = targetScopeOptions.find((option) => option.value === targetForm.value.scope_type);
+  const parts = [
+    targetForm.value.line_id,
+    targetForm.value.shift_id,
+    targetForm.value.scope_type === 'LINE_SHIFT' || targetForm.value.scope_type === 'ALL_USERS' ? 'ALL mesin' : targetForm.value.machine_id,
+    targetForm.value.scope_type === 'OPERATOR_ONLY' ? targetForm.value.operator_email : 'ALL operator',
+  ];
+  return `${scope?.label || targetForm.value.scope_type}: ${parts.join(' / ')}`;
 });
 const operatorOkPercent = computed(() =>
   Math.min(100, Math.round((Number(operatorDashboardSummary.value.ok_today || 0) / Math.max(1, Number(operatorDashboardSummary.value.target_today || 0))) * 100)),
@@ -461,14 +625,14 @@ const operatorRecentSubmissions = computed(() => [
   ...queueItems.value.map((item) => ({
     transaction_id: item.id,
     device_timestamp: item.time,
-    line_id: item.payload?.line_id || form.value.line_id,
-    shift_id: item.payload?.shift_id || form.value.shift_id,
-    machine_id: item.payload?.machine_id || form.value.machine_id,
-    target_harian: item.payload?.target_harian || 0,
-    tandon: item.payload?.tandon || 0,
-    perolehan_ok: item.payload?.perolehan_ok || 0,
-    perolehan_reject: item.payload?.perolehan_reject || 0,
-    defect_category_id: item.payload?.defect_category_id || '',
+    line_id: item.payload?.payload?.line_id || form.value.line_id,
+    shift_id: item.payload?.payload?.shift_id || form.value.shift_id,
+    machine_id: item.payload?.payload?.machine_id || form.value.machine_id,
+    target_harian: item.payload?.payload?.target_harian || 0,
+    tandon: item.payload?.payload?.tandon || 0,
+    perolehan_ok: item.payload?.payload?.perolehan_ok || 0,
+    perolehan_reject: item.payload?.payload?.perolehan_reject || 0,
+    defect_category_id: item.payload?.payload?.defect_category_id || '',
     status: item.status || 'QUEUED',
   })),
 ]);
@@ -515,9 +679,9 @@ const operatorTaskCards = computed(() => [
   },
   {
     label: 'Validasi input',
-    value: isTotalValid.value ? 'Siap' : 'Cek angka',
-    hint: isTotalValid.value ? 'OK + Reject masih dalam batas.' : 'Total melebihi Target + Tandon.',
-    tone: isTotalValid.value ? 'success' : 'danger',
+    value: 'OK + Reject',
+    hint: 'Target dibandingkan dengan realisasi; Tandon hanya konteks.',
+    tone: 'success',
   },
 ]);
 const mandorTaskCards = computed(() => [
@@ -933,6 +1097,7 @@ async function refreshOperatorDashboard() {
         line_id: form.value.line_id,
         shift_id: form.value.shift_id,
         machine_id: form.value.machine_id,
+        operator_email: selectedOperatorEmail.value,
       }),
       period: operatorTrendPeriod.value,
       page: 1,
@@ -968,18 +1133,153 @@ async function refreshDefectCategories() {
   }
 }
 
+async function refreshOperatorReferenceData() {
+  shiftCatalogLoading.value = true;
+  shiftCatalogError.value = '';
+
+  try {
+    const response = await api.getOperatorReferenceData({
+      session: buildSessionPayload(),
+    });
+    const lines = response.data.lines || [];
+    const shifts = response.data.shifts || [];
+    const machines = response.data.machines || [];
+    const operators = response.data.operators || [];
+    lineOptions.value = normalizeSelectOptions(lines, fallbackLineOptions, 'line_id');
+    shiftOptions.value = normalizeSelectOptions(shifts, fallbackShiftOptions, 'shift_id');
+    machineOptions.value = normalizeSelectOptions(machines, fallbackMachineOptions, 'machine_id');
+    operatorOptions.value = normalizeSelectOptions(operators, [{ value: selectedOperatorEmail.value, label: selectedOperatorEmail.value }], 'email');
+
+    if (!lineOptions.value.some((option) => option.value === form.value.line_id)) {
+      form.value.line_id = lineOptions.value[0]?.value || form.value.line_id;
+    }
+
+    if (!shiftOptions.value.some((option) => option.value === form.value.shift_id)) {
+      form.value.shift_id = shiftOptions.value[0]?.value || form.value.shift_id;
+    }
+
+    if (!machineOptions.value.some((option) => option.value === form.value.machine_id)) {
+      form.value.machine_id = machineOptions.value[0]?.value || form.value.machine_id;
+    }
+
+    if (!operatorOptions.value.some((option) => option.value === selectedOperatorEmail.value)) {
+      selectedOperatorEmail.value = operatorOptions.value[0]?.value || selectedOperatorEmail.value;
+    }
+  } catch (error) {
+    lineOptions.value = fallbackLineOptions;
+    shiftOptions.value = fallbackShiftOptions;
+    machineOptions.value = fallbackMachineOptions;
+    operatorOptions.value = [{ value: selectedOperatorEmail.value, label: selectedOperatorEmail.value }];
+    shiftCatalogError.value = `${getSafeErrorMessage(error)} Memakai data referensi default lokal.`;
+  } finally {
+    shiftCatalogLoading.value = false;
+  }
+}
+
+async function refreshShiftOptions() {
+  return refreshOperatorReferenceData();
+}
+
+async function refreshProductionTarget() {
+  productionTargetLoading.value = true;
+  productionTargetError.value = '';
+
+  try {
+    const response = await api.getProductionTarget({
+      session: buildSessionPayload(),
+      filter: {
+        factory_date: new Date().toISOString().slice(0, 10),
+        line_id: form.value.line_id,
+        shift_id: form.value.shift_id,
+        machine_id: form.value.machine_id,
+        operator_email: selectedOperatorEmail.value || sessionContext.value?.email || 'ALL',
+      },
+      include_inactive: activeView.value === 'mandor',
+    });
+    productionTargetData.value = response.data;
+
+    if (response.data.active_target?.target_harian !== undefined) {
+      form.value.target_harian = Number(response.data.active_target.target_harian || 0);
+    }
+  } catch (error) {
+    productionTargetError.value = `${getSafeErrorMessage(error)} Target memakai fallback manual.`;
+  } finally {
+    productionTargetLoading.value = false;
+  }
+}
+
+function normalizeTargetFormPayload() {
+  const scopeType = targetForm.value.scope_type;
+  return {
+    ...targetForm.value,
+    factory_date: targetForm.value.factory_date || '',
+    machine_id: scopeType === 'LINE_SHIFT' || scopeType === 'ALL_USERS' ? 'ALL' : targetForm.value.machine_id,
+    operator_email: scopeType === 'OPERATOR_ONLY' ? targetForm.value.operator_email : 'ALL',
+    status_aktif: true,
+  };
+}
+
+async function saveProductionTarget() {
+  productionTargetLoading.value = true;
+  productionTargetError.value = '';
+  productionTargetMessage.value = '';
+
+  try {
+    const response = await api.upsertProductionTarget({
+      session: buildSessionPayload(),
+      target: normalizeTargetFormPayload(),
+    });
+    productionTargetMessage.value = response.data.created ? 'Target baru tersimpan.' : 'Target diperbarui.';
+    targetForm.value = {
+      ...targetForm.value,
+      ...response.data.target,
+    };
+    await refreshProductionTarget();
+  } catch (error) {
+    productionTargetError.value = getSafeErrorMessage(error);
+  } finally {
+    productionTargetLoading.value = false;
+  }
+}
+
+async function deactivateProductionTarget(target) {
+  if (!target?.target_id || !window.confirm('Nonaktifkan target ini?')) {
+    return;
+  }
+
+  productionTargetLoading.value = true;
+  productionTargetError.value = '';
+  productionTargetMessage.value = '';
+
+  try {
+    await api.deactivateProductionTarget({
+      session: buildSessionPayload(),
+      target_id: target.target_id,
+    });
+    productionTargetMessage.value = 'Target dinonaktifkan.';
+    await refreshProductionTarget();
+  } catch (error) {
+    productionTargetError.value = getSafeErrorMessage(error);
+  } finally {
+    productionTargetLoading.value = false;
+  }
+}
+
 async function submitOperatorReportWithSession() {
   return submitOperatorReport({
     session: buildSessionPayload(),
     simulatedRole: selectedRole.value,
+    operatorEmail: selectedOperatorEmail.value,
   });
 }
 
 async function syncQueueWithSession() {
-  return syncQueue({
+  const result = await syncQueue({
     session: buildSessionPayload(),
     simulatedRole: selectedRole.value,
   });
+  await refreshOperatorDashboard();
+  return result;
 }
 
 async function refreshSessionContext() {
@@ -1053,6 +1353,7 @@ async function switchView(viewId) {
 
   if (viewId === 'operator' && !operatorDashboardLoaded.value) {
     await refreshOperatorDashboard();
+    await refreshProductionTarget();
   }
 
   if (viewId === 'supervisor' && !supervisorLoaded.value) {
@@ -1082,6 +1383,15 @@ async function switchNavigationItem(item) {
     };
     if (activeView.value === 'operator' && !operatorDashboardLoaded.value) {
       await refreshOperatorDashboard();
+    }
+    if (item.id === 'mandor-target') {
+      targetForm.value = {
+        ...targetForm.value,
+        line_id: form.value.line_id,
+        shift_id: form.value.shift_id,
+        machine_id: form.value.machine_id,
+      };
+      await refreshProductionTarget();
     }
     return;
   }
@@ -1124,6 +1434,30 @@ function formatPercent(value) {
     minimumFractionDigits: Number.isInteger(numericValue) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(numericValue);
+}
+
+function normalizeSelectOptions(rows, fallback, valueKey) {
+  const normalized = rows
+    .map((row) => {
+      const value = row.value || row[valueKey] || row.email || '';
+      return {
+        value,
+        label: row.label || row.name || row[valueKey] || row.email || value,
+      };
+    })
+    .filter((row) => row.value);
+
+  return normalized.length ? normalized : fallback;
+}
+
+async function renderOperatorDashboardCharts() {
+  if (activeView.value !== 'operator' || activeFeatureId.value !== 'operator-dashboard' || operatorDashboardPending.value) {
+    return;
+  }
+
+  await nextTick();
+  renderOperatorTrendChart();
+  renderOperatorDonutCharts();
 }
 
 function renderOperatorTrendChart() {
@@ -1287,9 +1621,16 @@ function renderOperatorTrendChart() {
 }
 
 function setOperatorDonutCanvas(element, index) {
-  if (element) {
-    operatorDonutChartCanvases.value[index] = element;
+  if (!element) {
+    if (operatorDonutCharts[index]) {
+      operatorDonutCharts[index].destroy();
+      operatorDonutCharts[index] = null;
+    }
+    operatorDonutChartCanvases.value[index] = null;
+    return;
   }
+
+  operatorDonutChartCanvases.value[index] = element;
 }
 
 function destroyOperatorDonutCharts() {
@@ -1450,16 +1791,17 @@ onMounted(() => {
   hydrate();
   ensureVisibleActiveView();
   refreshSessionContext();
+  refreshOperatorReferenceData();
   refreshDefectCategories();
+  refreshProductionTarget();
   refreshOperatorDashboard();
-  renderOperatorTrendChart();
-  renderOperatorDonutCharts();
+  renderOperatorDashboardCharts();
   window.addEventListener('keydown', handleKeydown);
 });
 
 watch(operatorComparisonDonuts, async () => {
   await nextTick();
-  renderOperatorDonutCharts();
+  renderOperatorDashboardCharts();
 }, {
   deep: true,
   flush: 'post',
@@ -1467,7 +1809,7 @@ watch(operatorComparisonDonuts, async () => {
 
 watch(operatorTrendHistory, async () => {
   await nextTick();
-  renderOperatorTrendChart();
+  renderOperatorDashboardCharts();
 }, {
   deep: true,
   flush: 'post',
@@ -1477,12 +1819,154 @@ watch(operatorTrendPeriod, () => {
   refreshOperatorDashboard();
 });
 
+watch(() => [activeView.value, activeFeatureId.value, operatorDashboardPending.value], () => {
+  renderOperatorDashboardCharts();
+}, {
+  flush: 'post',
+});
+
+watch(() => [form.value.line_id, form.value.shift_id, form.value.machine_id, selectedOperatorEmail.value], () => {
+  void refreshProductionTarget();
+  if (activeView.value === 'operator') {
+    void refreshOperatorDashboard();
+  }
+});
+
 onBeforeUnmount(() => {
   operatorTrendChart?.destroy();
   destroyOperatorDonutCharts();
   operatorStore.dispose();
   window.removeEventListener('keydown', handleKeydown);
 });
+
+function ensureSuperAdminLocalMaintenance() {
+  return selectedRole.value === 'SuperAdmin';
+}
+
+function readOptiflowLocalStorageSnapshot() {
+  try {
+    return Object.keys(window.localStorage)
+      .filter((key) => key.startsWith('optiflow.'))
+      .sort()
+      .reduce((snapshot, key) => ({
+        ...snapshot,
+        [key]: window.localStorage.getItem(key),
+      }), {});
+  } catch {
+    return {
+      error: 'localStorage tidak tersedia di browser ini.',
+    };
+  }
+}
+
+async function inspectSuperAdminLocalData() {
+  if (!ensureSuperAdminLocalMaintenance()) {
+    return;
+  }
+
+  try {
+    const indexedDbSnapshot = await inspectLocalData();
+    localMaintenanceSnapshot.value = {
+      indexed_db: indexedDbSnapshot,
+      local_storage: readOptiflowLocalStorageSnapshot(),
+    };
+    localMaintenanceError.value = '';
+    sessionMessage.value = 'Snapshot data lokal device berhasil dimuat.';
+  } catch (error) {
+    localMaintenanceError.value = getSafeErrorMessage(error);
+  }
+}
+
+async function clearSuperAdminLocalStores() {
+  if (!ensureSuperAdminLocalMaintenance()) {
+    return;
+  }
+
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Kosongkan IndexedDB?',
+    html: '<p>Draft dan queue lokal akan dihapus, tetapi database IndexedDB tetap ada.</p><p>Preferensi Try Role tidak berubah.</p>',
+    showCancelButton: true,
+    confirmButtonText: 'Kosongkan',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#dc2626',
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  await clearLocalData();
+  sessionMessage.value = 'Draft dan queue IndexedDB sudah dikosongkan.';
+  await inspectSuperAdminLocalData();
+}
+
+async function resetSuperAdminIndexedDb() {
+  if (!ensureSuperAdminLocalMaintenance()) {
+    return;
+  }
+
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Reset database IndexedDB?',
+    html: '<p>Database IndexedDB lokal akan dihapus total dan dibuat ulang saat aplikasi dipakai lagi.</p><p>Data backend tidak berubah.</p>',
+    showCancelButton: true,
+    confirmButtonText: 'Reset database',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#dc2626',
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  await resetLocalDatabase();
+  sessionMessage.value = 'Database IndexedDB lokal sudah direset.';
+  await inspectSuperAdminLocalData();
+}
+
+async function resetSuperAdminLocalData() {
+  if (!ensureSuperAdminLocalMaintenance()) {
+    return;
+  }
+
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Reset data lokal device?',
+    html: '<p>Draft Operator, queue IndexedDB, dan preferensi Try Role di browser ini akan dihapus.</p><p>Data Google Sheets dan Script Properties tidak akan disentuh.</p>',
+    showCancelButton: true,
+    confirmButtonText: 'Reset lokal',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#dc2626',
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  await resetLocalData();
+  clearLocalRolePreferences();
+  selectedRole.value = 'Operator';
+  visibleRoles.value = ['Operator', 'Mandor', 'Management'];
+  activeView.value = 'operator';
+  activeRoleFeatures.value = {
+    ...activeRoleFeatures.value,
+    operator: 'operator-dashboard',
+  };
+  navRoleMenuOpen.value = false;
+  sessionError.value = '';
+  sessionMessage.value = 'Data lokal device sudah direset. Role demo kembali ke default.';
+
+  await refreshSessionContext();
+}
+
+function reloadAppFromSuperAdmin() {
+  if (!ensureSuperAdminLocalMaintenance()) {
+    return;
+  }
+
+  window.location.reload();
+}
 
 function compactFilter(filter) {
   return Object.fromEntries(Object.entries(filter).filter(([, value]) => value !== ''));
@@ -1522,6 +2006,15 @@ function persistVisibleRoles(roles) {
     window.localStorage.setItem('optiflow.visible_roles', JSON.stringify(roles));
   } catch {
     // localStorage is optional; visible roles still work for this session.
+  }
+}
+
+function clearLocalRolePreferences() {
+  try {
+    window.localStorage.removeItem('optiflow.try_role');
+    window.localStorage.removeItem('optiflow.visible_roles');
+  } catch {
+    // localStorage is optional; IndexedDB reset remains available for local data cleanup.
   }
 }
 </script>
@@ -1684,6 +2177,8 @@ function persistVisibleRoles(roles) {
                 {{ option.label }}
               </option>
             </select>
+            <small v-if="shiftCatalogLoading">Memuat referensi dari database.</small>
+            <small v-if="shiftCatalogError" class="field-error">{{ shiftCatalogError }}</small>
             <small v-if="formErrors.shift_id" class="field-error">{{ formErrors.shift_id }}</small>
           </label>
           <label class="field">
@@ -1695,12 +2190,29 @@ function persistVisibleRoles(roles) {
             </select>
             <small v-if="formErrors.machine_id" class="field-error">{{ formErrors.machine_id }}</small>
           </label>
+          <label class="field">
+            <span>Operator</span>
+            <select v-model="selectedOperatorEmail" aria-label="Operator demo">
+              <option v-for="option in operatorOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <small>Mode demo mengikuti dataset USER_ROLES.</small>
+          </label>
         </div>
 
         <div class="number-grid">
           <label class="number-field">
             <span>Target</span>
-            <input v-model.number="form.target_harian" inputmode="numeric" aria-label="Target" @input="clearFieldError('target_harian')" />
+            <input
+              v-model.number="form.target_harian"
+              inputmode="numeric"
+              aria-label="Target"
+              :readonly="isTargetLocked"
+              @input="clearFieldError('target_harian')"
+            />
+            <small :class="isTargetLocked ? 'field-info' : 'field-error'">{{ targetStatusLabel }}</small>
+            <small v-if="productionTargetError" class="field-error">{{ productionTargetError }}</small>
             <small v-if="formErrors.target_harian" class="field-error">{{ formErrors.target_harian }}</small>
           </label>
           <label class="number-field">
@@ -1754,10 +2266,10 @@ function persistVisibleRoles(roles) {
           </div>
         </div>
 
-        <div :class="['check-row', isTotalValid ? 'valid' : 'invalid']">
+        <div :class="['check-row', isTandonValid ? 'valid' : 'invalid']">
           <span>Total perolehan</span>
           <strong>{{ formatNumber(totalOutput) }}</strong>
-          <small>{{ isTotalValid ? 'OK + Reject masih dalam Target + Tandon' : 'OK + Reject melebihi Target + Tandon' }}</small>
+          <small>Realisasi target = OK + Reject. Tandon tidak masuk perhitungan target.</small>
         </div>
 
         <div v-if="persistenceError" class="inline-error" role="alert">
@@ -2007,7 +2519,7 @@ function persistVisibleRoles(roles) {
         </div>
       </aside>
 
-      <section v-if="activeView === 'mandor'" class="panel review-panel role-workspace" aria-labelledby="review-title">
+      <section v-if="activeView === 'mandor' && activeFeatureId !== 'workspace-help'" class="panel review-panel role-workspace" aria-labelledby="review-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Mandor</p>
@@ -2143,9 +2655,134 @@ function persistVisibleRoles(roles) {
             Jalankan closing setelah pending approval dan conflict queue selesai. Closing aktual tetap memakai permission backend dan audit trail.
           </div>
         </div>
+
+        <div v-if="activeFeatureId === 'mandor-target'" class="target-management">
+          <article class="task-panel target-form-panel">
+            <div class="table-heading">
+              <div>
+                <span>Planning</span>
+                <strong>Atur target harian</strong>
+              </div>
+            </div>
+
+            <div class="field-grid target-field-grid">
+              <label class="field">
+                <span>Scope</span>
+                <select v-model="targetForm.scope_type" aria-label="Scope target">
+                  <option v-for="option in targetScopeOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Mulai berlaku</span>
+                <input v-model="targetForm.effective_from" aria-label="Mulai berlaku target" />
+              </label>
+              <label class="field">
+                <span>Sampai</span>
+                <input v-model="targetForm.effective_until" aria-label="Akhir berlaku target" placeholder="Opsional" />
+              </label>
+              <label class="field">
+                <span>Line</span>
+                <select v-model="targetForm.line_id" aria-label="Line target">
+                  <option v-for="option in lineOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Shift</span>
+                <select v-model="targetForm.shift_id" aria-label="Shift target">
+                  <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Machine</span>
+                <select v-model="targetForm.machine_id" :disabled="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" aria-label="Machine target">
+                  <option value="ALL">ALL</option>
+                  <option v-for="option in machineOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Operator email</span>
+                <input v-model="targetForm.operator_email" :readonly="targetForm.scope_type !== 'OPERATOR_ONLY'" aria-label="Operator email target" />
+              </label>
+              <label class="number-field">
+                <span>Target</span>
+                <input v-model.number="targetForm.target_harian" inputmode="numeric" aria-label="Nilai target harian" />
+              </label>
+            </div>
+
+            <div class="hint-box">
+              {{ targetScopePreview }}
+            </div>
+
+            <div v-if="productionTargetError" class="inline-error" role="alert">
+              {{ productionTargetError }}
+            </div>
+            <div v-if="productionTargetMessage" class="inline-info" role="status">
+              {{ productionTargetMessage }}
+            </div>
+
+            <div class="action-row inline-actions">
+              <button class="button secondary" type="button" @click="refreshProductionTarget">
+                Refresh
+              </button>
+              <button class="button primary" type="button" :disabled="productionTargetLoading" @click="saveProductionTarget">
+                Simpan target
+              </button>
+            </div>
+          </article>
+
+          <article class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Target aktif</span>
+                <strong>Scope yang cocok</strong>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Scope</th>
+                    <th>Line/Shift</th>
+                    <th>Machine</th>
+                    <th>Operator</th>
+                    <th>Target</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="target in productionTargetRows" :key="target.target_id">
+                    <td>{{ target.scope_type }}</td>
+                    <td>{{ target.line_id }} / {{ target.shift_id }}</td>
+                    <td>{{ target.machine_id }}</td>
+                    <td>{{ target.operator_email }}</td>
+                    <td>{{ formatNumber(target.target_harian) }}</td>
+                    <td><span :class="['status', target.status_aktif ? 'success' : 'warning']">{{ target.status_aktif ? 'Active' : 'Inactive' }}</span></td>
+                    <td>
+                      <button class="button secondary compact-button" type="button" :disabled="!target.status_aktif" @click="deactivateProductionTarget(target)">
+                        Nonaktifkan
+                      </button>
+                    </td>
+                  </tr>
+                  <tr v-if="productionTargetRows.length === 0">
+                    <td colspan="7">Belum ada target untuk scope ini.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
       </section>
 
-      <section v-if="activeView === 'supervisor'" class="panel supervisor-panel role-workspace" aria-labelledby="supervisor-title">
+      <section v-if="activeView === 'supervisor' && activeFeatureId !== 'workspace-help'" class="panel supervisor-panel role-workspace" aria-labelledby="supervisor-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Supervisor</p>
@@ -2303,7 +2940,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'management'" class="panel dashboard-panel role-workspace" aria-labelledby="dashboard-title">
+      <section v-if="activeView === 'management' && activeFeatureId !== 'workspace-help'" class="panel dashboard-panel role-workspace" aria-labelledby="dashboard-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">Management</p>
@@ -2458,7 +3095,7 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
-      <section v-if="activeView === 'hrd'" class="panel hrd-panel role-workspace" aria-labelledby="hrd-title">
+      <section v-if="activeView === 'hrd' && activeFeatureId !== 'workspace-help'" class="panel hrd-panel role-workspace" aria-labelledby="hrd-title">
         <div class="section-title">
           <div>
             <p class="eyebrow">HRD</p>
@@ -2573,6 +3210,51 @@ function persistVisibleRoles(roles) {
         </div>
       </section>
 
+      <section v-if="activeFeatureId === 'workspace-help' && activeView !== 'settings'" class="panel help-panel role-workspace" aria-labelledby="workspace-help-title">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">{{ activeHelpGuide.role }}</p>
+            <h2 id="workspace-help-title">Cara penggunaan</h2>
+          </div>
+          <span class="badge">Panduan role</span>
+        </div>
+
+        <div class="help-hero">
+          <strong>{{ activeHelpGuide.headline }}</strong>
+          <p>{{ activeHelpGuide.process }}</p>
+        </div>
+
+        <div class="help-grid">
+          <article class="help-card">
+            <div class="table-heading">
+              <div>
+                <span>Langkah kerja</span>
+                <strong>Yang harus dilakukan</strong>
+              </div>
+            </div>
+            <ol class="help-list">
+              <li v-for="step in activeHelpGuide.steps" :key="step">{{ step }}</li>
+            </ol>
+          </article>
+
+          <article class="help-card">
+            <div class="table-heading">
+              <div>
+                <span>Troubleshooting</span>
+                <strong>Jika terjadi masalah</strong>
+              </div>
+            </div>
+            <ul class="help-list">
+              <li v-for="item in activeHelpGuide.troubleshooting" :key="item">{{ item }}</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="hint-box">
+          Help ini mengikuti role/workspace yang sedang aktif. Ganti role melalui tombol Menu di atas nav jika ingin melihat proses bisnis role lain.
+        </div>
+      </section>
+
       <section v-if="activeView === 'settings'" class="panel settings-panel" aria-labelledby="settings-title">
         <div class="section-title">
           <div>
@@ -2623,6 +3305,64 @@ function persistVisibleRoles(roles) {
         </div>
         <div v-if="sessionError" class="inline-error" role="alert">
           {{ sessionError }}
+        </div>
+
+        <div v-if="selectedRole === 'SuperAdmin'" class="superadmin-local-reset">
+          <div>
+            <span>SuperAdmin local maintenance</span>
+            <strong>Database lokal device</strong>
+            <p>Lihat dan bersihkan draft, queue IndexedDB, serta preferensi lokal browser tanpa mengubah data GAS.</p>
+          </div>
+          <div class="superadmin-local-actions">
+            <button class="button secondary compact-button" type="button" @click="inspectSuperAdminLocalData">
+              Lihat data
+            </button>
+            <button class="button secondary compact-button" type="button" @click="clearSuperAdminLocalStores">
+              Kosongkan DB
+            </button>
+            <button class="button danger-button compact-button" type="button" @click="resetSuperAdminIndexedDb">
+              Reset DB
+            </button>
+            <button class="button danger-button compact-button" type="button" @click="resetSuperAdminLocalData">
+              Reset semua
+            </button>
+            <button class="button primary compact-button" type="button" @click="reloadAppFromSuperAdmin">
+              Reload
+            </button>
+          </div>
+          <div v-if="localMaintenanceError" class="inline-error" role="alert">
+            {{ localMaintenanceError }}
+          </div>
+          <pre v-if="localMaintenanceSnapshot" class="local-data-preview">{{ JSON.stringify(localMaintenanceSnapshot, null, 2) }}</pre>
+        </div>
+
+        <div v-if="selectedRole === 'SuperAdmin'" class="superadmin-maintenance-grid">
+          <article class="superadmin-maintenance-card">
+            <div>
+              <span>System configuration</span>
+              <strong>Script Properties</strong>
+              <p>Kelola status/update/delete/rotate key allowlisted melalui backend RBAC dan audit.</p>
+            </div>
+            <div class="superadmin-maintenance-meta">
+              <span class="status success">{{ maintenanceSummary }}</span>
+              <span class="status warning">Secret masked</span>
+            </div>
+            <button class="button primary" type="button" @click="openMaintenanceConsole">
+              Buka console
+            </button>
+          </article>
+
+          <article class="superadmin-maintenance-card">
+            <div>
+              <span>Operational readiness</span>
+              <strong>Bootstrap & diagnostics</strong>
+              <p>Gunakan toolbar spreadsheet untuk sheet default, seed dev, schema health, dan GAS smoke test.</p>
+            </div>
+            <div class="superadmin-maintenance-meta">
+              <span class="status warning">Spreadsheet toolbar</span>
+              <span class="status success">Audit required</span>
+            </div>
+          </article>
         </div>
 
         <div class="hint-box">

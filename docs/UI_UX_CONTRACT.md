@@ -16,7 +16,7 @@ Komposisi visual wajib mengikuti rasio arah desain:
 Rasio ini adalah batas arah desain, bukan ukuran matematis per halaman. Jika ada konflik antara estetika dan keterbacaan operasional, keterbacaan, kontras, dan kecepatan input selalu menang.
 
 Status implementasi 2026-09-09:
-- App shell multi-view, workspace navigation per role, Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, ChartJS Operator dashboard, SweetAlert2 metric help, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
+- App shell multi-view, workspace navigation per role, Help/Cara penggunaan per role, Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, ChartJS Operator dashboard, SweetAlert2 metric help, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
 - Scope M5/M6 runtime lokal sudah menambahkan control center desktop, daily closing action, adjustment review, management dashboard read-only, dan HRD read-only access dashboard sebagai view terpisah.
 - Artefak readiness dan QCC sudah tersedia; permukaan UI produksi yang belum lengkap tetap harus masuk kontrak/issue sebelum diimplementasikan.
 
@@ -28,12 +28,15 @@ Status implementasi 2026-09-09:
 - App shell wajib memisahkan workflow utama ke view/tab yang jelas; jangan menumpuk Operator, Mandor, Supervisor, Management, HRD, dan Pengaturan dalam satu halaman panjang.
 - Setiap workflow role wajib memakai pola production workspace: `Overview`, `Work Queue`, dan `Detail/Action`. Hindari layout yang menampilkan semua fitur sekaligus tanpa prioritas tugas.
 - Nav utama wajib menjadi feature nav untuk workspace yang sedang aktif, baik desktop maupun mobile. Pilihan workspace dipindahkan ke trigger/dropdown nyata di dalam `.app-nav`, bukan pseudo-element `::before`.
-- Semua workspace default ke menu `Dashboard` saat pertama dipilih. Untuk Operator, feature nav wajib berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, dan `Status`.
+- Semua workspace default ke menu `Dashboard` saat pertama dipilih. Semua role wajib memiliki menu `Help` berisi cara penggunaan, proses bisnis role aktif, dan troubleshooting. Untuk Operator, feature nav wajib berisi `Dashboard`, `Input`, `Riwayat`, `Defect`, `Status`, dan `Help`.
 - Trigger/dropdown `.app-nav` saat tertutup hanya menampilkan label mode seperti `Menu Operator`; pilihan workspace muncul setelah diklik.
 - Pada mobile, trigger/dropdown `.nav-context` tetap berada tepat di atas `.app-nav` seperti desktop, bukan berpindah jauh ke area lain.
 - Desktop wajib memakai navigasi workflow di area atas aplikasi; mobile wajib memakai bottom nav button ala aplikasi e-commerce agar bisa dijangkau satu tangan.
 - Desktop nav item wajib memakai pola icon kiri dan text-stack kanan. Tinggi icon harus setara dengan gabungan tinggi label dan badge, dan setiap row nav harus memiliki tinggi tetap agar active state tidak membuat button meloncat.
 - Pengaturan sesi wajib tersedia sebagai top floating button yang benar-benar mengambang di area kanan atas, bukan sebagai item bottom nav mobile.
+- Saat role aktif `SuperAdmin`, Pengaturan sesi boleh menampilkan card maintenance untuk membuka console Script Properties allowlisted, status bootstrap/diagnostics, dan aksi local-device maintenance.
+- Local-device maintenance SuperAdmin boleh mencakup lihat snapshot data lokal, kosongkan draft/queue IndexedDB, reset/delete database IndexedDB, reset semua data lokal termasuk preferensi Try Role, dan reload aplikasi. Aksi clear/reset wajib memakai confirmation dialog dan menjelaskan bahwa Google Sheets, Script Properties, audit backend, dan master data tidak disentuh.
+- Viewer localStorage hanya boleh menampilkan namespace aplikasi `optiflow.*`, bukan seluruh localStorage browser.
 - Mobile bottom nav wajib menampilkan icon besar untuk semua item, tetapi label teks penuh hanya untuk menu aktif agar hemat ruang; badge workflow disembunyikan di mobile dock agar tinggi nav stabil.
 - View berat seperti Supervisor dan Management wajib lazy-load ketika dibuka, bukan otomatis memanggil semua API saat startup Operator.
 - Tombol aksi utama wajib memakai warna solid.
@@ -69,7 +72,10 @@ Token warna awal:
 Tujuan UI mobile operator adalah one-hand reporting.
 
 Wajib:
-- Form ringkas untuk line, shift, machine, target, tandon, OK, reject, dan kategori defect.
+- Form ringkas untuk line, shift, machine, operator demo, target, tandon, OK, reject, dan kategori defect.
+- Pada mode development/demo, field Line, Shift, Mesin, dan Operator harus berupa selector dari response `getOperatorReferenceData` sehingga tester dapat meniru transaksi multi-user tanpa mengganti email Google.
+- UI wajib menjelaskan bahwa target dibandingkan dengan `OK + Reject`; `Tandon` adalah konteks buffer/sisa yang tidak masuk realisasi target dan boleh tetap diisi walaupun target tercapai.
+- Target harian Operator idealnya auto-filled dari `TARGET_MASTER` dan tampil sebagai read-only/locked value. Input manual target hanya boleh tampil sebagai fallback warning jika target master belum tersedia.
 - Input angka besar dan mudah disentuh.
 - Status koneksi, draft, dan sync selalu terlihat.
 - Kategori defect muncul hanya ketika `perolehan_reject > 0`.
@@ -90,8 +96,10 @@ Dilarang:
 - Operator workspace wajib memprioritaskan form submit cepat, lalu draft/sync, lalu riwayat submit terbaru.
 - Operator Dashboard wajib menampilkan komposisi perolehan `Hari ini` dan `Kemarin` sebagai ChartJS doughnut `OK vs Reject`, plus ChartJS trend detail `Target`, `Realisasi`, `OK`, dan `Reject` dengan segmented control horizontal `Daily`, `Weekly`, dan `Monthly`. Angka tengah doughnut wajib menampilkan capaian `Realisasi / Target`, bukan rasio `OK / Realisasi`. `Realisasi` berarti `OK + Reject`, sedangkan `Tandon` tidak masuk garis realisasi dan tampil sebagai informasi pendamping. Default periode adalah `Daily`. Chart wajib memakai container responsif dengan tinggi terikat agar tidak terlalu besar di desktop atau terlalu kecil di mobile. Dalam mode development, UI wajib dapat membaca dummy `getOperatorDashboard` dari `mock_gas.js` agar visual dapat diperiksa tanpa upload ke GAS.
 - Metric strip Operator untuk `Target`, `OK`, `Reject`, dan `Queue` wajib bisa diklik/tap untuk membuka bantuan ringkas yang menjelaskan arti metric, rumus, dan tindakan yang perlu dilakukan user.
+- Help role wajib tersedia sebagai menu fitur, bukan modal tersembunyi, agar user awam dapat memahami urutan kerja tanpa membaca dokumentasi repository. Saat Help aktif, panel kerja role lain tidak boleh ikut tampil sehingga layar tetap fokus.
 - Riwayat dan Status Operator harus punya empty/loading/error state yang jelas, serta tetap menggabungkan informasi mock/backend dengan queue lokal tanpa membuat user membaca log teknis.
 - Mandor workspace wajib action-first: pending approval, conflict, dan closing harus dipisah sebagai task surface yang mudah dipindai.
+- Mandor workspace perlu memiliki target management flow saat `TARGET_MASTER` diimplementasikan: pilih scope target, pilih apakah berlaku untuk semua operator atau satu operator, preview dampak multi-user, lalu simpan dengan audit.
 - Supervisor workspace wajib alert-first: conflict, closing terbuka, adjustment pending, dan transaksi anomali tampil sebelum tabel mentah.
 - Management workspace wajib insight-first dan read-only: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data.
 - HRD workspace wajib privacy-first: dashboard user access, role assignment, permission readiness, dan audit summary tampil dengan PII masked dan tanpa akses secret. Default HRD adalah Dashboard; menu Users menampilkan direktori akses masked, Roles menampilkan matriks permission, Audit menampilkan ringkasan event aman, dan Privacy menampilkan batas data yang tidak boleh dibuka. Walaupun seed `USER_ROLES` dapat berisi username, field terenkripsi, dan `profile_base64`, dashboard akses read-only HRD tidak boleh merender avatar/profile atau PII detail sampai ada workflow HRD detail yang disetujui kontrak.
@@ -139,7 +147,7 @@ Wajib:
 Console maintenance untuk Script Properties harus terasa seperti tool administratif, bukan fitur operasional umum.
 
 Wajib:
-- Tersembunyi dari navigasi normal dan hanya tampil lewat hidden trigger yang disepakati.
+- Tidak tampil di navigasi operasional normal. Console boleh dibuka lewat card SuperAdmin di Pengaturan sesi dan hidden trigger yang disepakati untuk emergency.
 - Menampilkan status allowlisted key, sensitivitas, masked preview untuk config, dan status-only untuk secret.
 - Memakai confirmation dialog untuk update, delete, dan rotate.
 - Menampilkan error aman tanpa stack trace atau nilai property.

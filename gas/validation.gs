@@ -195,10 +195,6 @@ var OptiflowValidation = (function () {
       throw new Error('Input Validation & Sanitization: defect_category_id is required when perolehan_reject is greater than zero.');
     }
 
-    if (normalizedReport.perolehan_ok + normalizedReport.perolehan_reject > normalizedReport.target_harian + normalizedReport.tandon) {
-      throw new Error('Input Validation & Sanitization: perolehan_ok + perolehan_reject must not exceed target_harian + tandon.');
-    }
-
     return {
       session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
       metadata: {
@@ -365,6 +361,99 @@ var OptiflowValidation = (function () {
 
     return {
       session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+    };
+  }
+
+  function validateShiftOptionsRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getShiftOptions', ['session', 'include_inactive'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      include_inactive: normalizeBoolean(payload.include_inactive, 'include_inactive', false),
+    };
+  }
+
+  function validateOperatorReferenceDataRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getOperatorReferenceData', ['session', 'include_inactive'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      include_inactive: normalizeBoolean(payload.include_inactive, 'include_inactive', false),
+    };
+  }
+
+  function validateProductionTargetGetRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getProductionTarget', ['session', 'filter', 'include_inactive'], false);
+    var rawFilter = payload.filter || {};
+    var filter = validateRequestObject([rawFilter], rawFilter, 'getProductionTarget.filter', [
+      'factory_date',
+      'line_id',
+      'shift_id',
+      'machine_id',
+      'operator_email',
+    ], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      filter: {
+        factory_date: normalizeFactoryDate(filter.factory_date, 'factory_date'),
+        line_id: normalizeIdentifier(filter.line_id, 'line_id'),
+        shift_id: normalizeIdentifier(filter.shift_id, 'shift_id'),
+        machine_id: normalizeAllOrIdentifier(filter.machine_id, 'machine_id'),
+        operator_email: normalizeAllOrEmail(filter.operator_email, 'operator_email'),
+      },
+      include_inactive: normalizeBoolean(payload.include_inactive, 'include_inactive', false),
+    };
+  }
+
+  function validateProductionTargetUpsertRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'upsertProductionTarget', ['session', 'target'], false);
+    var target = validateRequestObject([payload.target], payload.target, 'upsertProductionTarget.target', [
+      'target_id',
+      'factory_date',
+      'effective_from',
+      'effective_until',
+      'line_id',
+      'shift_id',
+      'machine_id',
+      'operator_email',
+      'target_harian',
+      'scope_type',
+      'status_aktif',
+    ], false);
+    var normalizedTarget = {
+      target_id: target.target_id ? normalizeUuid(target.target_id, 'target_id') : '',
+      factory_date: target.factory_date ? normalizeFactoryDate(target.factory_date, 'factory_date') : '',
+      effective_from: normalizeFactoryDate(target.effective_from, 'effective_from'),
+      effective_until: target.effective_until ? normalizeFactoryDate(target.effective_until, 'effective_until') : '',
+      line_id: normalizeIdentifier(target.line_id, 'line_id'),
+      shift_id: normalizeIdentifier(target.shift_id, 'shift_id'),
+      machine_id: normalizeAllOrIdentifier(target.machine_id, 'machine_id'),
+      operator_email: normalizeAllOrEmail(target.operator_email, 'operator_email'),
+      target_harian: normalizeInteger(target.target_harian, 'target_harian'),
+      scope_type: normalizeEnum(target.scope_type, 'scope_type', ['ALL_USERS', 'OPERATOR_ONLY', 'LINE_SHIFT', 'MACHINE_SCOPE']),
+      status_aktif: normalizeBoolean(target.status_aktif, 'status_aktif', true),
+    };
+
+    if (normalizedTarget.target_harian < 0) {
+      throw new Error('Input Validation & Sanitization: target_harian must not be negative.');
+    }
+
+    assertTargetScope(normalizedTarget);
+    assertDateRange(normalizedTarget.effective_from, normalizedTarget.effective_until);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      target: normalizedTarget,
+    };
+  }
+
+  function validateProductionTargetDeactivateRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'deactivateProductionTarget', ['session', 'target_id'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      target_id: normalizeUuid(payload.target_id, 'target_id'),
     };
   }
 
@@ -583,6 +672,58 @@ var OptiflowValidation = (function () {
     return normalizeIdentifier(value, fieldName);
   }
 
+  function normalizeAllOrIdentifier(value, fieldName) {
+    if (value === undefined || value === null || value === '') {
+      return 'ALL';
+    }
+
+    if (String(value).trim().toUpperCase() === 'ALL') {
+      return 'ALL';
+    }
+
+    return normalizeIdentifier(value, fieldName);
+  }
+
+  function normalizeAllOrEmail(value, fieldName) {
+    if (value === undefined || value === null || value === '') {
+      return 'ALL';
+    }
+
+    if (String(value).trim().toUpperCase() === 'ALL') {
+      return 'ALL';
+    }
+
+    return normalizeEmail(value, fieldName);
+  }
+
+  function assertTargetScope(target) {
+    if (target.scope_type === 'OPERATOR_ONLY' && target.operator_email === 'ALL') {
+      throw new Error('Input Validation & Sanitization: OPERATOR_ONLY target requires operator_email.');
+    }
+
+    if (target.scope_type !== 'OPERATOR_ONLY' && target.operator_email !== 'ALL') {
+      throw new Error('Input Validation & Sanitization: non-operator target scope must use operator_email ALL.');
+    }
+
+    if (target.scope_type === 'ALL_USERS' && (target.machine_id !== 'ALL' || target.operator_email !== 'ALL')) {
+      throw new Error('Input Validation & Sanitization: ALL_USERS target must use machine_id ALL and operator_email ALL.');
+    }
+
+    if (target.scope_type === 'LINE_SHIFT' && target.machine_id !== 'ALL') {
+      throw new Error('Input Validation & Sanitization: LINE_SHIFT target must use machine_id ALL.');
+    }
+
+    if (target.scope_type === 'MACHINE_SCOPE' && target.machine_id === 'ALL') {
+      throw new Error('Input Validation & Sanitization: MACHINE_SCOPE target requires machine_id.');
+    }
+  }
+
+  function assertDateRange(effectiveFrom, effectiveUntil) {
+    if (effectiveUntil && effectiveUntil < effectiveFrom) {
+      throw new Error('Input Validation & Sanitization: effective_until must be after effective_from.');
+    }
+  }
+
   function normalizeDefectCategoryId(value) {
     var normalized = normalizeIdentifier(value, 'defect_category_id');
 
@@ -740,6 +881,10 @@ var OptiflowValidation = (function () {
     validateHrdAccessDashboardRequest: validateHrdAccessDashboardRequest,
     validateListRequest: validateListRequest,
     validateOperatorDashboardRequest: validateOperatorDashboardRequest,
+    validateOperatorReferenceDataRequest: validateOperatorReferenceDataRequest,
+    validateProductionTargetDeactivateRequest: validateProductionTargetDeactivateRequest,
+    validateProductionTargetGetRequest: validateProductionTargetGetRequest,
+    validateProductionTargetUpsertRequest: validateProductionTargetUpsertRequest,
     validateQuarantineDecisionRequest: validateQuarantineDecisionRequest,
     validateRecapRunRequest: validateRecapRunRequest,
     validateTestRunnerRequest: validateTestRunnerRequest,
@@ -749,5 +894,6 @@ var OptiflowValidation = (function () {
     validateProductionReportSubmitRequest: validateProductionReportSubmitRequest,
     validateSessionContextRequest: validateSessionContextRequest,
     validateSecretRotationRequest: validateSecretRotationRequest,
+    validateShiftOptionsRequest: validateShiftOptionsRequest,
   });
 })();
