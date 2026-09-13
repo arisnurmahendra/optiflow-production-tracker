@@ -43,13 +43,15 @@ var OptiflowRecap = (function () {
 
   function getCleanProductionRows(filter) {
     var approvedTransactions = buildApprovedQuarantineMap();
+    var reviewState = buildProductionReviewState(filter || {});
 
     return OptiflowSheets.getRows(RAW_LOGS).filter(function (row) {
       var status = String(row.status || '').trim().toUpperCase();
       var transactionId = String(row.transaction_id || '').trim().toLowerCase();
       var allowed = status === 'ACCEPTED' || approvedTransactions[transactionId] === true;
+      var review = reviewState[transactionId];
 
-      return allowed && matchesScope(row, filter || {});
+      return allowed && !isReviewExcluded(review) && matchesScope(row, filter || {});
     });
   }
 
@@ -64,6 +66,28 @@ var OptiflowRecap = (function () {
       map[transactionId] = latest[transactionId] === 'APPROVED';
       return map;
     }, {});
+  }
+
+  function buildProductionReviewState(filter) {
+    return OptiflowAdjustments.listLatest(filter).reduce(function (map, adjustment) {
+      if (OptiflowProductionReview.isReviewType(adjustment.adjustment_type)) {
+        map[adjustment.source_transaction_id] = adjustment;
+      }
+      return map;
+    }, {});
+  }
+
+  function isReviewExcluded(review) {
+    if (!review) {
+      return false;
+    }
+
+    if (review.adjustment_type === 'VOID' && review.status === 'APPROVED') {
+      return true;
+    }
+
+    return review.adjustment_type === 'REQUEST_CORRECTION'
+      && (review.status === 'PENDING' || review.status === 'APPROVED');
   }
 
   function createRecapBucket(row) {

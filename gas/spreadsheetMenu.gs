@@ -122,6 +122,7 @@ var OptiflowSpreadsheetMenu = (function () {
       .concat(seedRolePermissions())
       .concat(seedLineMaster())
       .concat(seedShiftMaster())
+      .concat(seedBagianMaster())
       .concat(seedTargetMaster());
   }
 
@@ -214,6 +215,7 @@ var OptiflowSpreadsheetMenu = (function () {
         username: 'operator.demo',
         alamat_encrypted: 'enc:dev-operator-address',
         profile_base64: profileBase64,
+        mandor_email: 'mandor@example.com',
       },
       {
         user_id: 'DEV-Mandor',
@@ -231,6 +233,7 @@ var OptiflowSpreadsheetMenu = (function () {
         username: 'mandor.demo',
         alamat_encrypted: 'enc:dev-mandor-address',
         profile_base64: profileBase64,
+        mandor_email: '',
       },
       {
         user_id: 'DEV-Management',
@@ -248,6 +251,7 @@ var OptiflowSpreadsheetMenu = (function () {
         username: 'management.demo',
         alamat_encrypted: 'enc:dev-management-address',
         profile_base64: profileBase64,
+        mandor_email: '',
       },
       {
         user_id: 'DEV-HRD',
@@ -265,6 +269,7 @@ var OptiflowSpreadsheetMenu = (function () {
         username: 'hrd.demo',
         alamat_encrypted: 'enc:dev-hrd-address',
         profile_base64: profileBase64,
+        mandor_email: '',
       },
       {
         user_id: 'DEV-SuperAdmin',
@@ -282,6 +287,7 @@ var OptiflowSpreadsheetMenu = (function () {
         username: 'superadmin.demo',
         alamat_encrypted: 'enc:dev-superadmin-address',
         profile_base64: profileBase64,
+        mandor_email: '',
       },
       {
         user_id: 'DEV-Inactive-Operator',
@@ -299,6 +305,7 @@ var OptiflowSpreadsheetMenu = (function () {
         username: 'operator.inactive.demo',
         alamat_encrypted: 'enc:dev-inactive-operator-address',
         profile_base64: profileBase64,
+        mandor_email: 'mandor@example.com',
       },
     ]);
   }
@@ -307,15 +314,30 @@ var OptiflowSpreadsheetMenu = (function () {
     var records = [];
     var rolePermissions = {
       Operator: {
+        bagian_master: ['read'],
         defect_category: ['read'],
         production_report: ['create', 'read'],
         production_target: ['read'],
         reference_data: ['read'],
       },
       Mandor: {
+        bagian_master: ['read'],
         defect_category: ['read', 'create', 'update', 'soft_delete', 'seed'],
         production_report: ['create', 'read'],
         production_target: ['read', 'create', 'update', 'bulk_update', 'soft_delete'],
+        production_review: ['read', 'void', 'request_correction', 'pre_closing_correction'],
+        quarantine: ['read', 'approve', 'reject', 'request_correction'],
+        daily_closing: ['create', 'read', 'reopen'],
+        adjustment: ['create', 'read', 'approve', 'reject'],
+        dashboard: ['read'],
+        reference_data: ['read'],
+      },
+      Supervisor: {
+        bagian_master: ['read'],
+        defect_category: ['read', 'create', 'update', 'soft_delete'],
+        production_report: ['read'],
+        production_target: ['read', 'create', 'update', 'bulk_update', 'soft_delete'],
+        production_review: ['read', 'void', 'request_correction', 'pre_closing_correction'],
         quarantine: ['read', 'approve', 'reject', 'request_correction'],
         daily_closing: ['create', 'read', 'reopen'],
         adjustment: ['create', 'read', 'approve', 'reject'],
@@ -323,13 +345,16 @@ var OptiflowSpreadsheetMenu = (function () {
         reference_data: ['read'],
       },
       Management: {
+        bagian_master: ['read', 'create', 'update', 'soft_delete', 'seed'],
         dashboard: ['read'],
         defect_category: ['read'],
         production_target: ['read'],
+        production_review: ['read'],
         reference_data: ['read'],
       },
       HRD: {
         audit_log: ['read'],
+        bagian_master: ['read'],
         reference_data: ['read'],
         user_role: ['read'],
       },
@@ -380,6 +405,25 @@ var OptiflowSpreadsheetMenu = (function () {
         updated_at: new Date().toISOString(),
       },
     ]);
+  }
+
+  function seedBagianMaster() {
+    var now = new Date().toISOString();
+    return appendMissingRecords('BAGIAN_MASTER', 'bagian_id', OPTIFLOW_DEFAULT_BAGIAN_MASTER.map(function (bagian) {
+      return {
+        bagian_id: bagian.bagian_id,
+        bagian_name: bagian.bagian_name,
+        description: bagian.description,
+        unit_rate: bagian.unit_rate,
+        monthly_target_unit: bagian.monthly_target_unit,
+        target_salary: bagian.target_salary,
+        status_aktif: bagian.status_aktif,
+        created_by: 'seed@optiflow.local',
+        updated_by: 'seed@optiflow.local',
+        created_at: now,
+        updated_at: now,
+      };
+    }));
   }
 
   function seedTargetMaster() {

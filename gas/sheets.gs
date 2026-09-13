@@ -41,6 +41,10 @@ var OptiflowSheets = (function () {
       if (sheetName === 'DEFECT_CATEGORIES' && sheet.getLastRow() === 1) {
         seedDefaultDefectCategories(sheet);
       }
+
+      if (sheetName === 'BAGIAN_MASTER' && sheet.getLastRow() === 1) {
+        seedDefaultBagianMaster(sheet);
+      }
     });
 
     return OptiflowResponse.success({
@@ -170,6 +174,65 @@ var OptiflowSheets = (function () {
       });
       inserted.push(category.defect_category_id);
       existingKeys[category.defect_category_id] = true;
+    });
+
+    return inserted;
+  }
+
+  function seedDefaultBagianMaster(sheet) {
+    var now = new Date().toISOString();
+    OPTIFLOW_DEFAULT_BAGIAN_MASTER.forEach(function (bagian) {
+      appendRow(sheet, 'BAGIAN_MASTER', {
+        bagian_id: bagian.bagian_id,
+        bagian_name: bagian.bagian_name,
+        description: bagian.description,
+        unit_rate: bagian.unit_rate,
+        monthly_target_unit: bagian.monthly_target_unit,
+        target_salary: bagian.target_salary,
+        status_aktif: bagian.status_aktif,
+        created_by: 'seed@optiflow.local',
+        updated_by: 'seed@optiflow.local',
+        created_at: now,
+        updated_at: now,
+      });
+    });
+  }
+
+  function seedMissingDefaultBagianMaster() {
+    var spreadsheet = getSpreadsheet();
+    var sheet = spreadsheet.getSheetByName('BAGIAN_MASTER');
+
+    if (!sheet) {
+      throw new Error('Missing required sheet BAGIAN_MASTER. Run bootstrapSheets first.');
+    }
+
+    var existingKeys = getRows('BAGIAN_MASTER').reduce(function (index, bagian) {
+      index[String(bagian.bagian_id || '').trim().toUpperCase()] = true;
+      return index;
+    }, {});
+    var inserted = [];
+    var now = new Date().toISOString();
+
+    OPTIFLOW_DEFAULT_BAGIAN_MASTER.forEach(function (bagian) {
+      if (existingKeys[bagian.bagian_id]) {
+        return;
+      }
+
+      appendRow(sheet, 'BAGIAN_MASTER', {
+        bagian_id: bagian.bagian_id,
+        bagian_name: bagian.bagian_name,
+        description: bagian.description,
+        unit_rate: bagian.unit_rate,
+        monthly_target_unit: bagian.monthly_target_unit,
+        target_salary: bagian.target_salary,
+        status_aktif: bagian.status_aktif,
+        created_by: 'seed@optiflow.local',
+        updated_by: 'seed@optiflow.local',
+        created_at: now,
+        updated_at: now,
+      });
+      inserted.push(bagian.bagian_id);
+      existingKeys[bagian.bagian_id] = true;
     });
 
     return inserted;
@@ -319,5 +382,6 @@ var OptiflowSheets = (function () {
     isFirstRunBootstrapRequired: isFirstRunBootstrapRequired,
     replaceDataRows: replaceDataRows,
     seedMissingDefaultDefectCategories: seedMissingDefaultDefectCategories,
+    seedMissingDefaultBagianMaster: seedMissingDefaultBagianMaster,
   });
 })();

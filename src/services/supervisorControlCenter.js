@@ -1,5 +1,5 @@
 export const defaultSupervisorFilters = Object.freeze({
-  factory_date: '2026-09-02',
+  factory_date: new Date().toISOString().slice(0, 10),
   line_id: 'SMT-02',
   shift_id: 'SHIFT-1',
   status: '',

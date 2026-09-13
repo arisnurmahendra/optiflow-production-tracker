@@ -78,13 +78,29 @@ var OptiflowDashboard = (function () {
       operator_email: operatorEmail,
       status: '',
     };
-    var rawRows = filterRows(OptiflowSheets.getRows('RAW_LOGS'), scopedFilter).filter(function (row) {
+    var rawRows = OptiflowRecap.getCleanProductionRows(scopedFilter).filter(function (row) {
       return String(row.status || '').trim().toUpperCase() !== 'CONFLICT_PENDING';
     }).sort(function (a, b) {
       return String(b.device_timestamp || '').localeCompare(String(a.device_timestamp || ''));
     });
     var todayRows = rawRows.filter(function (row) { return row.factory_date === today; });
     var yesterdayRows = rawRows.filter(function (row) { return row.factory_date === yesterday; });
+    var todayTotals = summarizeProduction(todayRows);
+    var yesterdayTotals = summarizeProduction(yesterdayRows);
+    var todayTarget = resolveDashboardTarget({
+      factory_date: today,
+      line_id: filter.line_id || '',
+      shift_id: filter.shift_id || '',
+      machine_id: filter.machine_id || '',
+      operator_email: operatorEmail,
+    }, todayTotals.target);
+    var yesterdayTarget = resolveDashboardTarget({
+      factory_date: yesterday,
+      line_id: filter.line_id || '',
+      shift_id: filter.shift_id || '',
+      machine_id: filter.machine_id || '',
+      operator_email: operatorEmail,
+    }, yesterdayTotals.target);
 
     return OptiflowResponse.success({
       filters: filter,
@@ -96,14 +112,14 @@ var OptiflowDashboard = (function () {
         shift_id: filter.shift_id || '',
         machine_id: filter.machine_id || '',
         operator_name_masked: maskEmail(operatorEmail),
-        target_today: summarizeProduction(todayRows).target,
-        tandon_today: summarizeProduction(todayRows).tandon,
-        ok_today: summarizeProduction(todayRows).ok,
-        reject_today: summarizeProduction(todayRows).reject,
-        target_yesterday: summarizeProduction(yesterdayRows).target,
-        tandon_yesterday: summarizeProduction(yesterdayRows).tandon,
-        ok_yesterday: summarizeProduction(yesterdayRows).ok,
-        reject_yesterday: summarizeProduction(yesterdayRows).reject,
+        target_today: todayTarget,
+        tandon_today: todayTotals.tandon,
+        ok_today: todayTotals.ok,
+        reject_today: todayTotals.reject,
+        target_yesterday: yesterdayTarget,
+        tandon_yesterday: yesterdayTotals.tandon,
+        ok_yesterday: yesterdayTotals.ok,
+        reject_yesterday: yesterdayTotals.reject,
       },
       trend_history: buildOperatorTrendHistory(rawRows, today, period),
       weekly_history: period === 'DAILY' ? buildOperatorTrendHistory(rawRows, today, period) : [],
@@ -116,6 +132,15 @@ var OptiflowDashboard = (function () {
       },
       pareto: buildOperatorPareto(rawRows),
     });
+  }
+
+  function resolveDashboardTarget(filter, fallbackTarget) {
+    var target = OptiflowTargetMaster.resolveActiveTarget(filter);
+    if (target && target.target_harian > 0) {
+      return target.target_harian;
+    }
+
+    return fallbackTarget;
   }
 
   function joinQuarantineScope(rows) {
@@ -272,8 +297,13 @@ var OptiflowDashboard = (function () {
   }
 
   function summarizeProduction(rows) {
-    return rows.reduce(function (summary, row) {
-      summary.target += toNumber(row.target_harian);
+    var targetByDate = {};
+    var summary = rows.reduce(function (summary, row) {
+      var target = toNumber(row.target_harian);
+      if (target > 0) {
+        var key = String(row.factory_date || row.device_timestamp || 'unknown-date').slice(0, 10);
+        targetByDate[key] = Math.max(targetByDate[key] || 0, target);
+      }
       summary.tandon += toNumber(row.tandon);
       summary.ok += toNumber(row.perolehan_ok);
       summary.reject += toNumber(row.perolehan_reject);
@@ -284,6 +314,10 @@ var OptiflowDashboard = (function () {
       ok: 0,
       reject: 0,
     });
+    summary.target = Object.keys(targetByDate).reduce(function (total, key) {
+      return total + targetByDate[key];
+    }, 0);
+    return summary;
   }
 
   function toOperatorRecentSubmission(row) {

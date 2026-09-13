@@ -170,6 +170,7 @@ var OptiflowValidation = (function () {
     var report = validateRequestObject([payload.payload], payload.payload, 'submitProductionReport.payload', [
       'line_id',
       'shift_id',
+      'bagian_id',
       'machine_id',
       'target_harian',
       'tandon',
@@ -285,6 +286,26 @@ var OptiflowValidation = (function () {
     };
   }
 
+  function validateProductionReviewRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'createProductionReview', [
+      'session',
+      'source_transaction_id',
+      'action',
+      'delta',
+      'reason',
+    ], false);
+    var action = normalizeEnum(payload.action, 'action', ['VOID', 'REQUEST_CORRECTION', 'PRE_CLOSING_CORRECTION']);
+    var normalizedDelta = normalizeAdjustmentDelta(payload.delta || {}, action === 'PRE_CLOSING_CORRECTION');
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      source_transaction_id: normalizeUuid(payload.source_transaction_id, 'source_transaction_id'),
+      action: action,
+      delta: normalizedDelta,
+      reason: normalizeFreeText(payload.reason, 'reason', 240),
+    };
+  }
+
   function validateRecapRunRequest(args, request) {
     var payload = validateFilterRequest(args, request, 'runMasterRecap', false);
     return payload;
@@ -302,6 +323,33 @@ var OptiflowValidation = (function () {
 
   function validateListRequest(args, request, functionName) {
     return validateFilterRequest(args, request, functionName, true);
+  }
+
+  function normalizeAdjustmentDelta(delta, requireContent) {
+    if (typeof delta !== 'object' || delta === null || Array.isArray(delta)) {
+      throw new Error('Input Validation & Sanitization: delta must be an object.');
+    }
+
+    var normalizedDelta = {};
+    ['target_harian', 'tandon', 'perolehan_ok', 'perolehan_reject'].forEach(function (field) {
+      if (delta[field] !== undefined) {
+        normalizedDelta[field] = normalizeSignedInteger(delta[field], field);
+      }
+    });
+
+    if (delta.defect_category_id !== undefined) {
+      normalizedDelta.defect_category_id = normalizeOptionalIdentifier(delta.defect_category_id, 'defect_category_id');
+    }
+
+    if (delta.defect_notes !== undefined) {
+      normalizedDelta.defect_notes = normalizeFreeText(delta.defect_notes, 'defect_notes', OPTIFLOW_PRODUCTION_LOGS.max_defect_notes_length);
+    }
+
+    if (requireContent && Object.keys(normalizedDelta).length === 0) {
+      throw new Error('Input Validation & Sanitization: adjustment delta cannot be empty.');
+    }
+
+    return normalizedDelta;
   }
 
   function validateOperatorDashboardRequest(args, request) {
@@ -358,6 +406,58 @@ var OptiflowValidation = (function () {
 
   function validateDefectCategorySeedRequest(args, request) {
     var payload = validateRequestObject(args, request, 'seedDefectCategories', ['session'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+    };
+  }
+
+  function validateBagianMasterListRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'getBagianMaster', ['session', 'include_inactive'], true);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      include_inactive: normalizeBoolean(payload.include_inactive, 'include_inactive', false),
+    };
+  }
+
+  function validateBagianMasterUpsertRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'upsertBagianMaster', ['session', 'bagian'], false);
+    var bagian = validateRequestObject([payload.bagian], payload.bagian, 'upsertBagianMaster.bagian', [
+      'bagian_id',
+      'bagian_name',
+      'description',
+      'unit_rate',
+      'monthly_target_unit',
+      'target_salary',
+      'status_aktif',
+    ], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      bagian: {
+        bagian_id: normalizeIdentifier(bagian.bagian_id, 'bagian_id'),
+        bagian_name: normalizeFreeText(bagian.bagian_name, 'bagian_name', 80),
+        description: normalizeFreeText(bagian.description, 'description', 160),
+        unit_rate: normalizeBoundedInteger(bagian.unit_rate, 'unit_rate', 0, 999999),
+        monthly_target_unit: normalizeBoundedInteger(bagian.monthly_target_unit, 'monthly_target_unit', 0, 999999),
+        target_salary: normalizeBoundedInteger(bagian.target_salary, 'target_salary', 0, 999999999),
+        status_aktif: normalizeBoolean(bagian.status_aktif, 'status_aktif', true),
+      },
+    };
+  }
+
+  function validateBagianMasterDeactivateRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'deactivateBagianMaster', ['session', 'bagian_id'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      bagian_id: normalizeIdentifier(payload.bagian_id, 'bagian_id'),
+    };
+  }
+
+  function validateBagianMasterSeedRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'seedBagianMaster', ['session'], true);
 
     return {
       session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
@@ -505,6 +605,7 @@ var OptiflowValidation = (function () {
         factory_date: filter.factory_date ? normalizeFactoryDate(filter.factory_date, 'factory_date') : '',
         line_id: filter.line_id ? normalizeIdentifier(filter.line_id, 'line_id') : '',
         shift_id: filter.shift_id ? normalizeIdentifier(filter.shift_id, 'shift_id') : '',
+        bagian_id: filter.bagian_id ? normalizeIdentifier(filter.bagian_id, 'bagian_id') : '',
         machine_id: filter.machine_id ? normalizeIdentifier(filter.machine_id, 'machine_id') : '',
         operator_email: filter.operator_email ? normalizeEmail(filter.operator_email, 'operator_email') : '',
         status: filter.status ? normalizeIdentifier(filter.status, 'status') : '',
@@ -803,6 +904,20 @@ var OptiflowValidation = (function () {
     return numberValue;
   }
 
+  function normalizeBoundedInteger(value, fieldName, minValue, maxValue) {
+    var numberValue = Number(value);
+
+    if (!isFinite(numberValue) || Math.floor(numberValue) !== numberValue) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' must be an integer.');
+    }
+
+    if (numberValue < minValue || numberValue > maxValue) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' is outside allowed bounds.');
+    }
+
+    return numberValue;
+  }
+
   function normalizeSignedInteger(value, fieldName) {
     var numberValue = Number(value);
 
@@ -873,6 +988,10 @@ var OptiflowValidation = (function () {
     validatePermissionCheckRequest: validatePermissionCheckRequest,
     validateAdjustmentCreateRequest: validateAdjustmentCreateRequest,
     validateAdjustmentDecisionRequest: validateAdjustmentDecisionRequest,
+    validateBagianMasterDeactivateRequest: validateBagianMasterDeactivateRequest,
+    validateBagianMasterListRequest: validateBagianMasterListRequest,
+    validateBagianMasterSeedRequest: validateBagianMasterSeedRequest,
+    validateBagianMasterUpsertRequest: validateBagianMasterUpsertRequest,
     validateDailyClosingRequest: validateDailyClosingRequest,
     validateDefectCategoryDeactivateRequest: validateDefectCategoryDeactivateRequest,
     validateDefectCategoryListRequest: validateDefectCategoryListRequest,
@@ -885,6 +1004,7 @@ var OptiflowValidation = (function () {
     validateProductionTargetDeactivateRequest: validateProductionTargetDeactivateRequest,
     validateProductionTargetGetRequest: validateProductionTargetGetRequest,
     validateProductionTargetUpsertRequest: validateProductionTargetUpsertRequest,
+    validateProductionReviewRequest: validateProductionReviewRequest,
     validateQuarantineDecisionRequest: validateQuarantineDecisionRequest,
     validateRecapRunRequest: validateRecapRunRequest,
     validateTestRunnerRequest: validateTestRunnerRequest,

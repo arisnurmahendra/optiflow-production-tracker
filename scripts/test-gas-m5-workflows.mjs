@@ -160,6 +160,7 @@ const files = [
   'gas/auth.gs',
   'gas/dailyClosing.gs',
   'gas/adjustments.gs',
+  'gas/productionReview.gs',
   'gas/quarantine.gs',
   'gas/productionLogs.gs',
   'gas/recap.gs',
@@ -189,6 +190,10 @@ appendPermission('Mandor', 'daily_closing', 'reopen', true);
 appendPermission('Mandor', 'adjustment', 'create', true);
 appendPermission('Mandor', 'adjustment', 'approve', true);
 appendPermission('Mandor', 'adjustment', 'reject', true);
+appendPermission('Mandor', 'production_review', 'read', true);
+appendPermission('Mandor', 'production_review', 'void', true);
+appendPermission('Mandor', 'production_review', 'request_correction', true);
+appendPermission('Mandor', 'production_review', 'pre_closing_correction', true);
 appendPermission('Mandor', 'dashboard', 'read', true);
 appendPermission('Mandor', 'production_target', 'read', true);
 appendPermission('Mandor', 'production_target', 'create', true);
@@ -256,6 +261,39 @@ const baseRequest = {
 const accepted = vm.runInNewContext(`submitProductionReport(${JSON.stringify(baseRequest)})`, context);
 if (accepted.data.status !== 'ACCEPTED') {
   throw new Error('Expected first report accepted.');
+}
+
+const correction = vm.runInNewContext(`createProductionReview(${JSON.stringify({
+  session: { simulated_role: 'Mandor' },
+  source_transaction_id: baseRequest.metadata.transaction_id,
+  action: 'PRE_CLOSING_CORRECTION',
+  delta: { perolehan_ok: 5, perolehan_reject: 0 },
+  reason: 'Pre-closing recount',
+})})`, context);
+if (correction.data.status !== 'APPROVED') {
+  throw new Error('Expected pre-closing correction to be approved immediately.');
+}
+
+const voidRequest = structuredClone(baseRequest);
+voidRequest.metadata.transaction_id = '550e8400-e29b-41d4-a716-446655440013';
+voidRequest.metadata.device_timestamp = '2026-09-02T01:30:00.000Z';
+voidRequest.payload.perolehan_ok = 100;
+voidRequest.payload.perolehan_reject = 4;
+
+const voidSource = vm.runInNewContext(`submitProductionReport(${JSON.stringify(voidRequest)})`, context);
+if (voidSource.data.status !== 'ACCEPTED') {
+  throw new Error('Expected void source report accepted.');
+}
+
+const voidReview = vm.runInNewContext(`createProductionReview(${JSON.stringify({
+  session: { simulated_role: 'Mandor' },
+  source_transaction_id: voidRequest.metadata.transaction_id,
+  action: 'VOID',
+  delta: {},
+  reason: 'Duplicate input before closing',
+})})`, context);
+if (voidReview.data.status !== 'APPROVED') {
+  throw new Error('Expected pre-closing void to be approved immediately.');
 }
 
 const conflictRequest = structuredClone(baseRequest);
@@ -353,7 +391,7 @@ if (recap.data.rows_written !== 2 || recapAgain.data.rows_written !== 2) {
 }
 
 const dashboard = vm.runInNewContext(`getManagementDashboard(${JSON.stringify(recapRequest)})`, context);
-if (dashboard.data.summary.ok_total !== 2065 || dashboard.data.summary.reject_total !== 50 || dashboard.data.rows.total !== 2) {
+if (dashboard.data.summary.ok_total !== 2070 || dashboard.data.summary.reject_total !== 50 || dashboard.data.rows.total !== 2) {
   throw new Error('Expected management dashboard to read clean MASTER_RECAP totals only.');
 }
 

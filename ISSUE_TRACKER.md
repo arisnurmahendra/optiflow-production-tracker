@@ -54,10 +54,107 @@ Status:
 | `M5 - Supervisor Control & Recap` | Mandor/Supervisor bisa review, closing, dan recap. | Quarantine UI, closing, adjustment, `MASTER_RECAP`, dashboard operational. |
 | `M6 - Security, Testing & Deployment` | Hardening dan deploy siap produksi. | `test_runner.gs`, smoke test, POL checklist, Clasp deployment. |
 | `M7 - QCC Report & Rollout` | Pilot dan materi QCC siap. | Pilot 1 line/shift, SOP, QCC Step 1-8, rollout decision. |
+| `M8 - Internationalization` | Aplikasi siap alih bahasa ID/EN/CN. | Kontrak i18n, dictionary, language switcher, fallback, dan translation review siap setelah proses bisnis stabil. |
+| `M9 - HRD Workforce & Attendance` | HRD workspace menjadi workflow data karyawan, absensi, akses, dan audit yang siap dipakai. | HRD memiliki 4 menu utama: Dashboard, Karyawan, Absensi, dan Akses & Audit; PII tetap aman dan data payroll-ready tersedia. |
+| `M10 - Management Executive Workspace` | Management workspace menjadi pusat keputusan eksekutif yang ringkas, role-fit, dan tidak bercampur dengan pekerjaan operasional. | Management memiliki menu Dashboard, Bagian & Upah, Produksi, Absensi, Risiko & Pareto, Risiko & Pending, serta kandidat Laporan/Export jika dibutuhkan. |
+| `M11 - Supervisor QC Workspace` | Supervisor workspace menjadi pusat verifikasi produksi, kualitas, target tim, dan koreksi sebelum data masuk rekap final. | Supervisor memiliki menu Dashboard, Verifikasi QC, Defect & Pareto, Closing & Koreksi, Target & Tim, serta Detail Data sebagai drilldown aman. |
+| `M12 - Mandor Field Operations Workspace` | Mandor workspace menjadi pusat kerja lapangan untuk absensi tim, target harian, penerimaan hasil operator, koreksi sebelum closing, dan request defect. | Mandor memiliki menu Dashboard, Absensi Tim, Target Harian, Hasil Operator, Approval & Koreksi, Closing Harian, Defect Request, dan Help. |
 
-## 4. Issue Backlog
+## 4. Monitoring Pekerjaan
 
-Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Snapshot 2026-09-09: runtime lokal sudah mencakup implementasi sampai `OPT-034`; item berstatus `Review` tetap menunggu verifikasi/closure GitHub sesuai protokol sebelum ditandai `Closed`.
+Gunakan checklist ini sebagai ringkasan cepat progres pekerjaan. Milestone diberi `[x]` hanya jika semua issue di dalamnya sudah `Closed`; issue diberi `[x]` jika statusnya `Closed`.
+
+- [ ] `M0 - Contracts & Planning` - 2/4 issue closed
+  - [x] `OPT-001` Finalize documentation contract audit (`Closed`)
+  - [x] `OPT-002` Create UI/UX design system contract (`Closed`)
+  - [ ] `OPT-037` Rebaseline business process from line-machine reporting to Bagian daily reporting (`Ready`)
+  - [ ] `OPT-041` Define unit-rate wage and monthly target policy ownership (`Ready`)
+- [x] `M1 - Project Bootstrap` - 2/2 issue closed
+  - [x] `OPT-003` Bootstrap Vue 3 + Vite single-file build (`Closed`)
+  - [x] `OPT-004` Harden `.claspignore` and Clasp deployment flow (`Closed`)
+- [ ] `M2 - Backend Foundation` - 4/6 issue closed
+  - [x] `OPT-005` Implement GAS sheet bootstrap and schema health check (`Closed`)
+  - [x] `OPT-006` Implement AUTH_MODE session context and RBAC (`Closed`)
+  - [x] `OPT-007` Implement ROLE_PERMISSIONS enforcement (`Closed`)
+  - [x] `OPT-008` Implement Input Validation & Sanitization blocks for GAS endpoints (`Closed`)
+  - [ ] `OPT-038` Design employee master and attendance recap model (`Ready`)
+  - [ ] `OPT-043` Redefine role boundaries for Mandor, Supervisor verification, HRD, Management, and SuperAdmin (`Ready`)
+- [ ] `M3 - Operator Mobile MVP` - 4/6 issue closed
+  - [x] `OPT-009` Build production `apiAdapter.js` and local `mock_gas.js` (`Closed`)
+  - [x] `OPT-010` Build mobile operator reporting form (`Closed`)
+  - [x] `OPT-011` Implement Global State and IndexedDB persistence service (`Closed`)
+  - [x] `OPT-012` Implement append-only RAW_LOGS submit endpoint (`Closed`)
+  - [ ] `OPT-029` Split Operator workspace into input, draft, and recent submissions (`Review`)
+  - [ ] `OPT-042` Replace Line/Machine terminology with Bagian and work category terminology (`Ready`)
+- [ ] `M4 - Offline Sync & Conflict Control` - 5/6 issue closed
+  - [x] `OPT-013` Implement Offline-Tolerant sync queue (`Closed`)
+  - [x] `OPT-014` Implement CONFLICT_PENDING detection and quarantine routing (`Closed`)
+  - [x] `OPT-015` Build Mandor approval inbox and conflict comparison UI (`Closed`)
+  - [x] `OPT-016` Implement defect categories and Pareto-ready reject capture (`Closed`)
+  - [x] `OPT-034` Move defect category master data to Spreadsheet-backed CRUD (`Closed`)
+  - [ ] `OPT-040` Model Solder-to-Lem material source traceability (`Ready`)
+- [ ] `M5 - Supervisor Control & Recap` - 5/15 issue closed
+  - [x] `OPT-017` Implement daily closing workflow (`Closed`)
+  - [x] `OPT-018` Implement adjustment logs after closing (`Closed`)
+  - [x] `OPT-019` Implement MASTER_RECAP batch aggregation (`Closed`)
+  - [x] `OPT-020` Build desktop supervisor control center (`Closed`)
+  - [x] `OPT-021` Build management read-only dashboard (`Closed`)
+  - [ ] `OPT-028` Redesign role workspaces into production-ready task flows (`Review`)
+  - [ ] `OPT-030` Split Mandor workspace into approval inbox, conflict queue, and closing (`Review`)
+  - [ ] `OPT-031` Build Supervisor control center with alert-first layout (`Review`)
+  - [ ] `OPT-032` Build Management read-only KPI dashboard task flow (`Review`)
+  - [ ] `OPT-035` Build role-authorized daily target master and multi-user scope control (`Review`)
+  - [ ] `OPT-036` Build pre-closing review and void workflow (`Review`)
+  - [ ] `OPT-039` Build Supervisor-verified production valuation workflow (`Ready`)
+  - [ ] `OPT-044` Rework daily and monthly recap outputs for Bagian, attendance, production, and payroll-ready statistics (`Ready`)
+  - [ ] `OPT-045` Prepare Management mock dataset for Bagian, attendance, Supervisor verification, and unit-rate insight (`Review`)
+  - [ ] `OPT-049` Rework Management workspace for monthly UMR wage condition insight (`Review`)
+- [ ] `M6 - Security, Testing & Deployment` - 4/5 issue closed
+  - [x] `OPT-022` Implement GAS `test_runner.gs` (`Closed`)
+  - [x] `OPT-023` Run security hardening against POL.ISMS.001 (`Closed`)
+  - [x] `OPT-024` Prepare production deployment checklist (`Closed`)
+  - [x] `OPT-027` Build SuperAdmin hidden maintenance console for safe Script Properties management (`Closed`)
+  - [ ] `OPT-033` Build HRD user access and role audit workspace (`Review`)
+- [x] `M7 - QCC Report & Rollout` - 2/2 issue closed
+  - [x] `OPT-025` Execute 1 line / 1 shift pilot rollout (`Closed`)
+  - [x] `OPT-026` Produce QCC Step 1-8 report package (`Closed`)
+- [ ] `M8 - Internationalization` - 0/3 issue closed
+  - [ ] `OPT-046` Define i18n-ready UI text and terminology contract (`Ready`)
+  - [ ] `OPT-047` Build frontend i18n dictionary infrastructure and language switcher (`Backlog`)
+  - [ ] `OPT-048` Add ID EN CN translation packs after business process rebaseline is stable (`Backlog`)
+- [ ] `M9 - HRD Workforce & Attendance` - 0/5 issue closed
+  - [ ] `OPT-050` Rebaseline HRD workspace into four production-ready menus (`Ready`)
+  - [ ] `OPT-051` Build HRD Dashboard for workforce and payroll readiness (`Ready`)
+  - [ ] `OPT-052` Build HRD Karyawan directory with privacy-safe detail access (`Ready`)
+  - [ ] `OPT-053` Build HRD Absensi daily and monthly recap workspace (`Ready`)
+  - [ ] `OPT-054` Merge HRD Role Access and Audit into one lightweight governance workspace (`Ready`)
+- [ ] `M10 - Management Executive Workspace` - 0/7 issue closed
+  - [ ] `OPT-055` Rebaseline Management workspace navigation for executive task flow (`Ready`)
+  - [ ] `OPT-056` Build Management Bagian & Upah policy workspace (`Ready`)
+  - [ ] `OPT-057` Build Management Produksi performance workspace (`Ready`)
+  - [ ] `OPT-058` Build Management Absensi summary workspace (`Ready`)
+  - [ ] `OPT-059` Build Management Risiko & Pareto improvement workspace (`Ready`)
+  - [ ] `OPT-060` Build Management Risiko & Pending decision workspace (`Ready`)
+  - [ ] `OPT-061` Evaluate Management Laporan and Export workspace (`Backlog`)
+- [ ] `M11 - Supervisor QC Workspace` - 0/6 issue closed
+  - [ ] `OPT-062` Rebaseline Supervisor workspace navigation for QC task flow (`Ready`)
+  - [ ] `OPT-063` Build Supervisor Verifikasi QC production validation workspace (`Ready`)
+  - [ ] `OPT-064` Build Supervisor Defect & Pareto quality standard workspace (`Ready`)
+  - [ ] `OPT-065` Build Supervisor Closing & Koreksi workflow (`Ready`)
+  - [ ] `OPT-066` Build Supervisor Target & Tim capacity workspace (`Ready`)
+  - [ ] `OPT-067` Convert Supervisor Raw Logs into safe Detail Data drilldown (`Ready`)
+- [ ] `M12 - Mandor Field Operations Workspace` - 0/7 issue closed
+  - [ ] `OPT-068` Rebaseline Mandor workspace navigation for field operations (`Ready`)
+  - [ ] `OPT-069` Build Mandor Dashboard for team readiness and daily blockers (`Ready`)
+  - [ ] `OPT-070` Build Mandor Absensi Tim confirmation workspace (`Ready`)
+  - [ ] `OPT-071` Build Mandor Target Harian planning workspace (`Ready`)
+  - [ ] `OPT-072` Build Mandor Hasil Operator monitoring workspace (`Ready`)
+  - [ ] `OPT-073` Merge Mandor approval conflict and pre-closing correction workflow (`Ready`)
+  - [ ] `OPT-074` Build Mandor Defect Request workflow (`Ready`)
+
+## 5. Issue Backlog
+
+Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke GitHub. Snapshot 2026-09-09: runtime lokal sudah mencakup implementasi sampai `OPT-034`; item berstatus `Review` tetap menunggu verifikasi/closure GitHub sesuai protokol sebelum ditandai `Closed`. Snapshot 2026-09-10: `OPT-036` ditambahkan untuk pre-closing review/void workflow berdasarkan proses bisnis final pelaporan harian.
 
 | ID | Title | Status | Priority | Labels | Milestone | GitHub Issue |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -96,8 +193,47 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-033` | Build HRD user access and role audit workspace | Review | P2 | `type:feature`, `type:security`, `area:frontend`, `area:ui-ux`, `area:process`, `priority:p2`, `sync:github` | `M6 - Security, Testing & Deployment` | TBD |
 | `OPT-034` | Move defect category master data to Spreadsheet-backed CRUD | Closed | P1 | `type:feature`, `area:backend`, `area:frontend`, `area:data`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | #28 |
 | `OPT-035` | Build role-authorized daily target master and multi-user scope control | Review | P1 | `type:feature`, `area:backend`, `area:frontend`, `area:data`, `area:process`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-036` | Build pre-closing review and void workflow | Review | P1 | `type:feature`, `area:backend`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-037` | Rebaseline business process from line-machine reporting to Bagian daily reporting | Ready | P0 | `type:docs`, `area:process`, `area:data`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | TBD |
+| `OPT-038` | Design employee master and attendance recap model | Ready | P0 | `type:feature`, `area:data`, `area:backend`, `area:frontend`, `area:process`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | TBD |
+| `OPT-039` | Build Supervisor-verified production valuation workflow | Ready | P0 | `type:feature`, `area:process`, `area:backend`, `area:frontend`, `area:data`, `priority:p0`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-040` | Model Solder-to-Lem material source traceability | Ready | P1 | `type:feature`, `area:data`, `area:process`, `area:backend`, `area:frontend`, `priority:p1`, `sync:github` | `M4 - Offline Sync & Conflict Control` | TBD |
+| `OPT-041` | Define unit-rate wage and monthly target policy ownership | Ready | P0 | `type:docs`, `area:process`, `area:data`, `priority:p0`, `sync:github` | `M0 - Contracts & Planning` | TBD |
+| `OPT-042` | Replace Line/Machine terminology with Bagian and work category terminology | Ready | P1 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:ui-ux`, `priority:p1`, `sync:github` | `M3 - Operator Mobile MVP` | TBD |
+| `OPT-043` | Redefine role boundaries for Mandor, Supervisor verification, HRD, Management, and SuperAdmin | Ready | P0 | `type:security`, `area:process`, `area:data`, `area:backend`, `priority:p0`, `sync:github` | `M2 - Backend Foundation` | TBD |
+| `OPT-044` | Rework daily and monthly recap outputs for Bagian, attendance, production, and payroll-ready statistics | Ready | P0 | `type:feature`, `area:data`, `area:backend`, `area:frontend`, `area:process`, `priority:p0`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-045` | Prepare Management mock dataset for Bagian, attendance, QC verification, and unit-rate insight | Review | P1 | `type:feature`, `area:frontend`, `area:data`, `area:ui-ux`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-046` | Define i18n-ready UI text and terminology contract | Ready | P2 | `type:docs`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M8 - Internationalization` | TBD |
+| `OPT-047` | Build frontend i18n dictionary infrastructure and language switcher | Backlog | P2 | `type:feature`, `area:frontend`, `area:ui-ux`, `priority:p2`, `sync:github` | `M8 - Internationalization` | TBD |
+| `OPT-048` | Add ID EN CN translation packs after business process rebaseline is stable | Backlog | P3 | `type:feature`, `area:frontend`, `area:process`, `area:ui-ux`, `priority:p3`, `sync:github` | `M8 - Internationalization` | TBD |
+| `OPT-049` | Rework Management workspace for monthly UMR wage condition insight | Review | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M5 - Supervisor Control & Recap` | TBD |
+| `OPT-050` | Rebaseline HRD workspace into four production-ready menus | Ready | P0 | `type:docs`, `area:process`, `area:ui-ux`, `priority:p0`, `sync:github` | `M9 - HRD Workforce & Attendance` | TBD |
+| `OPT-051` | Build HRD Dashboard for workforce and payroll readiness | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:ui-ux`, `priority:p1`, `sync:github` | `M9 - HRD Workforce & Attendance` | TBD |
+| `OPT-052` | Build HRD Karyawan directory with privacy-safe detail access | Ready | P1 | `type:feature`, `type:security`, `area:frontend`, `area:backend`, `area:data`, `area:ui-ux`, `priority:p1`, `sync:github` | `M9 - HRD Workforce & Attendance` | TBD |
+| `OPT-053` | Build HRD Absensi daily and monthly recap workspace | Ready | P0 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `priority:p0`, `sync:github` | `M9 - HRD Workforce & Attendance` | TBD |
+| `OPT-054` | Merge HRD Role Access and Audit into one lightweight governance workspace | Ready | P1 | `type:feature`, `type:security`, `area:frontend`, `area:backend`, `area:ui-ux`, `priority:p1`, `sync:github` | `M9 - HRD Workforce & Attendance` | TBD |
+| `OPT-055` | Rebaseline Management workspace navigation for executive task flow | Ready | P0 | `type:docs`, `area:process`, `area:ui-ux`, `priority:p0`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-056` | Build Management Bagian & Upah policy workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:ui-ux`, `priority:p1`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-057` | Build Management Produksi performance workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-058` | Build Management Absensi summary workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-059` | Build Management Risiko & Pareto improvement workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-060` | Build Management Risiko & Pending decision workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-061` | Evaluate Management Laporan and Export workspace | Backlog | P2 | `type:docs`, `area:process`, `area:data`, `area:ui-ux`, `priority:p2`, `sync:github` | `M10 - Management Executive Workspace` | TBD |
+| `OPT-062` | Rebaseline Supervisor workspace navigation for QC task flow | Ready | P0 | `type:docs`, `area:process`, `area:ui-ux`, `priority:p0`, `sync:github` | `M11 - Supervisor QC Workspace` | TBD |
+| `OPT-063` | Build Supervisor Verifikasi QC production validation workspace | Ready | P0 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p0`, `sync:github` | `M11 - Supervisor QC Workspace` | TBD |
+| `OPT-064` | Build Supervisor Defect & Pareto quality standard workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M11 - Supervisor QC Workspace` | TBD |
+| `OPT-065` | Build Supervisor Closing & Koreksi workflow | Ready | P1 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M11 - Supervisor QC Workspace` | TBD |
+| `OPT-066` | Build Supervisor Target & Tim capacity workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M11 - Supervisor QC Workspace` | TBD |
+| `OPT-067` | Convert Supervisor Raw Logs into safe Detail Data drilldown | Ready | P2 | `type:feature`, `type:security`, `area:frontend`, `area:backend`, `area:data`, `area:ui-ux`, `priority:p2`, `sync:github` | `M11 - Supervisor QC Workspace` | TBD |
+| `OPT-068` | Rebaseline Mandor workspace navigation for field operations | Ready | P0 | `type:docs`, `area:process`, `area:ui-ux`, `priority:p0`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
+| `OPT-069` | Build Mandor Dashboard for team readiness and daily blockers | Ready | P1 | `type:feature`, `area:frontend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
+| `OPT-070` | Build Mandor Absensi Tim confirmation workspace | Ready | P0 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `priority:p0`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
+| `OPT-071` | Build Mandor Target Harian planning workspace | Ready | P0 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p0`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
+| `OPT-072` | Build Mandor Hasil Operator monitoring workspace | Ready | P1 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
+| `OPT-073` | Merge Mandor approval conflict and pre-closing correction workflow | Ready | P1 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p1`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
+| `OPT-074` | Build Mandor Defect Request workflow | Ready | P2 | `type:feature`, `area:frontend`, `area:backend`, `area:data`, `area:process`, `area:ui-ux`, `priority:p2`, `sync:github` | `M12 - Mandor Field Operations Workspace` | TBD |
 
-## 5. Closed Issue Log
+## 6. Closed Issue Log
 
 | ID | GitHub Issue | Closed At | Verification |
 | :--- | :--- | :--- | :--- |
@@ -130,7 +266,7 @@ Snapshot 2026-09-02: `OPT-001` sampai `OPT-027` sudah closed dan tersinkron ke G
 | `OPT-027` | #27 | 2026-08-30 | `npm run test:gas`, `npm run build:verify`, `npm run prepare:gas; clasp status`, and `npm audit --audit-level=moderate` passed; safe Script Properties maintenance pushed in commit `ea83d9a`. |
 | `OPT-034` | #28 | 2026-09-04 | `npm test`, `npm run build:verify`, `npm run prepare:gas`, and `git diff --check` passed; spreadsheet-backed defect category CRUD implemented locally in commit `80ec100`. |
 
-## 6. Issue Template
+## 7. Issue Template
 
 Use this body when creating GitHub Issues:
 

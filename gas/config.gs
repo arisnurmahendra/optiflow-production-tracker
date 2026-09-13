@@ -9,6 +9,7 @@ var OPTIFLOW_REQUIRED_SHEETS = Object.freeze([
   'ROLE_PERMISSIONS',
   'LINE_MASTER',
   'SHIFT_MASTER',
+  'BAGIAN_MASTER',
   'TARGET_MASTER',
   'DEFECT_CATEGORIES',
   'RAW_LOGS',
@@ -22,6 +23,7 @@ var OPTIFLOW_REQUIRED_SHEETS = Object.freeze([
 var OPTIFLOW_ROLES = Object.freeze([
   'Operator',
   'Mandor',
+  'Supervisor',
   'Management',
   'HRD',
   'SuperAdmin',
@@ -87,6 +89,36 @@ var OPTIFLOW_DEFAULT_DEFECT_CATEGORIES = Object.freeze([
   }),
 ]);
 
+var OPTIFLOW_DEFAULT_BAGIAN_MASTER = Object.freeze([
+  Object.freeze({
+    bagian_id: 'SOLDER',
+    bagian_name: 'Bagian Solder',
+    description: 'Proses solder/las komponen produksi.',
+    unit_rate: 94,
+    monthly_target_unit: 37234,
+    target_salary: 3500000,
+    status_aktif: true,
+  }),
+  Object.freeze({
+    bagian_id: 'LEM',
+    bagian_name: 'Bagian Lem',
+    description: 'Proses lem dan perakitan lanjutan.',
+    unit_rate: 83,
+    monthly_target_unit: 42169,
+    target_salary: 3500000,
+    status_aktif: true,
+  }),
+  Object.freeze({
+    bagian_id: 'PACKING',
+    bagian_name: 'Bagian Packing',
+    description: 'Packing dan persiapan pengiriman.',
+    unit_rate: 0,
+    monthly_target_unit: 0,
+    target_salary: 3500000,
+    status_aktif: true,
+  }),
+]);
+
 var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   schema: Object.freeze(['bootstrap', 'read_health']),
   session: Object.freeze(['read']),
@@ -94,9 +126,11 @@ var OPTIFLOW_PERMISSION_CATALOG = Object.freeze({
   quarantine: Object.freeze(['read', 'approve', 'reject', 'request_correction']),
   daily_closing: Object.freeze(['create', 'read', 'reopen']),
   adjustment: Object.freeze(['create', 'read', 'approve', 'reject']),
+  production_review: Object.freeze(['read', 'void', 'request_correction', 'pre_closing_correction']),
   audit_log: Object.freeze(['read']),
   dashboard: Object.freeze(['read']),
   defect_category: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
+  bagian_master: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
   production_target: Object.freeze(['read', 'create', 'update', 'bulk_update', 'soft_delete']),
   reference_data: Object.freeze(['read']),
   test_runner: Object.freeze(['run']),
@@ -163,6 +197,7 @@ var OPTIFLOW_SHEET_SCHEMAS = Object.freeze({
     'username',
     'alamat_encrypted',
     'profile_base64',
+    'mandor_email',
   ]),
   ROLE_PERMISSIONS: Object.freeze([
     'permission_id',
@@ -188,6 +223,19 @@ var OPTIFLOW_SHEET_SCHEMAS = Object.freeze({
     'end_time',
     'timezone',
     'status_aktif',
+    'updated_at',
+  ]),
+  BAGIAN_MASTER: Object.freeze([
+    'bagian_id',
+    'bagian_name',
+    'description',
+    'unit_rate',
+    'monthly_target_unit',
+    'target_salary',
+    'status_aktif',
+    'created_by',
+    'updated_by',
+    'created_at',
     'updated_at',
   ]),
   TARGET_MASTER: Object.freeze([

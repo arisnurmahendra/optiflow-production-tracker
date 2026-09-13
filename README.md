@@ -86,6 +86,7 @@ Yang sudah terimplementasi:
 - Vite single-file build dengan `vite-plugin-singlefile`; `/dist` hanya boleh menghasilkan `Index.html`.
 - `apiAdapter.js` sebagai satu-satunya jalur frontend ke GAS, dengan allowlist callable, timeout, safe structured response, dan safe error.
 - `mock_gas.js` untuk development lokal dengan latency, failure simulation, idempotency, reference dataset, target master, dashboard, dan conflict simulation.
+- State mock GAS development disimpan sebagai snapshot IndexedDB `optiflow-demo-gas-state`; seed demo awal hanya dibuat ketika snapshot belum ada, sehingga perubahan target/master/submit tetap bertahan setelah reload sampai user melakukan reset data demo lokal.
 - Global State/composable untuk hydrate draft, autosave background, enqueue submit, dan sync queue.
 - IndexedDB persistence untuk `drafts` dan `queue`; UI tidak membaca/menulis IndexedDB langsung.
 - GAS modular di `gas/*.gs` dengan `Code.js` sebagai entrypoint tipis.
@@ -250,7 +251,7 @@ Di production `AUTH_MODE=ON`, jalankan dengan akun SuperAdmin yang terdaftar dan
 
 ## Frontend API Adapter
 
-Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. Untuk Operator, mock menyediakan `getOperatorReferenceData`, `getProductionTarget`, submit/sync IndexedDB, dan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori user masked, role matrix, dan audit summary aman sehingga workspace dapat diuji cukup dengan `npm run dev`.
+Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. State mock disimpan di IndexedDB melalui `mockGasPersistence.js`; seed default hanya dibuat ketika snapshot kosong. Untuk Operator, mock menyediakan `getOperatorReferenceData`, `getProductionTarget`, submit/sync IndexedDB, dan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori user masked, role matrix, dan audit summary aman sehingga workspace dapat diuji cukup dengan `npm run dev`.
 
 ## Verifikasi Lokal
 

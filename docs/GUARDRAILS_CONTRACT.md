@@ -93,6 +93,8 @@
 - Backend wajib memvalidasi payload di awal fungsi.
 - Data yang sudah masuk periode `CLOSED` tidak boleh diubah langsung.
 - Koreksi setelah closing wajib masuk `ADJUSTMENT_LOGS` dan membutuhkan approval.
+- Review sebelum closing wajib append-only melalui `createProductionReview`; UI/GAS dilarang mengedit langsung baris asal `RAW_LOGS`.
+- Recap/dashboard wajib menghormati event review latest: transaksi `VOID` atau `REQUEST_CORRECTION` tidak boleh dihitung, sedangkan `PRE_CLOSING_CORRECTION` approved wajib diterapkan sebagai delta.
 - Kategori defect wajib ketika `perolehan_reject > 0`.
 - Kategori defect tidak boleh menjadi hardcode-only di UI production. `DEFECT_CATEGORIES` adalah sumber utama; frontend hanya boleh memakai fallback default/mock ketika GAS belum tersedia, dan backend tetap memvalidasi kategori aktif dari spreadsheet.
 - Master defect mengikuti separation of duties:
@@ -150,6 +152,7 @@ Per 2026-09-09, guardrail berikut sudah memiliki implementasi dan test lokal:
 - API adapter memakai callable allowlist, timeout, normalisasi response, dan safe error.
 - IndexedDB hanya diakses melalui `src/services/indexedDbPersistence.js`; UI melewati `useOperatorReportStore`.
 - `mock_gas.js` meniru response GAS untuk health, session, Script Properties, reference data, target master, submit produksi, approval/quarantine, closing, adjustment, recap, dashboard, defect categories, dan HRD access dashboard.
+- State mock GAS development wajib disimpan di IndexedDB terpisah dari draft/queue operator. Seed demo awal hanya boleh dibuat ketika snapshot state mock kosong.
 - Auth/RBAC, permission exact match, audit masking, append-only production submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, recap, dashboard APIs, active defect validation, defect category CRUD/seed, HRD masked access dashboard, Script Properties maintenance, and native GAS test runner memiliki test script.
 
 Guardrail yang sudah tersedia sebagai artefak M6/M7:

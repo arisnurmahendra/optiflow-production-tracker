@@ -26,15 +26,76 @@ Status implementasi 2026-09-09:
 - Daily closing, adjustment, batch recap, supervisor control center, management dashboard read-only, ChartJS Operator dashboard, Help/Cara penggunaan per role, spreadsheet-backed defect CRUD/seed, dan HRD read-only access dashboard sudah tersedia untuk scope runtime lokal.
 - Native GAS test runner, checklist deployment, checklist hardening, pilot plan, dan template paket QCC sudah tersedia sebagai artefak M6/M7.
 
+## 1A. Informasi Proses Bisnis Baru - Pending Rebaseline
+
+Informasi lapangan terbaru menunjukkan kontrak lama berbasis `line`, `machine`, dan input mandiri Operator belum sepenuhnya sesuai dengan proses berjalan. Sampai rebaseline selesai, perubahan kode baru harus ditahan atau dibatasi ke dokumentasi/issue planning.
+
+Fakta baru:
+- Struktur laporan harian sementara lebih tepat disebut `Bagian`; `Solder` dan `Lem` hanya sebagian contoh dari proses produksi yang lebih luas, bukan daftar proses final.
+- Mandor menerima hasil dari karyawan/operator dan menetapkan target harian operator.
+- Supervisor menjalankan fungsi QC/verifikasi dan menentukan/menilai jumlah pekerjaan sah berupa `OK + Reject`.
+- Laporan harian Bagian memuat jumlah karyawan hadir, jumlah hasil kerja, jumlah absen, statistik, serta pengesahan `Petugas Pencatat` yaitu Mandor dan `Verifikator` yaitu Supervisor.
+- Karyawan memiliki nomor karyawan, nama, status aktif/resign, dan dapat diperluas dengan alamat, nomor telepon, email, dan data HRD lain.
+- Satu email/ID karyawan dapat memiliki lebih dari satu role, misalnya `Management + Supervisor`; sistem tidak boleh lagi mengunci desain ke pola `1 user = 1 role`.
+- Absensi harian dibutuhkan untuk status hadir/tidak hadir serta rekap bulanan kehadiran.
+- Kolom keterangan dipakai untuk informasi tidak hadir atau catatan harian.
+- `Tandon` diperlakukan sebagai angka operasional saja sampai definisi final disahkan; tandon tidak boleh masuk perhitungan target/upah tanpa keputusan bisnis eksplisit.
+- Input Bagian Lem tidak selalu satu-ke-satu dengan Solder; satu transaksi Lem dapat menerima bahan dari lebih dari satu operator Solder dan relasi sumber bahan ini perlu dicatat.
+- Ada model upah per unit dan target bulanan: Solder/Las `94 rupiah/unit` dengan target sekitar `37.234 unit/bulan`; Lem `83 rupiah/unit` dengan target sekitar `42.169 unit/bulan`; target harian berubah menurut jumlah hari masuk.
+
+Keputusan awal yang disarankan:
+- `Management` menetapkan kebijakan target gaji, harga satuan, dan formula target bulanan.
+- `HRD` mengelola data karyawan, status aktif/resign, dan rekap absensi/payroll-ready.
+- `Mandor` menetapkan target harian operasional per karyawan berdasarkan kebijakan yang berlaku dan mencatat/menerima hasil kerja.
+- `Supervisor` memegang fungsi QC: memverifikasi nilai output sah `OK + Reject`, mengesahkan laporan harian Bagian, memonitor kinerja, dan menjadi escalation owner jika target/upah/proses tidak konsisten.
+- `SuperAdmin` tetap memiliki akses penuh untuk konfigurasi dan emergency maintenance.
+
+Kontrak awal Management:
+- Management bersifat read-only untuk data transaksi harian, tetapi menjadi owner kebijakan `BAGIAN_MASTER`: nama Bagian, status aktif, target gaji bulanan/UMR, harga satuan/upah per item, target unit bulanan, gap unit, dan proyeksi capaian.
+- Management boleh CRUD master Bagian dan upah per item melalui workflow khusus yang diaudit. Perubahan ini hanya memengaruhi kebijakan dan opsi baru; transaksi historis tetap append-only dan tidak boleh diubah diam-diam.
+- Kondisi UMR bulanan dihitung dari `hasil unit tervalidasi Supervisor x harga satuan`; fungsi QC melekat pada Supervisor, bukan role terpisah.
+- Jika proyeksi gaji bulanan di bawah UMR/target gaji, UI Management wajib menampilkan status warning dan gap unit yang perlu dikejar.
+- Jika proyeksi gaji bulanan memenuhi atau melebihi UMR/target gaji, UI Management menampilkan status aman/success.
+- Jika bagian belum memiliki harga satuan atau target gaji resmi, UI wajib menampilkan status `POLICY_PENDING`, bukan menghitung asumsi diam-diam.
+
+Open decision:
+- Apakah HRD hanya membaca kebijakan upah untuk payroll-ready recap atau juga boleh mengusulkan perubahan draft yang tetap disahkan Management.
+- Fungsi QC berada pada role `Supervisor`; tidak dibuat role `Quality` atau `QC` terpisah sampai ada keputusan bisnis baru.
+- Apakah absensi dicatat oleh Mandor, HRD, atau hasil integrasi dari sistem absensi eksternal.
+
+Kontrak awal absensi:
+- Karyawan menekan tombol `Masuk` dan `Keluar` sebagai event absensi harian.
+- Mandor melakukan `check` per karyawan atau `check all` untuk konfirmasi kehadiran dalam scope Bagian/tanggal.
+- Mandor boleh menetapkan status pengecualian seperti `Izin`, `Sakit`, atau `Alpha` dengan keterangan.
+- Rekap harian Bagian menampilkan jumlah hadir, absen, izin, sakit, alpha, hasil kerja, dan statistik produktivitas.
+- Rekap bulanan kehadiran harus bisa dibaca HRD/Management sesuai permission dan masking data.
+
 ## 2. Role Dan Hak Akses
 
 | Role | Hak akses utama |
 | :--- | :--- |
 | `Operator` | Submit laporan produksi miliknya sendiri, membaca target aktif, dan melihat status sync. |
-| `Mandor` | Melihat antrian konflik, approve/reject/request correction, closing harian, membaca rekap lini, dan mengatur target harian dalam scope line/shift yang menjadi tanggung jawabnya. |
-| `Management` | Membaca dashboard, target, dan rekap tanpa edit. |
-| `HRD` | Membaca kesiapan akses user, role, dan audit secara privacy-first; pengelolaan detail PII penuh menunggu workflow terpisah yang disahkan kontrak. |
-| `SuperAdmin` | Mengelola konfigurasi, role, target lintas scope, dan troubleshooting tingkat lanjut. |
+| `Mandor` | Review submit normal sebelum closing, menangani konflik, menjalankan `VOID`/`REQUEST_CORRECTION`/`PRE_CLOSING_CORRECTION`, closing harian, membaca rekap lini, mengatur target harian sesuai scope, dan membuat request/draft defect baru. |
+| `Supervisor` | Menjalankan fungsi QC/verifikator: memvalidasi nilai sah produksi `OK + Reject`, mengesahkan laporan harian Bagian, mengelola standar defect final, menangani closing/koreksi level area, serta membaca performa tim sesuai scope. |
+| `Management` | Membaca KPI eksekutif, produksi, absensi, risiko, Pareto, dan mengelola master kebijakan Bagian/upah sesuai permission. |
+| `HRD` | Mengelola registrasi user dan role bersama SuperAdmin, serta membaca kesiapan akses user dan audit secara privacy-first. |
+| `SuperAdmin` | Mengelola konfigurasi, role, master operasional, target lintas scope, dan troubleshooting tingkat lanjut. |
+
+## 2A. Proses Pelaporan Perolehan Harian
+
+1. HRD dan SuperAdmin mendaftarkan seluruh user dari Operator sampai Supervisor sesuai kebutuhan akses.
+2. Supervisor dan SuperAdmin mengatur master operasional: jenis pekerjaan dan Bagian.
+3. Jenis pekerjaan mempengaruhi target, kategori defect yang tersedia, dan field/form Operator bila proses kerja membutuhkan input berbeda.
+4. Mandor mengatur target harian operator dalam scope timnya; Supervisor boleh meninjau dan mengoreksi target lintas Bagian sesuai permission resmi.
+5. Supervisor dan SuperAdmin menjadi owner utama `DEFECT_CATEGORIES`. Mandor boleh membuat request/draft defect baru dari temuan lapangan, tetapi tidak langsung mengubah master final tanpa approval owner.
+6. Operator menginput hasil kerja harian.
+7. Submit normal otomatis `ACCEPTED` dan langsung menjadi kandidat rekap harian.
+8. Sebelum daily closing, Mandor boleh melakukan review terhadap submit normal dan menjalankan `VOID`, `REQUEST_CORRECTION`, atau `PRE_CLOSING_CORRECTION`. Mandor tidak boleh mengedit angka transaksi asal secara langsung.
+9. Setelah daily closing, data terkunci; perubahan setelah closing wajib lewat `ADJUSTMENT_LOGS` append-only.
+10. Supervisor memverifikasi hasil harian, mingguan, dan bulanan sebagai fungsi QC/verifikator sebelum data menjadi referensi final.
+11. Statistik performa operator mencakup Target vs Realisasi, OK rate, Reject rate, konsistensi harian, jumlah correction/request dari Mandor, dan ranking antar operator.
+12. Pareto defect tersedia sesuai filter dan batas akses role.
+13. Relasi Mandor-Operator wajib eksplisit: satu Mandor boleh membawahi banyak Operator, tetapi satu line tidak otomatis berarti semua Operator di line tersebut berada di bawah Mandor yang sama.
 
 ## 3. Alur Submit Produksi
 
@@ -103,6 +164,7 @@ Kontrak adapter API:
 3. Adapter mengubah `google.script.run.withSuccessHandler().withFailureHandler()` menjadi Promise dengan timeout.
 4. Adapter hanya boleh memanggil nama fungsi GAS yang ada di callable allowlist.
 5. Local development memakai `mock_gas.js` dengan bentuk response yang sama seperti GAS agar UI bisa diuji tanpa deploy.
+6. State mock GAS development disimpan ke IndexedDB sebagai snapshot demo; seed awal hanya dibuat ketika snapshot kosong agar perubahan target, master, submit, dan status demo tidak reset setelah reload.
 6. Mock wajib bisa mensimulasikan latency dan failure agar state loading/error/retry tidak hanya diuji secara optimistis.
 
 ## 6. Alur Quarantine
@@ -148,6 +210,10 @@ Kontrak approval inbox Mandor:
 3. Detail konflik wajib menampilkan perbandingan data current vs conflict-with: operator termasking, machine, OK, reject, defect, dan waktu perangkat.
 4. Tombol keputusan UI minimal mencakup `Approve current`, `Reject both`, dan `Request correction`.
 5. Jika endpoint approval backend gagal atau belum tersedia pada environment lokal, aksi UI hanya boleh distage di state frontend dan tidak boleh mengubah `MASTER_RECAP`.
+6. Setelah Mandor menekan `Approve`, `Reject`, atau `Request correction`, kasus wajib keluar dari `Work Queue` aktif. Status `APPROVED` menjadi kandidat rekap bersih, `REJECTED` dikecualikan dari rekap, dan `CORRECTION_REQUESTED` berpindah ke follow-up koreksi sampai operator melakukan resubmit.
+7. `Work Queue` Mandor hanya menampilkan status actionable: `PENDING` dan `CONFLICT_PENDING`. Status final atau follow-up tetap tersimpan untuk audit/riwayat, tetapi tidak boleh tetap terlihat sebagai pekerjaan approval aktif.
+8. Submit operator berstatus `ACCEPTED` tidak masuk Approval Inbox karena tidak membutuhkan keputusan HITL; data tersebut wajib terlihat di Dashboard Mandor sebagai monitoring submit terbaru atau raw-log scoped view.
+9. Dalam mode demo/mock, perpindahan Operator ke Mandor wajib mengambil data dari state mock GAS/IndexedDB yang sama, sehingga hasil retry sync dapat terlihat tanpa upload ke GAS selama filter tanggal, line, dan shift cocok.
 
 Backend quarantine routing:
 1. Endpoint submit produksi membentuk record `RAW_LOGS` terlebih dahulu tanpa menulis ke sheet.
@@ -168,10 +234,19 @@ Backend quarantine routing:
 7. Reopen closing hanya boleh dilakukan role berizin dan harus menambah event baru, bukan menghapus closing lama.
 8. Adjustment dibuat sebagai `PENDING`, lalu menjadi `APPROVED` atau `REJECTED` melalui aksi terpisah.
 
+### 7A. Pre-Closing Review, Void, dan Correction
+
+1. Submit normal Operator masuk `RAW_LOGS` dengan status `ACCEPTED` dan langsung boleh masuk rekap harian sementara.
+2. Sebelum `DAILY_CLOSING:CLOSED`, Mandor/Supervisor boleh membuat event review append-only untuk transaksi dalam scope timnya.
+3. `VOID` mengeluarkan transaksi dari `MASTER_RECAP` tanpa mengubah baris asal `RAW_LOGS`.
+4. `REQUEST_CORRECTION` mengeluarkan transaksi dari perhitungan sementara dan memberi sinyal agar Operator membuat submit koreksi baru.
+5. `PRE_CLOSING_CORRECTION` menambah/mengurangi delta OK/Reject sebelum closing dan diterapkan saat recap berikutnya.
+6. Setelah closing, jalur pre-closing review ditutup; perubahan berikutnya wajib memakai adjustment pasca-closing.
+
 ## 8. Alur Rekap
 
 1. Time-driven trigger GAS berjalan berkala.
-2. Backend membaca transaksi valid dari `RAW_LOGS`, keputusan final dari `QUARANTINE`, dan adjustment approved dari `ADJUSTMENT_LOGS`.
+2. Backend membaca transaksi valid dari `RAW_LOGS`, keputusan final dari `QUARANTINE`, pre-closing review latest, dan adjustment approved dari `ADJUSTMENT_LOGS`.
 3. Rekap dihitung berdasarkan tanggal pabrik `Asia/Jakarta`.
 4. Rekap dipisahkan per line, shift, operator, machine, dan kategori defect.
 5. Metadata `qcc_factor` dan `severity` dari `DEFECT_CATEGORIES` dipakai sebagai dasar Pareto defect dan prioritas improvement.
@@ -184,7 +259,7 @@ Backend quarantine routing:
 - Dashboard operasional menampilkan target, OK, reject, defect rate, pending sync, quarantine pending, dan status closing.
 - Dashboard improvement menampilkan Pareto defect, before-after QCC, paper saving, time saving, dan Target vs Actual.
 - Snapshot operator dipakai untuk melihat status submit dan pencapaian harian, bukan sebagai satu-satunya dasar penilaian kinerja personal.
-- Supervisor control center memakai filter dan pagination backend untuk `RAW_LOGS`, `QUARANTINE`, `DAILY_CLOSING`, dan `ADJUSTMENT_LOGS`.
+- Supervisor workspace memakai menu bisnis `Dashboard`, `Verifikasi QC`, `Defect & Pareto`, `Closing & Koreksi`, `Target & Tim`, `Detail Data`, dan `Help`. Sumber teknis seperti `RAW_LOGS`, `QUARANTINE`, `DAILY_CLOSING`, dan `ADJUSTMENT_LOGS` tetap dipakai di backend, tetapi tidak menjadi nama menu utama.
 - Management dashboard bersifat read-only dan hanya membaca `MASTER_RECAP` plus ringkasan status pending, bukan seluruh transaksi mentah.
 
 ## 9A. Kontrak Workspace Per Role
@@ -202,10 +277,27 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Header shift aktif Operator berisi line, shift, mesin, dan operator; header ini wajib tampil di semua menu fitur Operator.
 - Penyebutan `shift` harus seragam di UI, dokumen, payload, dan sheet. Opsi shift wajib diambil dari `SHIFT_MASTER` melalui backend ketika tersedia; opsi lokal hanya boleh menjadi fallback development/offline.
 - Menu `Defect` menjadi permukaan khusus untuk kategori reject, QCC factor, severity, dan Pareto mini agar informasi cacat tidak bercampur dengan form input.
-- `Mandor`: fokus pada pending approval, conflict queue, dan daily closing. Default Mandor harus menonjolkan item yang membutuhkan keputusan Human-in-the-Loop.
-- `Supervisor`: fokus pada alert-first control center: conflict, closing terbuka, raw log anomali, dan adjustment. Data berat tetap lazy-load saat view dibuka.
-- `Management`: fokus pada read-only insight dari `MASTER_RECAP`, Pareto defect, trend/KPI, dan export/report. Tidak boleh ada aksi mutasi produksi.
-- `HRD`: fokus pada user access readiness, role audit, dan PII masking. HRD tidak boleh membuka secret atau Script Properties dari workspace normal.
+- `Mandor`: fokus pada kerja lapangan harian melalui `Dashboard`, `Absensi Tim`, `Target Harian`, `Hasil Operator`, `Approval & Koreksi`, `Closing Harian`, `Defect Request`, dan `Help`.
+- `Dashboard` Mandor menampilkan kesiapan tim hari ini: karyawan hadir/belum dikonfirmasi, target yang sudah/belum ditetapkan, output masuk, antrean koreksi, conflict/actionable queue, dan status closing.
+- `Absensi Tim` menjadi tempat Mandor melakukan `check`, `check all`, dan menetapkan pengecualian `Izin`, `Sakit`, atau `Alpha` dengan keterangan. Karyawan resign/nonaktif tidak boleh ikut terkonfirmasi otomatis.
+- `Target Harian` menjadi tempat Mandor menetapkan target per operator/tim sesuai Bagian, tanggal, dan jenis pekerjaan. Target dapat dibuat untuk satu operator atau semua operator dalam scope, tetapi wajib ada preview dampak multi-user sebelum simpan.
+- `Hasil Operator` menampilkan submit normal `ACCEPTED` dan hasil terbaru operator dalam scope Mandor. Tabel wajib menampilkan konteks karyawan, Bagian, waktu, OK, Reject, Tandon, dan status; UUID tidak boleh menjadi satu-satunya informasi.
+- `Approval & Koreksi` menggabungkan conflict queue, pending review, `VOID`, `REQUEST_CORRECTION`, dan `PRE_CLOSING_CORRECTION`. Hanya status actionable `PENDING` dan `CONFLICT_PENDING` yang tampil sebagai pekerjaan aktif.
+- `Closing Harian` dipakai untuk memeriksa kelengkapan absensi, target, output, correction queue, dan verifikasi sebelum laporan harian dikunci atau dikirim ke Supervisor.
+- `Defect Request` dipakai Mandor untuk mengusulkan kategori defect baru dari temuan lapangan. Request ini tidak langsung menjadi master final sampai disetujui Supervisor atau SuperAdmin.
+- `Supervisor`: fokus pada workflow QC/verifikator melalui `Dashboard`, `Verifikasi QC`, `Defect & Pareto`, `Closing & Koreksi`, `Target & Tim`, `Detail Data`, dan `Help`. Alert teknis dirangkum sebagai pekerjaan yang perlu diverifikasi, bukan menu mentah.
+- `Dashboard` Supervisor menampilkan ringkasan output tervalidasi, output menunggu verifikasi, closing terbuka, defect dominan, risiko target, dan performa tim.
+- `Verifikasi QC` menjadi permukaan utama untuk memvalidasi nilai sah produksi `OK + Reject` per Bagian, karyawan, tanggal, dan transaksi. Aksi verifikasi harus append-only dan tidak menimpa transaksi asal.
+- `Defect & Pareto` menjadi tempat Supervisor mengelola kategori defect final, menyetujui/menolak draft defect dari Mandor, melihat Pareto defect, severity, dan `qcc_factor`.
+- `Closing & Koreksi` menampung closing harian, void, request correction, pre-closing correction, dan adjustment dengan bahasa proses bisnis.
+- `Target & Tim` menampilkan target per operator/tim, kapasitas berbasis absensi, gap target vs realisasi, dan ranking tim sesuai scope Supervisor.
+- `Detail Data` menggantikan tampilan `Raw Logs` sebagai drilldown aman untuk investigasi; data teknis berat wajib lazy-load, termasking sesuai permission, dan tidak menjadi layar default.
+- `Management`: fokus pada keputusan eksekutif melalui `Dashboard`, `Bagian & Upah`, `Produksi`, `Absensi`, `Risiko & Pareto`, `Risiko & Pending`, dan `Help`. Management tidak boleh melakukan mutasi transaksi produksi; pengecualian yang disahkan adalah CRUD master kebijakan Bagian/upah.
+- Menu `Produksi` Management wajib terpisah dari Dashboard agar analisis performa output tidak bercampur dengan ringkasan eksekutif.
+- Menu `Risiko & Pending` wajib memakai bahasa bisnis yang menjelaskan hambatan pelaporan terpercaya, bukan hanya status teknis backend.
+- `Laporan/Export` masih opsi backlog sampai kebutuhan format laporan, masking, audit, dan permission disahkan.
+- `HRD`: fokus pada empat workflow utama: Dashboard tenaga kerja, Karyawan, Absensi, dan Akses & Audit. HRD tidak boleh membuka secret atau Script Properties dari workspace normal.
+- Menu HRD lama `Dashboard PII`, `User Masked`, `Roles RBAC`, `Audit Logs`, dan `Privacy Safe` harus digabung menjadi empat menu production-ready: `Dashboard`, `Karyawan`, `Absensi`, dan `Akses & Audit`.
 - HRD tahap MVP bersifat read-only untuk akses user: melihat user aktif/nonaktif, role distribution, permission readiness, dan ringkasan audit akses. HRD tidak boleh menerima email mentah, nama/alamat/telepon terenkripsi, blind index, profile base64, metadata audit mentah, secret, atau Script Properties dari workspace normal.
 - Seed dummy HRD/admin boleh mengisi `USER_ROLES` dengan email, username, role, status, placeholder terenkripsi untuk nama/alamat/telepon, blind index, dan `profile_base64`. Data ini hanya untuk development/staging saat `AUTH_MODE=OFF`; production wajib memakai data HRD resmi dan enkripsi backend.
 - `SuperAdmin`: tetap memakai hidden maintenance console terpisah dari 5 menu utama.
@@ -221,11 +313,15 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 
 - `target_harian`, `tandon`, `perolehan_ok`, dan `perolehan_reject` harus integer non-negatif.
 - Target hanya dibandingkan dengan `perolehan_ok + perolehan_reject`. Reject tetap dihitung sebagai realisasi produksi, sedangkan `tandon` adalah konteks buffer/sisa dan tidak boleh mengubah status capaian target.
+- Dashboard Operator wajib memperlakukan target harian sebagai target per operator/scope per hari, bukan target per transaksi. Jika operator melakukan beberapa submit pada hari yang sama, `OK` dan `Reject` dijumlahkan, tetapi `target_harian` hanya dihitung satu kali untuk hari tersebut.
+- Progress Realisasi Operator wajib memakai target aktif dari `TARGET_MASTER` yang ditetapkan Mandor/role di atasnya bila tersedia. Snapshot target pada transaksi lama tidak boleh mengalahkan target aktif untuk tampilan progress hari berjalan.
 - `transaction_id` wajib unik.
 - Koreksi data tidak boleh menghapus transaksi asal.
 - Setiap perubahan keputusan harus punya audit trail.
 - Role menentukan data dan aksi yang boleh diakses.
 - Data setelah closing tidak boleh diubah langsung.
+- Sebelum closing, koreksi Mandor terhadap submit Operator wajib memakai event terkontrol `VOID`, `REQUEST_CORRECTION`, atau `PRE_CLOSING_CORRECTION`; angka transaksi asal tidak boleh diedit langsung.
+- Submit normal `ACCEPTED` boleh masuk rekap sementara, tetapi masih berada dalam review window sampai daily closing selesai.
 - Target harian bukan angka bebas operator. Operator hanya membaca target aktif; penggantian target dilakukan oleh Mandor atau role di atasnya sesuai permission dan scope.
 - Penggantian target harus memilih scope eksplisit: semua operator dalam line/shift/mesin, satu operator tertentu, satu line/shift, atau satu machine scope.
 - Bulk update target semua operator tidak boleh memakai asumsi implisit; UI/backend wajib menampilkan dan memvalidasi scope sebelum perubahan disimpan.
@@ -233,13 +329,18 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Perubahan target setelah submit tidak boleh menimpa `RAW_LOGS.target_harian` historis karena kolom tersebut adalah snapshot target saat transaksi dibuat.
 - Reject wajib punya kategori defect jika `perolehan_reject > 0`.
 - Kategori defect untuk reject wajib aktif di `DEFECT_CATEGORIES`.
-- Tambah/ubah/nonaktif kategori defect dilakukan di master spreadsheet atau endpoint SuperAdmin/Mandor, harus tervalidasi, audit-log, dan tidak mengubah transaksi historis.
+- Tambah/ubah/nonaktif kategori defect final dilakukan oleh Supervisor atau SuperAdmin, harus tervalidasi, audit-log, dan tidak mengubah transaksi historis.
 - Pembagian otoritas master defect:
   - Operator hanya melihat/memakai kategori defect aktif. Jika menemukan defect baru, proses production-ready adalah mengusulkan ke Mandor/Supervisor, bukan menulis langsung ke master.
-  - Mandor boleh mengelola kategori defect operasional (`create`, `update`, `soft_delete`) karena bertanggung jawab pada validasi lapangan dan closing harian.
-  - Supervisor, bila dibuat sebagai role resmi backend, boleh mengelola kategori defect lintas line dengan hak setara Mandor kecuali `seed`.
+  - Mandor boleh membuat request/draft defect baru dari temuan lapangan, tetapi tidak boleh langsung mengubah master final.
+  - Supervisor boleh mengelola kategori defect lintas line.
+  - Supervisor boleh approve/reject dan mengelola kategori defect final agar Pareto dan standar kualitas tetap konsisten.
   - Management tetap read-only agar KPI, Pareto, dan laporan improvement tidak bisa dipengaruhi oleh perubahan reference data dari pihak pembaca laporan.
   - SuperAdmin memegang `seed` dan administrasi sistem karena seed adalah bootstrap/configuration action.
+- Statistik performa Operator dibatasi role: Operator hanya melihat performa dirinya sendiri, sedangkan Mandor dan Supervisor boleh melihat ranking tim sesuai scope tanggung jawab.
+- Progress header tiap role wajib berbeda sumber data: Operator memakai target dan realisasi personal, Mandor memakai agregasi Operator di bawah tanggung jawabnya, Supervisor memakai agregasi lintas area, dan Management memakai agregat final tanpa PII.
+- Target tim Mandor dihitung dari target harian masing-masing Operator dalam scope Mandor, bukan dari satu angka Operator yang sedang aktif di device.
+- Pareto defect mengikuti filter user dan batas akses role: Operator hanya data sendiri, Mandor sesuai Bagian/tim, Supervisor untuk verifikasi kualitas dan standar defect lintas area, dan Management hanya agregat tanpa PII.
 - Kombinasi `operator_email + factory_date + line_id + shift_id + machine_id` dipakai sebagai sinyal duplicate detection tambahan.
 - Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.
@@ -252,6 +353,7 @@ Kontrak target harian:
 5. `SuperAdmin` boleh mengatur target lintas scope untuk bootstrap, koreksi administratif, atau troubleshooting.
 6. Jika beberapa target cocok, prioritas resolusi wajib dari paling spesifik: `OPERATOR_ONLY`, `MACHINE_SCOPE`, `LINE_SHIFT`, lalu `ALL_USERS`.
 7. Setiap perubahan target wajib diaudit dengan pembuat/pengubah, waktu, nilai lama/baru, dan scope.
+8. Tabel Target Planning Mandor wajib mendukung edit, aktifkan, nonaktifkan, dan hapus sebagai soft delete. Tidak ada hard delete untuk `TARGET_MASTER`.
 
 ## 12. Kontrak Session Context Dan Auth Mode
 
@@ -358,11 +460,14 @@ Baseline resource/action:
 | `schema` | `bootstrap`, `read_health` |
 | `session` | `read` |
 | `production_report` | `create`, `read` |
+| `production_review` | `read`, `void`, `request_correction`, `pre_closing_correction` |
 | `quarantine` | `read`, `approve`, `reject`, `request_correction` |
 | `daily_closing` | `create`, `read`, `reopen` |
 | `adjustment` | `create`, `read`, `approve`, `reject` |
 | `dashboard` | `read` |
 | `user_role` | `create`, `read`, `update`, `soft_delete` |
+| `work_master` | `read`, `create`, `update`, `soft_delete` |
+| `defect_change_request` | `create`, `read`, `approve`, `reject` |
 | `audit_log` | `read` |
 | `script_property` | `read_status`, `update`, `delete`, `rotate_secret` |
 | `test_runner` | `run` |

@@ -125,6 +125,26 @@
     {
       "title": "M7 - QCC Report & Rollout",
       "description": "Pilot rollout, SOP, and QCC Step 1-8 report package are ready."
+    },
+    {
+      "title": "M8 - Internationalization",
+      "description": "ID, EN, and CN language readiness after the core business process is stable."
+    },
+    {
+      "title": "M9 - HRD Workforce & Attendance",
+      "description": "HRD workspace is reworked around employee data, attendance, access governance, and payroll-ready readiness."
+    },
+    {
+      "title": "M10 - Management Executive Workspace",
+      "description": "Management workspace becomes a role-fit executive decision center for KPI, policy, production, attendance, risk, Pareto, and optional reports/exports."
+    },
+    {
+      "title": "M11 - Supervisor QC Workspace",
+      "description": "Supervisor workspace becomes the QC verification, quality standard, closing/correction, target/team, and safe transaction drilldown center."
+    },
+    {
+      "title": "M12 - Mandor Field Operations Workspace",
+      "description": "Mandor workspace becomes the field operations center for team attendance, daily targets, operator output intake, pre-closing correction, closing, and defect requests."
     }
   ],
   "issues": [
@@ -1074,6 +1094,1110 @@
         "npm run prepare:gas passed",
         "git diff --check passed with CRLF warnings only"
       ]
+    },
+    {
+      "id": "OPT-036",
+      "title": "Build pre-closing review and void workflow",
+      "status": "Review",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:backend",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": "TBD",
+      "scope": [
+        "Add Mandor review window for normal ACCEPTED Operator submits before daily closing.",
+        "Support controlled actions VOID, REQUEST_CORRECTION, and PRE_CLOSING_CORRECTION without editing the original RAW_LOGS row.",
+        "Keep ACCEPTED submit data eligible for temporary daily recap until closed, unless voided or corrected.",
+        "Expose role-aware UI for Mandor review, Supervisor monitoring, and audit-friendly history.",
+        "Ensure mock GAS and IndexedDB demo state simulate the same transaction flow as GAS."
+      ],
+      "acceptance_criteria": [
+        "Contract docs define pre-closing review statuses, ownership, and audit behavior before code.",
+        "Mandor can review scoped ACCEPTED submits and trigger VOID, REQUEST_CORRECTION, or PRE_CLOSING_CORRECTION.",
+        "Original RAW_LOGS rows remain append-only and are never edited directly.",
+        "Recap/dashboard excludes voided data and reflects approved pre-closing corrections.",
+        "Operator sees only personal correction requests/performance; Mandor and Supervisor can see team ranking by scope.",
+        "Relevant frontend, mock GAS, backend validation/RBAC, and build verification pass."
+      ],
+      "verification": [
+        "npm test passed",
+        "npm run test:frontend:api passed",
+        "npm run test:gas:m5 passed",
+        "npm run test:gas:spreadsheet-menu passed",
+        "npm run audit:gas:validation passed",
+        "npm run build:verify passed",
+        "npm run prepare:gas passed",
+        "ISSUE_TRACKER.json parse passed",
+        "git diff --check passed with CRLF warnings only"
+      ]
+    },
+    {
+      "id": "OPT-037",
+      "title": "Rebaseline business process from line-machine reporting to Bagian daily reporting",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M0 - Contracts & Planning",
+      "github_issue": "TBD",
+      "scope": [
+        "Audit old line/machine/shift assumptions against the new Bagian-based process.",
+        "Define Solder and Lem as operational Bagian or work categories.",
+        "Rewrite daily reporting process around Bagian, employee, attendance, output, Mandor recorder, and Supervisor verifier with QC responsibility."
+      ],
+      "acceptance_criteria": [
+        "BUSINESS_PROCESS.md clearly marks obsolete assumptions and defines the approved target process.",
+        "DATA_SCHEMA.md impact list is prepared before code migration.",
+        "Open decisions are listed for owner approval."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-038",
+      "title": "Design employee master and attendance recap model",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:data",
+        "area:backend",
+        "area:frontend",
+        "area:process",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M2 - Backend Foundation",
+      "github_issue": "TBD",
+      "scope": [
+        "Add employee number, name, active/resigned status, and extensible HRD fields.",
+        "Design daily attendance status and notes.",
+        "Design monthly attendance recap output."
+      ],
+      "acceptance_criteria": [
+        "Employee and attendance sheets are documented with validation rules.",
+        "Role ownership for attendance entry and HRD maintenance is defined.",
+        "Monthly attendance recap contract is documented before implementation."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-039",
+      "title": "Build Supervisor-verified production valuation workflow",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:process",
+        "area:backend",
+        "area:frontend",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": "TBD",
+      "scope": [
+        "Separate Mandor recording from Supervisor output verification.",
+        "Define Supervisor-verified OK + Reject as the authoritative production value; QC is a Supervisor function, not a separate role.",
+        "Add daily report approval states for Mandor recorder and Supervisor verifier."
+      ],
+      "acceptance_criteria": [
+        "Workflow states for recorded, Supervisor verified, void, and correction are documented.",
+        "Dashboard and recap consume verified values, not unverified raw input.",
+        "Audit trail identifies recorder and verifier separately."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-040",
+      "title": "Model Solder-to-Lem material source traceability",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:data",
+        "area:process",
+        "area:backend",
+        "area:frontend",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M4 - Offline Sync & Conflict Control",
+      "github_issue": "TBD",
+      "scope": [
+        "Model many-to-one source relation where one Lem output can receive material from multiple Solder employees.",
+        "Define traceability fields and validation without forcing a one-line input.",
+        "Prepare UI pattern for selecting multiple source employees or source batches."
+      ],
+      "acceptance_criteria": [
+        "Data schema supports multi-source material lineage.",
+        "Business process explains when traceability is required.",
+        "Mock/demo data includes realistic Solder-to-Lem examples."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-041",
+      "title": "Define unit-rate wage and monthly target policy ownership",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:data",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M0 - Contracts & Planning",
+      "github_issue": "TBD",
+      "scope": [
+        "Document Solder/Las 94 rupiah per unit and Lem 83 rupiah per unit policy.",
+        "Document monthly target formulas and daily target table by attendance days.",
+        "Decide owner role for wage policy: Management, HRD, or Management approval with HRD administration."
+      ],
+      "acceptance_criteria": [
+        "BUSINESS_PROCESS.md records owner decision and escalation path.",
+        "DATA_SCHEMA.md defines wage policy and target policy contract without exposing payroll PII.",
+        "UI scope for role-authorized policy maintenance is defined before code."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-042",
+      "title": "Replace Line/Machine terminology with Bagian and work category terminology",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M3 - Operator Mobile MVP",
+      "github_issue": "TBD",
+      "scope": [
+        "Map or migrate current line_id and machine_id fields to Bagian/work-category terminology.",
+        "Update UI labels, filters, mock data, and help text.",
+        "Keep backward compatibility or migration notes for existing sheets."
+      ],
+      "acceptance_criteria": [
+        "Terminology is consistent across README, contracts, UI, payloads, and seeds.",
+        "Migration strategy avoids data loss from existing line/machine fields.",
+        "Tests cover new labels and reference data shape."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-043",
+      "title": "Redefine role boundaries for Mandor, Supervisor verification, HRD, Management, and SuperAdmin",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:security",
+        "area:process",
+        "area:data",
+        "area:backend",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M2 - Backend Foundation",
+      "github_issue": "TBD",
+      "scope": [
+        "Define Mandor as recorder and daily target setter.",
+        "Define Supervisor as production value verifier for OK + Reject with QC responsibility.",
+        "Define Supervisor as verifier/escalation and Management/HRD boundaries for wage and employee data."
+      ],
+      "acceptance_criteria": [
+        "ROLE_PERMISSIONS matrix is redesigned from the approved responsibility map.",
+        "SuperAdmin full access remains explicit, not implicit bypass.",
+        "PII/payroll-sensitive data is separated from operational production views."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-044",
+      "title": "Rework daily and monthly recap outputs for Bagian, attendance, production, and payroll-ready statistics",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:data",
+        "area:backend",
+        "area:frontend",
+        "area:process",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": "TBD",
+      "scope": [
+        "Create daily Bagian report output: present employees, absent employees, total output, tandon, statistics, recorder, and verifier.",
+        "Create monthly attendance and production recap outputs.",
+        "Prepare statistics for employee performance and Pareto defect by role-based filters."
+      ],
+      "acceptance_criteria": [
+        "Daily and monthly recap schemas are documented.",
+        "Recap calculations separate raw recorded values from Supervisor-verified values.",
+        "Dashboard requirements reflect Bagian, attendance, production, and payroll-ready statistics."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-045",
+      "title": "Prepare Management mock dataset for Bagian, attendance, Supervisor verification, and unit-rate insight",
+      "status": "Review",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": "TBD",
+      "scope": [
+        "Add mock Management response data for Bagian-based daily reporting.",
+        "Show attendance confirmation counts, Supervisor-verified output, tandon as context, unit-rate policy, and Solder-to-Lem source examples.",
+        "Keep Management read-only while rebaseline issues remain open."
+      ],
+      "acceptance_criteria": [
+        "Management mock data can be inspected without GAS upload.",
+        "Dashboard displays Bagian, attendance, Supervisor verification, wage policy, and material flow examples.",
+        "Existing MASTER_RECAP dashboard behavior remains backward-compatible."
+      ],
+      "verification": [
+        "npm run test:frontend:api passed",
+        "npm run build:verify passed",
+        "ISSUE_TRACKER.json parse passed"
+      ]
+    },
+    {
+      "id": "OPT-046",
+      "title": "Define i18n-ready UI text and terminology contract",
+      "status": "Ready",
+      "priority": "P2",
+      "labels": [
+        "type:docs",
+        "area:frontend",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M8 - Internationalization",
+      "github_issue": "TBD",
+      "scope": [
+        "Define default language ID and supported languages ID, EN, CN.",
+        "Define fallback behavior for missing translation keys.",
+        "List domain terms that must not be translated until business process rebaseline is stable."
+      ],
+      "acceptance_criteria": [
+        "UI_UX_CONTRACT.md defines i18n-ready rules.",
+        "BUSINESS_PROCESS.md or glossary documents protected domain terminology.",
+        "No full translation is required before process terminology is stable."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-047",
+      "title": "Build frontend i18n dictionary infrastructure and language switcher",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M8 - Internationalization",
+      "github_issue": "TBD",
+      "scope": [
+        "Create dictionary files for id, en, and cn keys.",
+        "Add translation helper with safe fallback.",
+        "Add language preference storage and a lightweight language switcher."
+      ],
+      "acceptance_criteria": [
+        "UI labels can resolve through a translation helper.",
+        "Missing key fallback is deterministic and visible in development.",
+        "Language switch does not reload the full app or break GAS single-file build."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-048",
+      "title": "Add ID EN CN translation packs after business process rebaseline is stable",
+      "status": "Backlog",
+      "priority": "P3",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:process",
+        "area:ui-ux",
+        "priority:p3",
+        "sync:github"
+      ],
+      "milestone": "M8 - Internationalization",
+      "github_issue": "TBD",
+      "scope": [
+        "Translate finalized menus, buttons, statuses, validation messages, help text, and dashboard labels.",
+        "Review production terminology in ID, EN, and CN.",
+        "Keep technical keys stable while business copy can change."
+      ],
+      "acceptance_criteria": [
+        "All user-facing core UI text has ID, EN, and CN translations.",
+        "Domain terminology is reviewed after OPT-037 through OPT-044 are stable.",
+        "Automated or manual i18n coverage verification is recorded."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-049",
+      "title": "Rework Management workspace for monthly UMR wage condition insight",
+      "status": "Review",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M5 - Supervisor Control & Recap",
+      "github_issue": "TBD",
+      "scope": [
+        "Reorganize Management feature menu around role-fit read-only insights.",
+        "Add monthly UMR/target salary condition from mock wage policy and Supervisor-verified output.",
+        "Show gap unit, estimated wage, target salary, and policy pending states."
+      ],
+      "acceptance_criteria": [
+        "Management menu no longer depends on obsolete or non-role-fit views.",
+        "UMR monthly status clearly distinguishes meets, below, and policy pending conditions.",
+        "Mock data supports verification without GAS upload."
+      ],
+      "verification": [
+        "npm run test:frontend:api passed",
+        "npm run build:verify passed",
+        "ISSUE_TRACKER.json parse passed"
+      ]
+    },
+    {
+      "id": "OPT-050",
+      "title": "Rebaseline HRD workspace into four production-ready menus",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:ui-ux",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M9 - HRD Workforce & Attendance",
+      "github_issue": "TBD",
+      "scope": [
+        "Replace current HRD menu concept with four menus: Dashboard, Karyawan, Absensi, and Akses & Audit.",
+        "Move privacy rules out of a standalone menu and make them a cross-cutting HRD UI behavior.",
+        "Update BUSINESS_PROCESS.md, DATA_SCHEMA.md, and UI_UX_CONTRACT.md before implementation."
+      ],
+      "acceptance_criteria": [
+        "HRD menu contract lists exactly four primary menus.",
+        "Old menu labels Dashboard PII, User Masked, Roles RBAC, Audit Logs, and Privacy Safe are deprecated or mapped.",
+        "Each HRD menu has clear user goals, data boundaries, and privacy constraints."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-051",
+      "title": "Build HRD Dashboard for workforce and payroll readiness",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M9 - HRD Workforce & Attendance",
+      "github_issue": "TBD",
+      "scope": [
+        "Show active employees, resigned/inactive employees, today's attendance, pending Mandor confirmations, incomplete employee data, and payroll-ready summary.",
+        "Remove PII wording from the dashboard title while preserving privacy-first behavior.",
+        "Use mock GAS data that matches the future backend response shape."
+      ],
+      "acceptance_criteria": [
+        "Dashboard provides HRD operational signals without exposing unnecessary PII.",
+        "Cards and states cover loading, empty, error, and demo/mock data.",
+        "Payroll-ready summary is clearly separated from final payroll calculation."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-052",
+      "title": "Build HRD Karyawan directory with privacy-safe detail access",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "type:security",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M9 - HRD Workforce & Attendance",
+      "github_issue": "TBD",
+      "scope": [
+        "Combine the old User Masked and Privacy Safe concepts into one Karyawan menu.",
+        "Display 5-digit employee ID, full name, Bagian, active/resigned status, email, WhatsApp wa.me action, address, and data completeness indicators.",
+        "Define masking and detail-access behavior for demo and production modes."
+      ],
+      "acceptance_criteria": [
+        "Karyawan menu supports privacy-safe employee directory browsing.",
+        "WhatsApp action uses wa.me and never logs phone numbers into audit metadata.",
+        "Production PII access is gated by backend permission and documented before implementation."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-053",
+      "title": "Build HRD Absensi daily and monthly recap workspace",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M9 - HRD Workforce & Attendance",
+      "github_issue": "TBD",
+      "scope": [
+        "Create HRD Absensi menu for daily and monthly attendance recap.",
+        "Show Hadir, Izin, Sakit, Alpha, Resign, clock-in, clock-out, Mandor confirmation status, and payroll-ready export state.",
+        "Align with employee attendance events and monthly recap schema."
+      ],
+      "acceptance_criteria": [
+        "HRD can inspect daily and monthly attendance recap by Bagian/status/date period.",
+        "Pending Mandor confirmation is visible and not treated as final attendance.",
+        "Payroll-ready export status is present without calculating final payroll beyond approved contract."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-054",
+      "title": "Merge HRD Role Access and Audit into one lightweight governance workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "type:security",
+        "area:frontend",
+        "area:backend",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M9 - HRD Workforce & Attendance",
+      "github_issue": "TBD",
+      "scope": [
+        "Combine Roles RBAC and safe Audit Logs into Akses & Audit.",
+        "Show role ownership, active/inactive roles, multi-role users, access anomalies, last login, denied access, and employee/role change summaries.",
+        "Hide low-level backend logs, secrets, raw audit metadata, and irrelevant technical RBAC internals."
+      ],
+      "acceptance_criteria": [
+        "Akses & Audit gives HRD enough governance context without becoming a SuperAdmin console.",
+        "Multi-role assignment visibility is supported.",
+        "Audit display focuses on HRD-relevant events only and preserves masking."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-055",
+      "title": "Rebaseline Management workspace navigation for executive task flow",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:ui-ux",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Replace the current Management menu structure with Dashboard, Bagian & Upah, Produksi, Absensi, Risiko & Pareto, Risiko & Pending, and Help.",
+        "Clarify that Management is read-only for production transactions but can manage Bagian and wage policy.",
+        "Deprecate unclear technical menu names such as Trace and Pending when they do not match Management decision language."
+      ],
+      "acceptance_criteria": [
+        "UI_UX_CONTRACT.md and BUSINESS_PROCESS.md define the revised Management navigation.",
+        "Every Management menu has a clear decision goal and role boundary.",
+        "No operational mutation surface is exposed in Management except approved Bagian/upah policy CRUD."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-056",
+      "title": "Build Management Bagian & Upah policy workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Turn Bagian and Upah UMR into one policy workspace.",
+        "Support Bagian CRUD, upah per item, monthly target unit, target salary/UMR, active/inactive status, and policy pending state.",
+        "Keep all policy changes audited and separate from historical production transactions."
+      ],
+      "acceptance_criteria": [
+        "Management can inspect and maintain BAGIAN_MASTER through a clear policy UI.",
+        "Wage/UMR projections use BAGIAN_MASTER policy values.",
+        "Mock GAS and GAS endpoints keep parity for create, update, soft delete, seed, and read."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-057",
+      "title": "Build Management Produksi performance workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create a dedicated Produksi menu for output performance, separate from the executive dashboard.",
+        "Show target vs realization, OK, Reject, reject rate, trend, Bagian comparison, and Supervisor-verified output.",
+        "Support daily, weekly, and monthly views when the recap contract is ready."
+      ],
+      "acceptance_criteria": [
+        "Produksi menu answers performance questions without mixing policy CRUD or audit controls.",
+        "Charts and tables are responsive on desktop and mobile.",
+        "Only verified/final or clearly labeled non-final data is used."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-058",
+      "title": "Build Management Absensi summary workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Management Absensi menu for attendance summary, not individual HRD detail.",
+        "Show present, absent, izin, sakit, alpha, resign, pending Mandor confirmation, and productivity impact.",
+        "Preserve HRD privacy boundaries and avoid unnecessary PII."
+      ],
+      "acceptance_criteria": [
+        "Management sees attendance signals by Bagian/period without raw personal detail by default.",
+        "Pending confirmation is visually separated from final attendance.",
+        "Attendance summary can connect to payroll-ready indicators without becoming final payroll."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-059",
+      "title": "Build Management Risiko & Pareto improvement workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Risiko & Pareto menu for defect/risk prioritization.",
+        "Show Pareto defect, reject concentration, affected Bagian, trend, and QCC improvement priority.",
+        "Use Management-safe aggregates and role-based filters."
+      ],
+      "acceptance_criteria": [
+        "Pareto helps Management identify top improvement priorities.",
+        "Risk signals use business language, not raw technical status names only.",
+        "No PII is exposed in aggregate Management views."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-060",
+      "title": "Build Management Risiko & Pending decision workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Rename/reshape technical Pending into Management-friendly Risiko & Pending.",
+        "Show conflict, unverified output, open closing, policy pending, incomplete master data, and blocked recap signals.",
+        "Keep actions read-only unless escalation/assignment workflow is explicitly approved later."
+      ],
+      "acceptance_criteria": [
+        "Management can see what blocks trustworthy reporting.",
+        "Pending categories are explained in business terms.",
+        "Dashboard KPI excludes unresolved pending/conflict items or labels them clearly."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-061",
+      "title": "Evaluate Management Laporan and Export workspace",
+      "status": "Backlog",
+      "priority": "P2",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:data",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M10 - Management Executive Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Decide whether Management needs a dedicated Laporan/Export menu.",
+        "Define supported outputs such as monthly recap, PDF, CSV, Excel, or Google Sheets export.",
+        "Define export authorization, masking, and audit requirements before implementation."
+      ],
+      "acceptance_criteria": [
+        "Decision recorded: separate Laporan/Export menu or export actions embedded in existing views.",
+        "Export formats and data boundaries are documented.",
+        "No export implementation starts before PII and audit rules are approved."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-062",
+      "title": "Rebaseline Supervisor workspace navigation for QC task flow",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:ui-ux",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M11 - Supervisor QC Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Replace technical Supervisor menus with Dashboard, Verifikasi QC, Defect & Pareto, Closing & Koreksi, Target & Tim, and Detail Data.",
+        "Map old Alerts into Dashboard, Quarantine into Verifikasi QC or Closing & Koreksi, Adjustment into Closing & Koreksi, and Raw Logs into Detail Data.",
+        "Update BUSINESS_PROCESS.md and UI_UX_CONTRACT.md before implementation."
+      ],
+      "acceptance_criteria": [
+        "Supervisor menu contract is role-fit for Supervisor/QC daily work.",
+        "Raw Logs, Quarantine, Alerts, and Adjustment are no longer treated as primary business menu names.",
+        "Each new menu has clear purpose, permission boundary, and data source."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-063",
+      "title": "Build Supervisor Verifikasi QC production validation workspace",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M11 - Supervisor QC Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Verifikasi QC menu for validating authoritative OK + Reject output by Bagian, employee, and date.",
+        "Support approve, return/request correction, quarantine decision visibility, and verified status.",
+        "Keep raw transaction rows append-only and record verifier separately from Mandor recorder."
+      ],
+      "acceptance_criteria": [
+        "Supervisor can identify output pending verification and verified output.",
+        "Verification actions are audited and do not overwrite RAW_LOGS.",
+        "Recap/dashboard can distinguish recorded, verified, correction requested, and voided output."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-064",
+      "title": "Build Supervisor Defect & Pareto quality standard workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M11 - Supervisor QC Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Defect & Pareto menu for quality standards and reject analysis.",
+        "Let Supervisor manage final defect categories and review Mandor defect requests.",
+        "Show Pareto, severity, QCC factor, defect trends, and affected Bagian."
+      ],
+      "acceptance_criteria": [
+        "Supervisor can maintain defect standards without using SuperAdmin console.",
+        "Mandor defect requests are visibly separated from final master data.",
+        "Pareto uses role-appropriate filters and supports improvement prioritization."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-065",
+      "title": "Build Supervisor Closing & Koreksi workflow",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M11 - Supervisor QC Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Combine daily closing, void, request correction, pre-closing correction, and adjustment trail into one workflow.",
+        "Show what must be resolved before closing a Bagian/date scope.",
+        "Keep correction history append-only and auditable."
+      ],
+      "acceptance_criteria": [
+        "Closing & Koreksi shows open closing, correction, void, and adjustment states in business language.",
+        "Supervisor can see blockers before closing or final verification.",
+        "All correction actions preserve audit trail and idempotency."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-066",
+      "title": "Build Supervisor Target & Tim capacity workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M11 - Supervisor QC Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Target & Tim menu for reviewing target realism, attendance capacity, and team performance.",
+        "Show Bagian, employees under scope, hadir/absen impact, Mandor target setting, and monthly target pressure.",
+        "Support read/review first; target override needs explicit permission."
+      ],
+      "acceptance_criteria": [
+        "Supervisor can evaluate whether target plans match available team capacity.",
+        "Team performance is separated from individual Operator self-view and Management aggregate view.",
+        "Any mutation controls are hidden unless permission contract allows them."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-067",
+      "title": "Convert Supervisor Raw Logs into safe Detail Data drilldown",
+      "status": "Ready",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "type:security",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M11 - Supervisor QC Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Move Raw Logs out of primary Supervisor workflow and expose it as Detail Data drilldown.",
+        "Provide filters, pagination, masking, and clear source/status labels.",
+        "Keep technical payloads and unsafe PII out of normal display."
+      ],
+      "acceptance_criteria": [
+        "Detail Data supports investigation without making raw technical logs the default workflow.",
+        "Filter and pagination protect performance on larger sheets.",
+        "Sensitive fields and raw payloads remain hidden unless explicitly authorized."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-068",
+      "title": "Rebaseline Mandor workspace navigation for field operations",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:docs",
+        "area:process",
+        "area:ui-ux",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Replace narrow approval-only Mandor layout with Dashboard, Absensi Tim, Target Harian, Hasil Operator, Approval & Koreksi, Closing Harian, Defect Request, and Help.",
+        "Define which old Mandor surfaces are merged: conflict queue into Approval & Koreksi, submit monitoring into Hasil Operator, target planning into Target Harian, and closing into Closing Harian.",
+        "Update BUSINESS_PROCESS.md and UI_UX_CONTRACT.md before implementation."
+      ],
+      "acceptance_criteria": [
+        "Mandor menu contract matches daily field operations.",
+        "Mandor workspace separates routine monitoring from exception handling.",
+        "Each menu has clear purpose, permission boundary, and data source."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-069",
+      "title": "Build Mandor Dashboard for team readiness and daily blockers",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Dashboard menu showing team attendance, target readiness, output submitted, pending confirmation, correction queue, and closing status.",
+        "Use Bagian and Mandor-Operator scope, not global line/shift assumptions.",
+        "Keep dashboard summary lightweight with drilldown links to relevant Mandor menus."
+      ],
+      "acceptance_criteria": [
+        "Mandor can see today's team readiness and blockers in one screen.",
+        "Dashboard distinguishes accepted output, pending correction, and closing blockers.",
+        "Progress is team-scoped and never uses the active Operator personal target as Mandor target."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-070",
+      "title": "Build Mandor Absensi Tim confirmation workspace",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Absensi Tim menu for confirming employee Masuk/Keluar records.",
+        "Support check, check all, and exception status Izin, Sakit, Alpha with notes.",
+        "Expose confirmation status for HRD payroll-ready attendance recap."
+      ],
+      "acceptance_criteria": [
+        "Mandor can confirm attendance per employee and per team scope.",
+        "Check all cannot silently confirm resigned/inactive employees.",
+        "Attendance decisions are auditable and visible to HRD summary."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-071",
+      "title": "Build Mandor Target Harian planning workspace",
+      "status": "Ready",
+      "priority": "P0",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p0",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Target Harian menu for assigning target per operator, Bagian, date, and work category.",
+        "Show multi-user impact preview before saving all-operator/team targets.",
+        "Support edit, active, inactive, and soft delete for target records."
+      ],
+      "acceptance_criteria": [
+        "Target harian is set by Mandor or higher, not manually by Operator.",
+        "Target changes are scoped to explicit employee/team selection.",
+        "Target active list updates immediately after save in real GAS and mock mode."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-072",
+      "title": "Build Mandor Hasil Operator monitoring workspace",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Hasil Operator menu for monitoring normal accepted submits and recent output.",
+        "Display transaction metadata with employee id/name masked as needed, Bagian, timestamp, OK, Reject, Tandon, and status.",
+        "Provide drilldown to correction/approval actions without mixing routine monitoring with conflict queue."
+      ],
+      "acceptance_criteria": [
+        "Mandor can see Operator submissions that do not require HITL approval.",
+        "Transaction rows are understandable without relying on UUID alone.",
+        "Mock mode shares data with Operator submit flow through persistent demo state."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-073",
+      "title": "Merge Mandor approval conflict and pre-closing correction workflow",
+      "status": "Ready",
+      "priority": "P1",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p1",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Approval & Koreksi menu that combines actionable conflict queue, pending records, void, request correction, and pre-closing correction.",
+        "Hide final statuses from active queue while preserving audit/history.",
+        "Route resolved items to Hasil Operator or Closing Harian status."
+      ],
+      "acceptance_criteria": [
+        "Only actionable PENDING and CONFLICT_PENDING cases stay in the active queue.",
+        "Approve, reject, request correction, void, and pre-closing correction are append-only and audited.",
+        "Resolved items disappear from work queue immediately in GAS and mock mode."
+      ],
+      "verification": []
+    },
+    {
+      "id": "OPT-074",
+      "title": "Build Mandor Defect Request workflow",
+      "status": "Ready",
+      "priority": "P2",
+      "labels": [
+        "type:feature",
+        "area:frontend",
+        "area:backend",
+        "area:data",
+        "area:process",
+        "area:ui-ux",
+        "priority:p2",
+        "sync:github"
+      ],
+      "milestone": "M12 - Mandor Field Operations Workspace",
+      "github_issue": "TBD",
+      "scope": [
+        "Create Defect Request menu for Mandor to propose new defect categories from field findings.",
+        "Separate draft/request defect records from final Supervisor/SuperAdmin defect master.",
+        "Show request status and feedback from Supervisor verification."
+      ],
+      "acceptance_criteria": [
+        "Mandor can propose defects without mutating final DEFECT_CATEGORIES directly.",
+        "Supervisor can later approve/reject requests from the QC workspace.",
+        "Operator only sees active final defect categories, not unapproved requests."
+      ],
+      "verification": []
     }
   ]
 }

@@ -1,7 +1,6 @@
 export const defaultDashboardFilters = Object.freeze({
   factory_date: '2026-09-02',
-  line_id: '',
-  shift_id: '',
+  bagian_id: '',
 });
 
 export function buildDashboardTiles(data = {}) {

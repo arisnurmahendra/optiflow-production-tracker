@@ -2,7 +2,6 @@ export const approvalStatusOptions = Object.freeze([
   { value: 'ALL', label: 'Semua status' },
   { value: 'CONFLICT_PENDING', label: 'Bentrok Data' },
   { value: 'PENDING', label: 'Review Umum' },
-  { value: 'CORRECTION_REQUESTED', label: 'Koreksi' },
 ]);
 
 export const approvalLineOptions = Object.freeze([
@@ -64,6 +63,7 @@ export const initialApprovalCases = Object.freeze([
 ]);
 
 const FINAL_STATUSES = ['APPROVED', 'REJECTED', 'CORRECTION_REQUESTED'];
+export const actionableApprovalStatuses = Object.freeze(['CONFLICT_PENDING', 'PENDING']);
 
 export function summarizeApprovalCases(cases) {
   return cases.reduce((summary, item) => {
@@ -104,6 +104,41 @@ export function filterApprovalCases(cases, filters = {}) {
     });
 }
 
+export function filterActionableApprovalCases(cases) {
+  return cases.filter((item) => actionableApprovalStatuses.includes(item.status));
+}
+
+export function createApprovalCasesFromControlCenter(data = {}) {
+  const rawRows = data.raw_logs?.items || [];
+  const rawByTransaction = new Map(rawRows.map((row) => [row.transaction_id, row]));
+  const rows = data.quarantine?.items || [];
+
+  return rows.map((row, index) => {
+    const raw = rawByTransaction.get(row.transaction_id) || {};
+    return {
+      id: row.quarantine_id,
+      transaction_id: row.transaction_id,
+      status: row.status || 'PENDING',
+      reason_code: row.reason_code || 'REVIEW_REQUIRED',
+      priority: row.status === 'CONFLICT_PENDING' ? 1 : index + 2,
+      line_id: row.line_id || raw.line_id || '',
+      shift_id: row.shift_id || raw.shift_id || '',
+      machine_id: row.machine_id || raw.machine_id || '',
+      submitted_at: raw.server_received_at || raw.device_timestamp || '',
+      current: {
+        operator: raw.operator_name || 'Operator',
+        operator_email_masked: raw.operator_email_masked || maskEmail(raw.operator_email),
+        ok: Number(raw.perolehan_ok || 0),
+        reject: Number(raw.perolehan_reject || 0),
+        defect_category_id: raw.defect_category_id || '',
+        device_timestamp: raw.device_timestamp || '',
+      },
+      conflict_with: null,
+      note: row.notes || 'Kasus membutuhkan keputusan Mandor sebelum masuk proses recap.',
+    };
+  });
+}
+
 export function findApprovalCase(cases, id) {
   return cases.find((item) => item.id === id) || null;
 }
@@ -132,4 +167,14 @@ export function resolveApprovalCase(cases, id, action, now = () => new Date().to
       staged_action: action,
     };
   });
+}
+
+function maskEmail(email) {
+  const value = String(email || '').trim();
+  if (!value || !value.includes('@')) {
+    return '-';
+  }
+
+  const [name, domain] = value.split('@');
+  return `${name.slice(0, 2)}***@${domain}`;
 }

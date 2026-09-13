@@ -5,22 +5,47 @@ const DEFAULT_FAILURE_RATE = 0;
 
 const DUMMY_PROFILE_BASE64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxOCIgZmlsbD0iIzM4YjRmOCIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMjQiIHI9IjEwIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE0IDU2YzMtMTMgMTMtMjAgMTgtMjBzMTUgNyAxOCAyMCIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==';
 
+const MOCK_PERMISSION_CATALOG = Object.freeze({
+  schema: Object.freeze(['bootstrap', 'read_health']),
+  session: Object.freeze(['read']),
+  production_report: Object.freeze(['create', 'read']),
+  quarantine: Object.freeze(['read', 'approve', 'reject', 'request_correction']),
+  daily_closing: Object.freeze(['create', 'read', 'reopen']),
+  adjustment: Object.freeze(['create', 'read', 'approve', 'reject']),
+  production_review: Object.freeze(['read', 'void', 'request_correction', 'pre_closing_correction']),
+  audit_log: Object.freeze(['read']),
+  dashboard: Object.freeze(['read']),
+  defect_category: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
+  bagian_master: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
+  production_target: Object.freeze(['read', 'create', 'update', 'bulk_update', 'soft_delete']),
+  reference_data: Object.freeze(['read']),
+  test_runner: Object.freeze(['run']),
+  user_role: Object.freeze(['create', 'read', 'update', 'soft_delete']),
+  script_property: Object.freeze(['read_status', 'update', 'delete', 'rotate_secret']),
+});
+
 const DEFAULT_USER_ROLES = [
-  { user_id: 'DEV-Operator', email: 'operator@example.com', username: 'operator.demo', role: 'Operator', nama_lengkap_encrypted: 'enc:dev-operator-name', alamat_encrypted: 'enc:dev-operator-address', nomor_telepon_encrypted: 'enc:dev-operator-phone', phone_blind_index: 'blind:dev-operator-phone', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T00:55:00.000Z', created_at: '2026-08-25T02:00:00.000Z', updated_at: '2026-09-03T03:10:00.000Z' },
-  { user_id: 'DEV-Mandor', email: 'mandor@example.com', username: 'mandor.demo', role: 'Mandor', nama_lengkap_encrypted: 'enc:dev-mandor-name', alamat_encrypted: 'enc:dev-mandor-address', nomor_telepon_encrypted: 'enc:dev-mandor-phone', phone_blind_index: 'blind:dev-mandor-phone', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T01:12:00.000Z', created_at: '2026-08-25T02:10:00.000Z', updated_at: '2026-09-03T03:12:00.000Z' },
-  { user_id: 'DEV-Management', email: 'management@example.com', username: 'management.demo', role: 'Management', nama_lengkap_encrypted: 'enc:dev-management-name', alamat_encrypted: 'enc:dev-management-address', nomor_telepon_encrypted: 'enc:dev-management-phone', phone_blind_index: 'blind:dev-management-phone', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-03T08:45:00.000Z', created_at: '2026-08-25T02:20:00.000Z', updated_at: '2026-09-03T03:14:00.000Z' },
-  { user_id: 'DEV-HRD', email: 'hrd@example.com', username: 'hrd.demo', role: 'HRD', nama_lengkap_encrypted: 'enc:dev-hrd-name', alamat_encrypted: 'enc:dev-hrd-address', nomor_telepon_encrypted: 'enc:dev-hrd-phone', phone_blind_index: 'blind:dev-hrd-phone', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T01:30:00.000Z', created_at: '2026-08-25T02:30:00.000Z', updated_at: '2026-09-03T03:16:00.000Z' },
-  { user_id: 'DEV-Inactive', email: 'inactive.operator@example.com', username: 'operator.inactive.demo', role: 'Operator', nama_lengkap_encrypted: 'enc:dev-inactive-operator-name', alamat_encrypted: 'enc:dev-inactive-operator-address', nomor_telepon_encrypted: 'enc:dev-inactive-operator-phone', phone_blind_index: 'blind:dev-inactive-operator-phone', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: false, is_deleted: false, last_login: '', created_at: '2026-08-20T02:00:00.000Z', updated_at: '2026-09-01T04:00:00.000Z' },
+  { user_id: '10001', employee_no: '10001', full_name: 'Rina Wulandari', address: 'Jl. Melati 12, Bogor', email: 'operator@example.com', wa_number: '628121110001', username: 'rina.solder', role: 'Operator', bagian_id: 'SOLDER', nama_lengkap_encrypted: 'enc:rina-wulandari', alamat_encrypted: 'enc:bogor-melati-12', nomor_telepon_encrypted: 'enc:628121110001', phone_blind_index: 'blind:628121110001', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: true, is_deleted: false, last_login: '2026-09-04T00:55:00.000Z', created_at: '2026-08-25T02:00:00.000Z', updated_at: '2026-09-03T03:10:00.000Z' },
+  { user_id: '10002', employee_no: '10002', full_name: 'Budi Hartono', address: 'Kp. Cikaret RT 03/02, Bogor', email: 'mandor@example.com', wa_number: '628121110002', username: 'budi.mandor', role: 'Mandor', bagian_id: 'SOLDER', nama_lengkap_encrypted: 'enc:budi-hartono', alamat_encrypted: 'enc:cikaret-rt0302', nomor_telepon_encrypted: 'enc:628121110002', phone_blind_index: 'blind:628121110002', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T01:12:00.000Z', created_at: '2026-08-25T02:10:00.000Z', updated_at: '2026-09-03T03:12:00.000Z' },
+  { user_id: '10003', employee_no: '10003', full_name: 'Maya Safitri', address: 'Perum Griya Asri Blok C7, Depok', email: 'management@example.com', wa_number: '628121110003', username: 'maya.management', role: 'Management', roles: ['Management', 'Supervisor'], bagian_id: 'ALL', nama_lengkap_encrypted: 'enc:maya-safitri', alamat_encrypted: 'enc:griya-asri-c7', nomor_telepon_encrypted: 'enc:628121110003', phone_blind_index: 'blind:628121110003', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-03T08:45:00.000Z', created_at: '2026-08-25T02:20:00.000Z', updated_at: '2026-09-03T03:14:00.000Z' },
+  { user_id: '10004', employee_no: '10004', full_name: 'Dewi Anggraeni', address: 'Jl. Kenanga 5, Cibinong', email: 'hrd@example.com', wa_number: '628121110004', username: 'dewi.hrd', role: 'HRD', bagian_id: 'HRD', nama_lengkap_encrypted: 'enc:dewi-anggraeni', alamat_encrypted: 'enc:kenanga-5', nomor_telepon_encrypted: 'enc:628121110004', phone_blind_index: 'blind:628121110004', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T01:30:00.000Z', created_at: '2026-08-25T02:30:00.000Z', updated_at: '2026-09-03T03:16:00.000Z' },
+  { user_id: '10005', employee_no: '10005', full_name: 'Agus Prasetyo', address: 'Jl. Raya Tajur 88, Bogor', email: 'agus.lem@example.com', wa_number: '628121110005', username: 'agus.lem', role: 'Operator', bagian_id: 'LEM', nama_lengkap_encrypted: 'enc:agus-prasetyo', alamat_encrypted: 'enc:tajur-88', nomor_telepon_encrypted: 'enc:628121110005', phone_blind_index: 'blind:628121110005', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: true, is_deleted: false, last_login: '2026-09-04T02:10:00.000Z', created_at: '2026-08-26T02:00:00.000Z', updated_at: '2026-09-03T04:10:00.000Z' },
+  { user_id: '10006', employee_no: '10006', full_name: 'Siti Nurhaliza', address: 'Jl. Pahlawan 21, Sukabumi', email: 'inactive.operator@example.com', wa_number: '628121110006', username: 'siti.resign', role: 'Operator', bagian_id: 'SOLDER', nama_lengkap_encrypted: 'enc:siti-nurhaliza', alamat_encrypted: 'enc:pahlawan-21', nomor_telepon_encrypted: 'enc:628121110006', phone_blind_index: 'blind:628121110006', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: false, is_deleted: false, last_login: '', created_at: '2026-08-20T02:00:00.000Z', updated_at: '2026-09-01T04:00:00.000Z' },
 ];
 
 const DEFAULT_ROLE_PERMISSIONS = [
   ['Operator', 'production_report', 'create'],
   ['Operator', 'production_report', 'read'],
+  ['Operator', 'bagian_master', 'read'],
   ['Operator', 'defect_category', 'read'],
   ['Operator', 'production_target', 'read'],
   ['Operator', 'reference_data', 'read'],
   ['Mandor', 'quarantine', 'read'],
   ['Mandor', 'quarantine', 'approve'],
+  ['Mandor', 'production_review', 'read'],
+  ['Mandor', 'production_review', 'void'],
+  ['Mandor', 'production_review', 'request_correction'],
+  ['Mandor', 'production_review', 'pre_closing_correction'],
   ['Mandor', 'daily_closing', 'create'],
   ['Mandor', 'dashboard', 'read'],
   ['Mandor', 'production_target', 'read'],
@@ -29,15 +54,25 @@ const DEFAULT_ROLE_PERMISSIONS = [
   ['Mandor', 'production_target', 'bulk_update'],
   ['Mandor', 'production_target', 'soft_delete'],
   ['Mandor', 'reference_data', 'read'],
+  ['Mandor', 'bagian_master', 'read'],
+  ['Supervisor', 'bagian_master', 'read'],
   ['Management', 'dashboard', 'read'],
+  ['Management', 'production_review', 'read'],
+  ['Management', 'bagian_master', 'read'],
+  ['Management', 'bagian_master', 'create'],
+  ['Management', 'bagian_master', 'update'],
+  ['Management', 'bagian_master', 'soft_delete'],
+  ['Management', 'bagian_master', 'seed'],
   ['Management', 'defect_category', 'read'],
   ['Management', 'production_target', 'read'],
   ['Management', 'reference_data', 'read'],
   ['HRD', 'user_role', 'read'],
   ['HRD', 'audit_log', 'read'],
+  ['HRD', 'bagian_master', 'read'],
   ['HRD', 'reference_data', 'read'],
-  ['SuperAdmin', 'script_property', 'read_status'],
-  ['SuperAdmin', 'test_runner', 'run'],
+  ...Object.entries(MOCK_PERMISSION_CATALOG).flatMap(([resource, actions]) =>
+    actions.map((action) => ['SuperAdmin', resource, action]),
+  ),
 ].map(([role, resource, action]) => ({ role, resource, action, is_allowed: true }));
 
 const DEFAULT_SHIFT_MASTER = [
@@ -50,6 +85,12 @@ const DEFAULT_LINE_MASTER = [
   { line_id: 'SMT-01', line_name: 'Surface Mount 01', area: 'Produksi Elektronik', mandor_email: 'mandor@example.com', status_aktif: true },
   { line_id: 'SMT-02', line_name: 'Surface Mount 02', area: 'Produksi Elektronik', mandor_email: 'mandor@example.com', status_aktif: true },
   { line_id: 'ASSY-01', line_name: 'Assembly 01', area: 'Final Assembly', mandor_email: 'mandor@example.com', status_aktif: true },
+];
+
+const DEFAULT_BAGIAN_MASTER = [
+  { bagian_id: 'SOLDER', bagian_name: 'Bagian Solder', description: 'Proses solder/las komponen produksi.', unit_rate: 94, monthly_target_unit: 37234, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
+  { bagian_id: 'LEM', bagian_name: 'Bagian Lem', description: 'Proses lem dan perakitan lanjutan.', unit_rate: 83, monthly_target_unit: 42169, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
+  { bagian_id: 'PACKING', bagian_name: 'Bagian Packing', description: 'Packing dan persiapan pengiriman.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
 ];
 
 const DEFAULT_TARGET_MASTER = [
@@ -167,6 +208,95 @@ const DEFAULT_PROPERTIES = [
   },
 ];
 
+const DEFAULT_MANAGEMENT_DEMO = Object.freeze({
+  attendance_summary: Object.freeze({
+    factory_date: '2026-09-03',
+    total_employees: 96,
+    present_count: 89,
+    absent_count: 7,
+    izin_count: 2,
+    sakit_count: 3,
+    alpha_count: 2,
+    mandor_confirmed_count: 86,
+    pending_confirmation_count: 3,
+  }),
+  bagian_summary: Object.freeze([
+    Object.freeze({
+      bagian_id: 'SOLDER',
+      bagian_name: 'Bagian Solder',
+      target_total: 127448,
+      qc_ok_total: 125910,
+      qc_reject_total: 842,
+      tandon_total: 3280,
+      present_count: 89,
+      absent_count: 7,
+      unit_rate: 94,
+      monthly_target_unit: 37234,
+      monthly_actual_unit: 35800,
+      target_salary: 3500000,
+      recorder: 'mandor@example.com',
+      verifier: 'qc.management@example.com',
+      verification_status: 'QC_VERIFIED',
+    }),
+    Object.freeze({
+      bagian_id: 'LEM',
+      bagian_name: 'Bagian Lem',
+      target_total: 68896,
+      qc_ok_total: 67640,
+      qc_reject_total: 514,
+      tandon_total: 1460,
+      present_count: 41,
+      absent_count: 4,
+      unit_rate: 83,
+      monthly_target_unit: 42169,
+      monthly_actual_unit: 43050,
+      target_salary: 3500000,
+      recorder: 'mandor.lem@example.com',
+      verifier: 'supervisor@example.com',
+      verification_status: 'SUPERVISOR_VERIFIED',
+    }),
+    Object.freeze({
+      bagian_id: 'PACKING',
+      bagian_name: 'Bagian Packing',
+      target_total: 54000,
+      qc_ok_total: 54820,
+      qc_reject_total: 120,
+      tandon_total: 0,
+      present_count: 32,
+      absent_count: 1,
+      unit_rate: 0,
+      monthly_target_unit: 0,
+      monthly_actual_unit: 0,
+      target_salary: 0,
+      recorder: 'mandor.packing@example.com',
+      verifier: 'supervisor@example.com',
+      verification_status: 'DRAFT_POLICY',
+    }),
+  ]),
+  material_flow: Object.freeze([
+    Object.freeze({
+      flow_id: 'FLOW-LEM-20260903-001',
+      target_bagian_id: 'LEM',
+      target_employee_no: 'LEM-014',
+      source_bagian_id: 'SOLDER',
+      source_employee_nos: Object.freeze(['SLD-006', 'SLD-014', 'SLD-021']),
+      received_units: 4820,
+      verified_units: 4744,
+      note: 'Satu operator Lem menerima bahan dari tiga operator Solder.',
+    }),
+    Object.freeze({
+      flow_id: 'FLOW-LEM-20260903-002',
+      target_bagian_id: 'LEM',
+      target_employee_no: 'LEM-018',
+      source_bagian_id: 'SOLDER',
+      source_employee_nos: Object.freeze(['SLD-011', 'SLD-019']),
+      received_units: 3910,
+      verified_units: 3892,
+      note: 'Relasi many-to-one untuk debugging traceability.',
+    }),
+  ]),
+});
+
 export function installMockGas(options = {}) {
   const mockGas = createMockGas(options);
   window.__OPTIFLOW_MOCK_GAS__ = mockGas;
@@ -179,32 +309,45 @@ export function installMockGas(options = {}) {
 export function createMockGas(options = {}) {
   const latencyMs = options.latencyMs ?? DEFAULT_LATENCY_MS;
   const failureRate = options.failureRate ?? DEFAULT_FAILURE_RATE;
+  const initialState = options.initialState || {};
+  const onStateChange = typeof options.onStateChange === 'function' ? options.onStateChange : null;
   const state = {
-    properties: structuredCloneSafe(options.properties || DEFAULT_PROPERTIES),
-    rawLogs: [],
-    quarantine: [],
-    dailyClosing: [],
-    adjustments: [],
-    masterRecap: [],
-    defectCategories: structuredCloneSafe(options.defectCategories || defaultDefectCategories),
-    userRoles: structuredCloneSafe(options.userRoles || DEFAULT_USER_ROLES),
-    rolePermissions: structuredCloneSafe(options.rolePermissions || DEFAULT_ROLE_PERMISSIONS),
-    lineMaster: structuredCloneSafe(options.lineMaster || DEFAULT_LINE_MASTER),
-    shiftMaster: structuredCloneSafe(options.shiftMaster || DEFAULT_SHIFT_MASTER),
-    targetMaster: structuredCloneSafe(options.targetMaster || DEFAULT_TARGET_MASTER),
-    auditLogs: structuredCloneSafe(options.auditLogs || DEFAULT_AUDIT_LOGS),
-    session: options.session || {
+    properties: structuredCloneSafe(options.properties || initialState.properties || DEFAULT_PROPERTIES),
+    rawLogs: structuredCloneSafe(options.rawLogs || initialState.rawLogs || []),
+    quarantine: structuredCloneSafe(options.quarantine || initialState.quarantine || []),
+    dailyClosing: structuredCloneSafe(options.dailyClosing || initialState.dailyClosing || []),
+    adjustments: structuredCloneSafe(options.adjustments || initialState.adjustments || []),
+    masterRecap: structuredCloneSafe(options.masterRecap || initialState.masterRecap || []),
+    defectCategories: structuredCloneSafe(options.defectCategories || initialState.defectCategories || defaultDefectCategories),
+    userRoles: structuredCloneSafe(options.userRoles || initialState.userRoles || DEFAULT_USER_ROLES),
+    rolePermissions: mergeDefaultRows(
+      options.rolePermissions || initialState.rolePermissions,
+      DEFAULT_ROLE_PERMISSIONS,
+      (permission) => `${permission.role}.${permission.resource}.${permission.action}`,
+    ),
+    lineMaster: structuredCloneSafe(options.lineMaster || initialState.lineMaster || DEFAULT_LINE_MASTER),
+    shiftMaster: structuredCloneSafe(options.shiftMaster || initialState.shiftMaster || DEFAULT_SHIFT_MASTER),
+    bagianMaster: mergeDefaultRows(
+      options.bagianMaster || initialState.bagianMaster,
+      DEFAULT_BAGIAN_MASTER,
+      (bagian) => String(bagian.bagian_id || '').toUpperCase(),
+    ),
+    targetMaster: structuredCloneSafe(options.targetMaster || initialState.targetMaster || DEFAULT_TARGET_MASTER),
+    auditLogs: structuredCloneSafe(options.auditLogs || initialState.auditLogs || DEFAULT_AUDIT_LOGS),
+    session: structuredCloneSafe(options.session || initialState.session || {
       auth_mode: 'OFF',
       email: 'dev.simulated@optiflow.local',
       role: 'SuperAdmin',
       user_id: 'DEV-SuperAdmin',
       is_simulated: true,
       requires_role_selection: false,
-      allowed_simulated_roles: ['Operator', 'Mandor', 'Management', 'HRD', 'SuperAdmin'],
-    },
+      allowed_simulated_roles: ['Operator', 'Mandor', 'Supervisor', 'Management', 'HRD', 'SuperAdmin'],
+    }),
   };
 
   function respond(data, meta = {}) {
+    persistState();
+
     return simulateNetwork({
       ok: true,
       data,
@@ -215,6 +358,14 @@ export function createMockGas(options = {}) {
       },
       error: null,
     });
+  }
+
+  function persistState() {
+    if (!onStateChange) {
+      return;
+    }
+
+    onStateChange(structuredCloneSafe(state));
   }
 
   return Object.freeze({
@@ -274,6 +425,69 @@ export function createMockGas(options = {}) {
       state.adjustments.push(adjustment);
       return respond({ adjustment_id: adjustment.adjustment_id, status: adjustment.status, created_at: adjustment.created_at });
     },
+    createProductionReview: (request = {}) => {
+      const actionMap = {
+        VOID: 'void',
+        REQUEST_CORRECTION: 'request_correction',
+        PRE_CLOSING_CORRECTION: 'pre_closing_correction',
+      };
+      const action = String(request.action || '').toUpperCase();
+      assertMockPermission(state, request, 'production_review', actionMap[action] || '');
+      const source = state.rawLogs.find((row) => row.transaction_id === request.source_transaction_id);
+      if (!source) {
+        throw new Error('Production review source transaction was not found.');
+      }
+      if (latestClosing(state, source)?.status === 'CLOSED') {
+        throw new Error('Production review is only allowed before daily closing.');
+      }
+      if (String(source.status || '').toUpperCase() !== 'ACCEPTED') {
+        throw new Error('Production review only accepts normal ACCEPTED production rows.');
+      }
+      const existing = getLatestMockProductionReview(state, request.source_transaction_id);
+      if (existing && existing.adjustment_type === action && action !== 'PRE_CLOSING_CORRECTION' && ['PENDING', 'APPROVED'].includes(existing.status)) {
+        return respond({
+          adjustment_id: existing.adjustment_id,
+          source_transaction_id: existing.source_transaction_id,
+          action: existing.adjustment_type,
+          status: existing.status,
+          duplicate: true,
+        });
+      }
+      const now = new Date().toISOString();
+      const status = action === 'REQUEST_CORRECTION' ? 'PENDING' : 'APPROVED';
+      const adjustment = {
+        adjustment_id: `00000000-0000-4000-8000-${String(state.adjustments.length + 1).padStart(12, '0')}`,
+        source_transaction_id: source.transaction_id,
+        factory_date: source.factory_date,
+        line_id: source.line_id,
+        shift_id: source.shift_id,
+        adjustment_type: action,
+        delta_json: JSON.stringify(request.delta || {}),
+        reason: request.reason || '',
+        status,
+        requested_by: state.session.email,
+        approved_by: status === 'APPROVED' ? state.session.email : '',
+        approved_at: status === 'APPROVED' ? now : '',
+        created_at: now,
+      };
+      state.adjustments.push(adjustment);
+      return respond({
+        adjustment_id: adjustment.adjustment_id,
+        source_transaction_id: adjustment.source_transaction_id,
+        action: adjustment.adjustment_type,
+        status: adjustment.status,
+        created_at: now,
+        duplicate: false,
+      });
+    },
+    deactivateBagianMaster: (request = {}) => {
+      assertMockPermission(state, request, 'bagian_master', 'soft_delete');
+      const bagian = findBagianMaster(state, request.bagian_id);
+      bagian.status_aktif = false;
+      bagian.updated_by = state.session.email;
+      bagian.updated_at = new Date().toISOString();
+      return respond({ bagian_id: bagian.bagian_id, status_aktif: false });
+    },
     deactivateDefectCategory: (request = {}) => {
       const category = findDefectCategory(state, request.defect_category_id);
       category.status_aktif = false;
@@ -294,6 +508,14 @@ export function createMockGas(options = {}) {
     }),
     getHrdAccessDashboard: (request = {}) => respond(buildHrdAccessDashboard(state, request)),
     getManagementDashboard: (request = {}) => respond(buildManagementDashboard(state, request)),
+    getBagianMaster: (request = {}) => {
+      assertMockPermission(state, request, 'bagian_master', 'read');
+      return respond({
+        bagian: state.bagianMaster
+          .filter((bagian) => request.include_inactive || isTruthy(bagian.status_aktif))
+          .map(normalizeMockBagian),
+      });
+    },
     getDefectCategories: (request = {}) => respond({
       categories: state.defectCategories
         .filter((category) => request.include_inactive || isTruthy(category.status_aktif))
@@ -419,6 +641,14 @@ export function createMockGas(options = {}) {
       property.value_preview = property.sensitivity === 'SECRET' ? '' : maskPreview(property.key, request.value);
       return respond({ property });
     },
+    seedBagianMaster: (request = {}) => {
+      assertMockPermission(state, request, 'bagian_master', 'seed');
+      const inserted = seedDefaultBagianMaster(state);
+      return respond({
+        inserted,
+        bagian: state.bagianMaster.map(normalizeMockBagian),
+      });
+    },
     seedDefectCategories: () => {
       const inserted = seedDefaultDefectCategories(state);
       return respond({
@@ -501,6 +731,28 @@ export function createMockGas(options = {}) {
       target.updated_at = new Date().toISOString();
       return respond({ target_id: target.target_id, status_aktif: false });
     },
+    upsertBagianMaster: (request = {}) => {
+      const bagian = normalizeIncomingBagian(request.bagian || {});
+      const index = state.bagianMaster.findIndex((item) => item.bagian_id === bagian.bagian_id);
+      assertMockPermission(state, request, 'bagian_master', index === -1 ? 'create' : 'update');
+      const now = new Date().toISOString();
+      const existing = index >= 0 ? state.bagianMaster[index] : null;
+      const record = {
+        ...bagian,
+        created_by: existing?.created_by || state.session.email,
+        updated_by: state.session.email,
+        created_at: existing?.created_at || now,
+        updated_at: now,
+      };
+
+      if (index >= 0) {
+        state.bagianMaster.splice(index, 1, record);
+      } else {
+        state.bagianMaster.push(record);
+      }
+
+      return respond({ bagian: normalizeMockBagian(record), created: index === -1 });
+    },
     upsertDefectCategory: (request = {}) => {
       const category = normalizeMockDefectCategory(request.category || {});
       const existing = state.defectCategories.find((item) =>
@@ -581,10 +833,12 @@ function createGoogleScriptRunMock(mockGas) {
     approveQuarantine(payload) { this.invoke('approveQuarantine', payload); },
     closeDailyClosing(payload) { this.invoke('closeDailyClosing', payload); },
     createAdjustment(payload) { this.invoke('createAdjustment', payload); },
+    deactivateBagianMaster(payload) { this.invoke('deactivateBagianMaster', payload); },
     deactivateDefectCategory(payload) { this.invoke('deactivateDefectCategory', payload); },
     deactivateProductionTarget(payload) { this.invoke('deactivateProductionTarget', payload); },
     deleteScriptProperty(payload) { this.invoke('deleteScriptProperty', payload); },
     getDefectCategories(payload) { this.invoke('getDefectCategories', payload); },
+    getBagianMaster(payload) { this.invoke('getBagianMaster', payload); },
     getHealthCheck(payload) { this.invoke('getHealthCheck', payload); },
     getHrdAccessDashboard(payload) { this.invoke('getHrdAccessDashboard', payload); },
     getManagementDashboard(payload) { this.invoke('getManagementDashboard', payload); },
@@ -602,9 +856,11 @@ function createGoogleScriptRunMock(mockGas) {
     reopenDailyClosing(payload) { this.invoke('reopenDailyClosing', payload); },
     rotateSecretProperty(payload) { this.invoke('rotateSecretProperty', payload); },
     runMasterRecap(payload) { this.invoke('runMasterRecap', payload); },
+    seedBagianMaster(payload) { this.invoke('seedBagianMaster', payload); },
     seedDefectCategories(payload) { this.invoke('seedDefectCategories', payload); },
     setScriptProperty(payload) { this.invoke('setScriptProperty', payload); },
     submitProductionReport(payload) { this.invoke('submitProductionReport', payload); },
+    upsertBagianMaster(payload) { this.invoke('upsertBagianMaster', payload); },
     upsertDefectCategory(payload) { this.invoke('upsertDefectCategory', payload); },
     upsertProductionTarget(payload) { this.invoke('upsertProductionTarget', payload); },
   };
@@ -630,6 +886,87 @@ function findDefectCategory(state, defectCategoryId) {
   }
 
   return category;
+}
+
+function findBagianMaster(state, bagianId) {
+  const bagian = state.bagianMaster.find((item) =>
+    item.bagian_id === String(bagianId || '').trim().toUpperCase(),
+  );
+
+  if (!bagian) {
+    throw new Error('Bagian was not found.');
+  }
+
+  return bagian;
+}
+
+function seedDefaultBagianMaster(state) {
+  const existing = new Set(state.bagianMaster.map((bagian) => bagian.bagian_id));
+  const inserted = [];
+  const now = new Date().toISOString();
+
+  DEFAULT_BAGIAN_MASTER.forEach((bagian) => {
+    if (existing.has(bagian.bagian_id)) {
+      return;
+    }
+
+    state.bagianMaster.push({ ...bagian, created_at: now, updated_at: now });
+    inserted.push(bagian.bagian_id);
+  });
+
+  return inserted;
+}
+
+function normalizeIncomingBagian(bagian) {
+  const normalized = {
+    bagian_id: String(bagian.bagian_id || '').trim().toUpperCase(),
+    bagian_name: String(bagian.bagian_name || '').trim(),
+    description: String(bagian.description || '').trim(),
+    unit_rate: Number(bagian.unit_rate || 0),
+    monthly_target_unit: Number(bagian.monthly_target_unit || 0),
+    target_salary: Number(bagian.target_salary || 0),
+    status_aktif: bagian.status_aktif === undefined ? true : isTruthy(bagian.status_aktif),
+  };
+
+  if (!/^[A-Z0-9_-]{2,40}$/.test(normalized.bagian_id)) {
+    throw new Error('bagian_id must be 2-40 uppercase identifier chars.');
+  }
+
+  if (!normalized.bagian_name || normalized.bagian_name.length > 80) {
+    throw new Error('bagian_name is required and max 80 chars.');
+  }
+
+  if (normalized.description.length > 160) {
+    throw new Error('description max 160 chars.');
+  }
+
+  [
+    ['unit_rate', 999999],
+    ['monthly_target_unit', 999999],
+    ['target_salary', 999999999],
+  ].forEach(([field, maxValue]) => {
+    if (!Number.isInteger(normalized[field]) || normalized[field] < 0 || normalized[field] > maxValue) {
+      throw new Error(`${field} must be a positive integer.`);
+    }
+  });
+
+  return normalized;
+}
+
+function normalizeMockBagian(bagian) {
+  return {
+    bagian_id: String(bagian.bagian_id || '').trim().toUpperCase(),
+    bagian_name: String(bagian.bagian_name || '').trim(),
+    description: String(bagian.description || '').trim(),
+    unit_rate: Number(bagian.unit_rate || 0),
+    monthly_target_unit: Number(bagian.monthly_target_unit || 0),
+    target_salary: Number(bagian.target_salary || 0),
+    status_aktif: bagian.status_aktif === undefined ? true : isTruthy(bagian.status_aktif),
+    created_by: String(bagian.created_by || '').trim(),
+    updated_by: String(bagian.updated_by || '').trim(),
+    created_at: bagian.created_at || '',
+    updated_at: bagian.updated_at || '',
+  };
 }
 
 function assertActiveMockDefectCategory(state, record) {
@@ -893,8 +1230,16 @@ function buildHrdAccessDashboard(state, request) {
 function maskMockUser(user) {
   return {
     user_id: user.user_id,
+    employee_no: user.employee_no || user.user_id,
+    full_name: user.full_name || user.username || '',
+    address: user.address || '',
+    email: user.email,
     email_masked: maskEmail(user.email),
+    wa_number: user.wa_number || '',
+    wa_url: buildWaUrl(user.wa_number),
+    bagian_id: user.bagian_id || '',
     role: user.role,
+    roles: user.roles || [user.role],
     status_aktif: isTruthy(user.status_aktif),
     is_deleted: isTruthy(user.is_deleted),
     last_login: user.last_login || '',
@@ -903,8 +1248,13 @@ function maskMockUser(user) {
   };
 }
 
+function buildWaUrl(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits ? `https://wa.me/${digits}` : '';
+}
+
 function buildMockRoleMatrix(rolePermissions) {
-  return ['Operator', 'Mandor', 'Management', 'HRD', 'SuperAdmin'].map((role) => {
+  return ['Operator', 'Mandor', 'Supervisor', 'Management', 'HRD', 'SuperAdmin'].map((role) => {
     const permissions = rolePermissions.filter((permission) =>
       permission.role === role && isTruthy(permission.is_allowed),
     );
@@ -1025,6 +1375,16 @@ function decideAdjustment(state, request, status, respond) {
   });
 }
 
+function getLatestMockProductionReview(state, transactionId) {
+  const types = ['VOID', 'REQUEST_CORRECTION', 'PRE_CLOSING_CORRECTION'];
+  return [...state.adjustments]
+    .reverse()
+    .find((row) =>
+      row.source_transaction_id === transactionId
+      && types.includes(String(row.adjustment_type || '').toUpperCase()),
+    ) || null;
+}
+
 function buildSupervisorControlCenter(state, request) {
   const filter = request.filter || {};
   const pagination = normalizePagination(request);
@@ -1055,7 +1415,11 @@ function buildSupervisorControlCenter(state, request) {
 function buildManagementDashboard(state, request) {
   const filter = request.filter || {};
   const pagination = normalizePagination(request);
-  const rows = filterRows(state.masterRecap, filter);
+  const demo = buildManagementDemoDataset(state, filter);
+  const legacyRows = filterRows(state.masterRecap, filter);
+  const rows = filter.bagian_id || !legacyRows.length
+    ? demo.recap_rows
+    : legacyRows;
   const summary = rows.reduce((total, row) => ({
     target_total: total.target_total + Number(row.target_total || 0),
     tandon_total: total.tandon_total + Number(row.tandon_total || 0),
@@ -1077,9 +1441,103 @@ function buildManagementDashboard(state, request) {
       defect_rate: output > 0 ? Math.round((summary.reject_total / output) * 10000) / 10000 : 0,
       pending_quarantine: state.quarantine.filter((row) => ['PENDING', 'CONFLICT_PENDING', 'CORRECTION_REQUESTED'].includes(row.status)).length,
       open_closing: state.dailyClosing.filter((row) => row.status !== 'CLOSED').length,
+      present_count: demo.attendance_summary.present_count,
+      absent_count: demo.attendance_summary.absent_count,
+      pending_confirmation_count: demo.attendance_summary.pending_confirmation_count,
     },
     pareto: buildPareto(rows),
+    bagian_summary: demo.bagian_summary,
+    attendance_summary: demo.attendance_summary,
+    wage_policy: demo.wage_policy,
+    material_flow: demo.material_flow,
     rows: paginate(rows, pagination),
+  };
+}
+
+function buildManagementDemoDataset(state, filter = {}) {
+  const factoryDate = filter.factory_date || DEFAULT_MANAGEMENT_DEMO.attendance_summary.factory_date;
+  const bagianFilter = String(filter.bagian_id || '').trim().toUpperCase();
+  const policyByBagian = new Map(state.bagianMaster.map((bagian) => [String(bagian.bagian_id || '').toUpperCase(), normalizeMockBagian(bagian)]));
+  const demoIds = new Set(DEFAULT_MANAGEMENT_DEMO.bagian_summary.map((bagian) => bagian.bagian_id));
+  const baseRows = [
+    ...DEFAULT_MANAGEMENT_DEMO.bagian_summary.map((bagian) => ({ ...bagian })),
+    ...state.bagianMaster
+      .filter((bagian) => !demoIds.has(String(bagian.bagian_id || '').toUpperCase()))
+      .map((bagian) => ({
+        bagian_id: bagian.bagian_id,
+        bagian_name: bagian.bagian_name,
+        target_total: 0,
+        qc_ok_total: 0,
+        qc_reject_total: 0,
+        tandon_total: 0,
+        present_count: 0,
+        absent_count: 0,
+        monthly_actual_unit: 0,
+        recorder: '',
+        verifier: '',
+        verification_status: 'NO_TRANSACTION',
+      })),
+  ];
+  const bagianSummary = baseRows.filter((bagian) =>
+    !bagianFilter || bagian.bagian_id === bagianFilter,
+  ).map((bagian) => {
+    const policy = policyByBagian.get(bagian.bagian_id) || {};
+    const actual = Number(bagian.qc_ok_total || 0) + Number(bagian.qc_reject_total || 0);
+    const target = Number(bagian.target_total || 0);
+    const unitRate = Number(policy.unit_rate ?? bagian.unit_rate ?? 0);
+    const targetSalary = Number(policy.target_salary ?? bagian.target_salary ?? 0);
+    const monthlyTargetUnit = Number(policy.monthly_target_unit ?? bagian.monthly_target_unit ?? 0);
+    const monthlyActualUnit = Number(bagian.monthly_actual_unit || 0);
+    return {
+      ...bagian,
+      bagian_name: policy.bagian_name || bagian.bagian_name,
+      description: policy.description || '',
+      unit_rate: unitRate,
+      monthly_target_unit: monthlyTargetUnit,
+      target_salary: targetSalary,
+      status_aktif: policy.status_aktif ?? true,
+      factory_date: factoryDate,
+      actual_total: actual,
+      achievement_rate: target > 0 ? Math.round((actual / target) * 1000) / 10 : 0,
+      reject_rate: actual > 0 ? Math.round((Number(bagian.qc_reject_total || 0) / actual) * 1000) / 10 : 0,
+      wage_estimate: unitRate * actual,
+      monthly_wage_estimate: unitRate * monthlyActualUnit,
+      umr_monthly: targetSalary,
+      wage_gap_amount: Math.max(0, targetSalary - (unitRate * monthlyActualUnit)),
+      wage_gap_units: unitRate > 0
+        ? Math.ceil(Math.max(0, targetSalary - (unitRate * monthlyActualUnit)) / unitRate)
+        : 0,
+      umr_status: unitRate <= 0 || targetSalary <= 0
+        ? 'POLICY_PENDING'
+        : unitRate * monthlyActualUnit >= targetSalary
+          ? 'MEETS_UMR'
+          : 'BELOW_UMR',
+    };
+  });
+
+  return {
+    attendance_summary: {
+      ...DEFAULT_MANAGEMENT_DEMO.attendance_summary,
+      factory_date: factoryDate,
+    },
+    bagian_summary: bagianSummary,
+    wage_policy: state.bagianMaster.map(normalizeMockBagian),
+    material_flow: DEFAULT_MANAGEMENT_DEMO.material_flow.map((flow) => ({ ...flow })),
+    recap_rows: bagianSummary.map((bagian) => ({
+      recap_id: `${factoryDate}_${bagian.bagian_id}`,
+      factory_date: factoryDate,
+      operator_email: '',
+      line_id: bagian.bagian_id,
+      shift_id: 'ALL',
+      machine_id: 'BAGIAN',
+      target_total: bagian.target_total,
+      tandon_total: bagian.tandon_total,
+      ok_total: bagian.qc_ok_total,
+      reject_total: bagian.qc_reject_total,
+      defect_rate: bagian.reject_rate / 100,
+      top_defect_category_id: bagian.bagian_id === 'SOLDER' ? 'DEF-SOLDER-THIN' : 'DEF-VISUAL-SCRATCH',
+      generated_at: new Date().toISOString(),
+    })),
   };
 }
 
@@ -1087,8 +1545,10 @@ function buildOperatorDashboard(state, request) {
   const filter = request.filter || {};
   const period = normalizeTrendPeriod(request.period);
   const seedRows = createOperatorDashboardSeed(filter);
+  const reviewState = buildMockProductionReviewState(state, filter);
   const submittedRows = state.rawLogs
     .filter((row) => row.status !== 'CONFLICT_PENDING')
+    .filter((row) => !isMockReviewExcluded(reviewState.get(row.transaction_id)))
     .map((row) => ({
       transaction_id: row.transaction_id,
       device_timestamp: row.device_timestamp,
@@ -1115,6 +1575,16 @@ function buildOperatorDashboard(state, request) {
   const yesterdayRows = rows.filter((row) => row.factory_date === yesterday);
   const trendHistory = buildOperatorTrendHistory(rows, today, period);
   const allRecent = rows.slice(0, Number(request.page_size || 8));
+  const todayTotals = summarizeOperatorRows(todayRows);
+  const yesterdayTotals = summarizeOperatorRows(yesterdayRows);
+  const todayTarget = resolveMockDashboardTarget(state, {
+    ...filter,
+    factory_date: today,
+  }, todayTotals.target);
+  const yesterdayTarget = resolveMockDashboardTarget(state, {
+    ...filter,
+    factory_date: yesterday,
+  }, yesterdayTotals.target);
 
   return {
     filters: filter,
@@ -1126,14 +1596,14 @@ function buildOperatorDashboard(state, request) {
       shift_id: filter.shift_id || 'SHIFT-1',
       machine_id: filter.machine_id || 'SLD-14',
       operator_name_masked: 'Operator Demo',
-      target_today: summarizeOperatorRows(todayRows).target,
-      tandon_today: summarizeOperatorRows(todayRows).tandon,
-      ok_today: summarizeOperatorRows(todayRows).ok,
-      reject_today: summarizeOperatorRows(todayRows).reject,
-      target_yesterday: summarizeOperatorRows(yesterdayRows).target,
-      tandon_yesterday: summarizeOperatorRows(yesterdayRows).tandon,
-      ok_yesterday: summarizeOperatorRows(yesterdayRows).ok,
-      reject_yesterday: summarizeOperatorRows(yesterdayRows).reject,
+      target_today: todayTarget,
+      tandon_today: todayTotals.tandon,
+      ok_today: todayTotals.ok,
+      reject_today: todayTotals.reject,
+      target_yesterday: yesterdayTarget,
+      tandon_yesterday: yesterdayTotals.tandon,
+      ok_yesterday: yesterdayTotals.ok,
+      reject_yesterday: yesterdayTotals.reject,
     },
     trend_history: trendHistory,
     weekly_history: period === 'DAILY' ? trendHistory : [],
@@ -1277,17 +1747,36 @@ function monthEnd(dateString) {
 }
 
 function summarizeOperatorRows(rows) {
-  return rows.reduce((total, row) => ({
-    target: total.target + Number(row.target_harian || 0),
-    tandon: total.tandon + Number(row.tandon || 0),
-    ok: total.ok + Number(row.perolehan_ok || 0),
-    reject: total.reject + Number(row.perolehan_reject || 0),
-  }), {
+  const targetByDate = new Map();
+  const totals = rows.reduce((total, row) => {
+    const target = Number(row.target_harian || 0);
+    if (target > 0) {
+      const key = row.factory_date || row.device_timestamp?.slice(0, 10) || 'unknown-date';
+      targetByDate.set(key, Math.max(targetByDate.get(key) || 0, target));
+    }
+
+    return {
+      target: total.target,
+      tandon: total.tandon + Number(row.tandon || 0),
+      ok: total.ok + Number(row.perolehan_ok || 0),
+      reject: total.reject + Number(row.perolehan_reject || 0),
+    };
+  }, {
     target: 0,
     tandon: 0,
     ok: 0,
     reject: 0,
   });
+
+  totals.target = [...targetByDate.values()].reduce((sum, value) => sum + value, 0);
+  return totals;
+}
+
+function resolveMockDashboardTarget(state, filter, fallbackTarget) {
+  const target = listMockProductionTargets(state, filter, false)[0] || null;
+  return target && Number(target.target_harian || 0) > 0
+    ? Number(target.target_harian)
+    : fallbackTarget;
 }
 
 function buildOperatorPareto(rows, categories) {
@@ -1321,34 +1810,77 @@ function buildOperatorPareto(rows, categories) {
 
 function buildRecapRows(state, filter) {
   const grouped = new Map();
+  const reviewState = buildMockProductionReviewState(state, filter);
   filterRows(state.rawLogs, filter)
     .filter((row) => row.status === 'ACCEPTED' || isApprovedQuarantine(state, row.transaction_id))
+    .filter((row) => !isMockReviewExcluded(reviewState.get(row.transaction_id)))
     .forEach((row) => {
-      const key = `${row.factory_date}_${row.operator_email}_${row.line_id}_${row.shift_id}_${row.machine_id}`;
-      const current = grouped.get(key) || {
-        recap_id: key,
-        factory_date: row.factory_date,
-        operator_email: row.operator_email,
-        line_id: row.line_id,
-        shift_id: row.shift_id,
-        machine_id: row.machine_id,
-        target_total: 0,
-        tandon_total: 0,
-        ok_total: 0,
-        reject_total: 0,
-        top_defect_category_id: '',
-        generated_at: new Date().toISOString(),
-      };
-      current.target_total += Number(row.target_harian || 0);
-      current.tandon_total += Number(row.tandon || 0);
-      current.ok_total += Number(row.perolehan_ok || 0);
-      current.reject_total += Number(row.perolehan_reject || 0);
-      current.top_defect_category_id = current.top_defect_category_id || row.defect_category_id || '';
-      const output = current.ok_total + current.reject_total;
-      current.defect_rate = output > 0 ? Math.round((current.reject_total / output) * 10000) / 10000 : 0;
-      grouped.set(key, current);
+      addMockRecapRow(grouped, row, row);
+    });
+  filterRows(state.adjustments, filter)
+    .filter((adjustment) => adjustment.status === 'APPROVED')
+    .forEach((adjustment) => {
+      const source = state.rawLogs.find((row) => row.transaction_id === adjustment.source_transaction_id);
+      if (!source || isMockReviewExcluded(reviewState.get(source.transaction_id))) {
+        return;
+      }
+      addMockRecapRow(grouped, source, JSON.parse(adjustment.delta_json || '{}'));
     });
   return [...grouped.values()];
+}
+
+function addMockRecapRow(grouped, source, values) {
+  const key = `${source.factory_date}_${source.operator_email}_${source.line_id}_${source.shift_id}_${source.machine_id}`;
+  const current = grouped.get(key) || {
+    recap_id: key,
+    factory_date: source.factory_date,
+    operator_email: source.operator_email,
+    line_id: source.line_id,
+    shift_id: source.shift_id,
+    machine_id: source.machine_id,
+    target_total: 0,
+    tandon_total: 0,
+    ok_total: 0,
+    reject_total: 0,
+    top_defect_category_id: '',
+    generated_at: new Date().toISOString(),
+  };
+  current.target_total += Number(values.target_harian || 0);
+  current.tandon_total += Number(values.tandon || 0);
+  current.ok_total += Number(values.perolehan_ok || 0);
+  current.reject_total += Number(values.perolehan_reject || 0);
+  current.top_defect_category_id = current.top_defect_category_id || values.defect_category_id || '';
+  const output = current.ok_total + current.reject_total;
+  current.defect_rate = output > 0 ? Math.round((current.reject_total / output) * 10000) / 10000 : 0;
+  grouped.set(key, current);
+}
+
+function buildMockProductionReviewState(state, filter) {
+  const types = ['VOID', 'REQUEST_CORRECTION', 'PRE_CLOSING_CORRECTION'];
+  const adjustmentFilter = {
+    factory_date: filter.factory_date,
+    line_id: filter.line_id,
+    shift_id: filter.shift_id,
+  };
+  return filterRows(state.adjustments, adjustmentFilter).reduce((map, adjustment) => {
+    if (types.includes(String(adjustment.adjustment_type || '').toUpperCase())) {
+      map.set(adjustment.source_transaction_id, adjustment);
+    }
+    return map;
+  }, new Map());
+}
+
+function isMockReviewExcluded(review) {
+  if (!review) {
+    return false;
+  }
+
+  if (review.adjustment_type === 'VOID' && review.status === 'APPROVED') {
+    return true;
+  }
+
+  return review.adjustment_type === 'REQUEST_CORRECTION'
+    && ['PENDING', 'APPROVED'].includes(review.status);
 }
 
 function filterRows(rows, filter) {
@@ -1408,6 +1940,21 @@ function paginate(rows, pagination) {
     total: rows.length,
     items: rows.slice(start, start + pagination.page_size),
   };
+}
+
+function mergeDefaultRows(existingRows, defaultRows, getKey) {
+  const rows = structuredCloneSafe(existingRows || []);
+  const existingKeys = new Set(rows.map(getKey));
+
+  defaultRows.forEach((defaultRow) => {
+    const key = getKey(defaultRow);
+    if (!existingKeys.has(key)) {
+      rows.push(structuredCloneSafe(defaultRow));
+      existingKeys.add(key);
+    }
+  });
+
+  return rows;
 }
 
 function structuredCloneSafe(value) {

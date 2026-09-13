@@ -8,6 +8,8 @@ import { ApiAdapterError, api } from './services/apiAdapter.js';
 import {
   approvalLineOptions,
   approvalStatusOptions,
+  createApprovalCasesFromControlCenter,
+  filterActionableApprovalCases,
   filterApprovalCases,
   findApprovalCase,
   initialApprovalCases,
@@ -76,8 +78,9 @@ const filteredApprovalCases = computed(() => filterApprovalCases(approvalCases.v
   status: approvalStatusFilter.value,
   line: approvalLineFilter.value,
 }));
+const approvalWorkQueueCases = computed(() => filterActionableApprovalCases(filteredApprovalCases.value));
 const activeApprovalCase = computed(() =>
-  findApprovalCase(approvalCases.value, activeApprovalId.value) || filteredApprovalCases.value[0] || null,
+  findApprovalCase(approvalWorkQueueCases.value, activeApprovalId.value) || approvalWorkQueueCases.value[0] || null,
 );
 const activeComparisonRows = computed(() => {
   if (!activeApprovalCase.value) {
@@ -103,6 +106,19 @@ const dashboardData = ref(null);
 const dashboardLoading = ref(false);
 const dashboardError = ref('');
 const dashboardLoaded = ref(false);
+const bagianMasterRows = ref([]);
+const bagianMasterLoading = ref(false);
+const bagianMasterError = ref('');
+const bagianMasterMessage = ref('');
+const bagianMasterForm = ref({
+  bagian_id: '',
+  bagian_name: '',
+  description: '',
+  unit_rate: 0,
+  monthly_target_unit: 0,
+  target_salary: 3500000,
+  status_aktif: true,
+});
 const hrdData = ref(null);
 const hrdLoading = ref(false);
 const hrdError = ref('');
@@ -182,7 +198,7 @@ const metricHelpContent = Object.freeze({
     html: '<p><strong>Queue</strong> adalah antrean laporan yang tersimpan lokal di IndexedDB dan belum selesai sinkron ke GAS.</p><p>Data tetap aman saat koneksi putus dan akan dikirim ulang saat device online.</p>',
   },
 });
-const roleOptions = Object.freeze(['Operator', 'Mandor', 'Management', 'HRD', 'SuperAdmin']);
+const roleOptions = Object.freeze(['Operator', 'Mandor', 'Supervisor', 'Management', 'HRD', 'SuperAdmin']);
 const roleIcons = Object.freeze({
   Operator: '📝',
   Mandor: '✅',
@@ -278,8 +294,11 @@ const roleFeatureViews = Object.freeze({
     { id: 'supervisor-adjustment', type: 'role-feature', icon: '🛠️', label: 'Adjustment', title: 'Adjustment', subtitle: 'Koreksi pasca closing dengan audit trail.', badge: 'Audit' },
   ]),
   management: appendHelpFeature([
-    { id: 'management-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Read-only dashboard', subtitle: 'KPI final berbasis MASTER_RECAP.', badge: 'Final' },
-    { id: 'management-recap', type: 'role-feature', icon: '📈', label: 'Recap', title: 'Recap rows', subtitle: 'Rekap final approved per line/shift/mesin.', badge: 'MASTER' },
+    { id: 'management-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Executive dashboard', subtitle: 'KPI final, attendance, dan status kebijakan.', badge: 'Final' },
+    { id: 'management-bagian', type: 'role-feature', icon: '🏭', label: 'Bagian', title: 'Bagian performance', subtitle: 'Output tervalidasi Supervisor per Bagian.', badge: 'Verif' },
+    { id: 'management-wage', type: 'role-feature', icon: '💰', label: 'Upah UMR', title: 'UMR monthly condition', subtitle: 'Estimasi upah unit vs target gaji bulanan.', badge: 'Read' },
+    { id: 'management-attendance', type: 'role-feature', icon: '🕒', label: 'Absensi', title: 'Attendance recap', subtitle: 'Hadir, absen, dan pending check Mandor.', badge: 'HR' },
+    { id: 'management-flow', type: 'role-feature', icon: '🔗', label: 'Trace', title: 'Material traceability', subtitle: 'Relasi bahan antar Bagian.', badge: 'Flow' },
     { id: 'management-pareto', type: 'role-feature', icon: '🧩', label: 'Pareto', title: 'Pareto defect', subtitle: 'Prioritas improvement berdasarkan reject.', badge: 'QCC' },
     { id: 'management-pending', type: 'role-feature', icon: '⏳', label: 'Pending', title: 'Pending status', subtitle: 'Quarantine dan closing yang dikecualikan dari KPI.', badge: 'Guard' },
   ]),
@@ -490,10 +509,10 @@ const activeFeatureId = computed(() => activeRoleFeatures.value[activeView.value
 const activeNavId = computed(() => activeFeatureId.value);
 const displayedApprovalCases = computed(() => {
   if (activeFeatureId.value === 'mandor-conflict') {
-    return filteredApprovalCases.value.filter((row) => row.status === 'CONFLICT_PENDING');
+    return approvalWorkQueueCases.value.filter((row) => row.status === 'CONFLICT_PENDING');
   }
 
-  return filteredApprovalCases.value;
+  return approvalWorkQueueCases.value;
 });
 const currentRoleFeatureMeta = computed(() =>
   navItems.value.find((view) => view.id === activeFeatureId.value) || navItems.value[0],
@@ -506,6 +525,19 @@ const activeShellMeta = computed(() => {
   return activeViewMeta.value;
 });
 const activeHelpGuide = computed(() => roleHelpGuides[activeView.value] || roleHelpGuides.operator);
+const activeWorkspaceRole = computed(() => {
+  if (selectedRole.value === 'SuperAdmin' || activeView.value === 'settings') {
+    return selectedRole.value;
+  }
+
+  return {
+    operator: 'Operator',
+    mandor: 'Mandor',
+    supervisor: 'Mandor',
+    management: 'Management',
+    hrd: 'HRD',
+  }[activeView.value] || selectedRole.value;
+});
 const selectedOperatorLabel = computed(() =>
   operatorOptions.value.find((option) => option.value === selectedOperatorEmail.value)?.label
   || selectedOperatorEmail.value
@@ -557,8 +589,9 @@ const targetScopePreview = computed(() => {
   ];
   return `${scope?.label || targetForm.value.scope_type}: ${parts.join(' / ')}`;
 });
+const machineScopedOptions = computed(() => machineOptions.value.filter((option) => option.value !== 'ALL'));
 const operatorOkPercent = computed(() =>
-  Math.min(100, Math.round((Number(operatorDashboardSummary.value.ok_today || 0) / Math.max(1, Number(operatorDashboardSummary.value.target_today || 0))) * 100)),
+  Math.min(100, Math.round(((Number(operatorDashboardSummary.value.ok_today || 0) + Number(operatorDashboardSummary.value.reject_today || 0)) / Math.max(1, Number(operatorDashboardSummary.value.target_today || 0))) * 100)),
 );
 const operatorComparisonDonuts = computed(() => [
   {
@@ -664,6 +697,27 @@ const operatorDashboardMetrics = computed(() => [
     tone: 'warning',
   },
 ]);
+const mandorProgressSummary = computed(() => {
+  const targetByOperator = new Map();
+  const totals = supervisorRawRows.value.reduce((summary, row) => {
+    const operatorKey = row.operator_email || row.operator_email_masked || row.transaction_id;
+    const target = Number(row.target_harian || 0);
+    if (target > 0 && operatorKey) {
+      targetByOperator.set(operatorKey, Math.max(targetByOperator.get(operatorKey) || 0, target));
+    }
+
+    summary.actual += Number(row.perolehan_ok || 0) + Number(row.perolehan_reject || 0);
+    return summary;
+  }, {
+    actual: 0,
+    target: 0,
+  });
+  totals.target = [...targetByOperator.values()].reduce((sum, value) => sum + value, 0);
+  return totals;
+});
+const mandorProgressPercent = computed(() =>
+  Math.min(100, Math.round((mandorProgressSummary.value.actual / Math.max(1, mandorProgressSummary.value.target)) * 100)),
+);
 const operatorTaskCards = computed(() => [
   {
     label: 'Draft device',
@@ -742,6 +796,49 @@ const managementInsightCards = computed(() => [
     value: dashboardData.value?.summary?.pending_quarantine || 0,
     hint: 'Tidak dihitung dalam KPI final.',
     tone: 'warning',
+  },
+]);
+const managementBagianSummary = computed(() => dashboardData.value?.bagian_summary || []);
+const managementAttendanceSummary = computed(() => dashboardData.value?.attendance_summary || {});
+const managementMaterialFlow = computed(() => dashboardData.value?.material_flow || []);
+const managementWagePolicy = computed(() => dashboardData.value?.wage_policy || []);
+const bagianMasterOptions = computed(() => {
+  const rows = bagianMasterRows.value.length ? bagianMasterRows.value : managementWagePolicy.value;
+  return rows
+    .filter((bagian) => bagian.status_aktif !== false)
+    .map((bagian) => ({
+      value: bagian.bagian_id,
+      label: bagian.bagian_name || bagian.bagian_id,
+    }));
+});
+const managementWageRows = computed(() => managementBagianSummary.value.map((item) => ({
+  ...item,
+  statusLabel: item.umr_status === 'MEETS_UMR'
+    ? 'Memenuhi UMR'
+    : item.umr_status === 'BELOW_UMR'
+      ? 'Di bawah UMR'
+      : 'Policy pending',
+  tone: item.umr_status === 'MEETS_UMR'
+    ? 'success'
+    : item.umr_status === 'BELOW_UMR'
+      ? 'warning'
+      : 'neutral',
+})));
+const managementAttendanceCards = computed(() => [
+  {
+    label: 'Hadir',
+    value: formatNumber(managementAttendanceSummary.value.present_count),
+    tone: 'success',
+  },
+  {
+    label: 'Absen',
+    value: formatNumber(managementAttendanceSummary.value.absent_count),
+    tone: Number(managementAttendanceSummary.value.absent_count || 0) > 0 ? 'warning' : 'success',
+  },
+  {
+    label: 'Pending check',
+    value: formatNumber(managementAttendanceSummary.value.pending_confirmation_count),
+    tone: Number(managementAttendanceSummary.value.pending_confirmation_count || 0) > 0 ? 'warning' : 'success',
   },
 ]);
 const hrdAccessCards = computed(() => [
@@ -961,7 +1058,9 @@ async function stageApprovalAction(action) {
     approvalMessage.value = `${getSafeErrorMessage(error)} Keputusan distage lokal.`;
   }
 
-  approvalCases.value = resolveApprovalCase(approvalCases.value, activeApprovalCase.value.id, action);
+  const resolvedId = activeApprovalCase.value.id;
+  approvalCases.value = resolveApprovalCase(approvalCases.value, resolvedId, action);
+  activeApprovalId.value = approvalWorkQueueCases.value[0]?.id || '';
   await refreshSupervisorControlCenter();
 }
 
@@ -977,12 +1076,27 @@ async function refreshSupervisorControlCenter() {
       page_size: 8,
     });
     supervisorData.value = response.data;
+    const nextApprovalCases = createApprovalCasesFromControlCenter(response.data);
+    approvalCases.value = nextApprovalCases;
+    activeApprovalId.value = filterActionableApprovalCases(filterApprovalCases(nextApprovalCases, {
+      status: approvalStatusFilter.value,
+      line: approvalLineFilter.value,
+    }))[0]?.id || '';
     supervisorLoaded.value = true;
   } catch (error) {
     supervisorError.value = getSafeErrorMessage(error);
   } finally {
     supervisorLoading.value = false;
   }
+}
+
+function syncSupervisorFiltersFromOperator() {
+  supervisorFilters.value = {
+    ...supervisorFilters.value,
+    factory_date: operatorDashboardSummary.value.factory_date || new Date().toISOString().slice(0, 10),
+    line_id: form.value.line_id || supervisorFilters.value.line_id,
+    shift_id: form.value.shift_id || supervisorFilters.value.shift_id,
+  };
 }
 
 async function closeCurrentScope() {
@@ -1027,17 +1141,122 @@ async function createAdjustmentFromFirstRow() {
   }
 }
 
+async function createProductionReviewFromRow(row, action) {
+  if (!row?.transaction_id) {
+    supervisorError.value = 'Transaksi sumber tidak valid untuk review.';
+    return;
+  }
+
+  const payload = await buildProductionReviewPayload(row, action);
+  if (!payload) {
+    return;
+  }
+
+  supervisorError.value = '';
+  supervisorMessage.value = '';
+  try {
+    const response = await api.createProductionReview({
+      session: buildSessionPayload(),
+      source_transaction_id: row.transaction_id,
+      ...payload,
+    });
+    supervisorMessage.value = `Review ${response.data.action} tersimpan dengan status ${response.data.status}.`;
+    await refreshSupervisorControlCenter();
+    await runRecapForSupervisorScope();
+  } catch (error) {
+    supervisorError.value = getSafeErrorMessage(error);
+  }
+}
+
+async function buildProductionReviewPayload(row, action) {
+  if (action === 'VOID') {
+    const result = await Swal.fire({
+      title: 'Void transaksi?',
+      text: `${row.transaction_id} tidak akan dihitung di rekap sebelum closing.`,
+      input: 'text',
+      inputLabel: 'Alasan void',
+      inputPlaceholder: 'Contoh: double input operator',
+      showCancelButton: true,
+      confirmButtonText: 'Void',
+      cancelButtonText: 'Batal',
+      inputValidator: (value) => (!String(value || '').trim() ? 'Alasan wajib diisi.' : undefined),
+    });
+    return result.isConfirmed ? { action, delta: {}, reason: result.value } : null;
+  }
+
+  if (action === 'REQUEST_CORRECTION') {
+    const result = await Swal.fire({
+      title: 'Request correction',
+      input: 'textarea',
+      inputLabel: 'Instruksi koreksi untuk operator',
+      inputPlaceholder: 'Contoh: cek ulang reject karena defect belum lengkap',
+      showCancelButton: true,
+      confirmButtonText: 'Kirim request',
+      cancelButtonText: 'Batal',
+      inputValidator: (value) => (!String(value || '').trim() ? 'Instruksi wajib diisi.' : undefined),
+    });
+    return result.isConfirmed ? { action, delta: {}, reason: result.value } : null;
+  }
+
+  const result = await Swal.fire({
+    title: 'Pre-closing correction',
+    html: '<input id="swal-delta-ok" class="swal2-input" type="number" placeholder="Delta OK"><input id="swal-delta-reject" class="swal2-input" type="number" placeholder="Delta Reject"><textarea id="swal-delta-reason" class="swal2-textarea" placeholder="Alasan koreksi"></textarea>',
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'Simpan koreksi',
+    cancelButtonText: 'Batal',
+    preConfirm: () => {
+      const ok = Number(document.getElementById('swal-delta-ok')?.value || 0);
+      const reject = Number(document.getElementById('swal-delta-reject')?.value || 0);
+      const reason = String(document.getElementById('swal-delta-reason')?.value || '').trim();
+      if (!Number.isInteger(ok) || !Number.isInteger(reject)) {
+        Swal.showValidationMessage('Delta harus angka bulat.');
+        return false;
+      }
+      if (ok === 0 && reject === 0) {
+        Swal.showValidationMessage('Isi minimal satu delta OK atau Reject.');
+        return false;
+      }
+      if (!reason) {
+        Swal.showValidationMessage('Alasan wajib diisi.');
+        return false;
+      }
+      return { ok, reject, reason };
+    },
+  });
+
+  if (!result.isConfirmed) {
+    return null;
+  }
+
+  return {
+    action,
+    delta: {
+      perolehan_ok: result.value.ok,
+      perolehan_reject: result.value.reject,
+    },
+    reason: result.value.reason,
+  };
+}
+
+async function runRecapForSupervisorScope() {
+  await api.runMasterRecap({
+    session: buildSessionPayload(),
+    filter: compactFilter({
+      factory_date: supervisorFilters.value.factory_date,
+      line_id: supervisorFilters.value.line_id,
+      shift_id: supervisorFilters.value.shift_id,
+    }),
+    page: 1,
+    page_size: 8,
+  });
+}
+
 async function runRecapAndDashboard() {
   dashboardLoading.value = true;
   dashboardError.value = '';
 
   try {
-    await api.runMasterRecap({
-      session: buildSessionPayload(),
-      filter: compactFilter(dashboardFilters.value),
-      page: 1,
-      page_size: 8,
-    });
     await refreshManagementDashboard();
   } catch (error) {
     dashboardError.value = getSafeErrorMessage(error);
@@ -1062,6 +1281,115 @@ async function refreshManagementDashboard() {
     dashboardError.value = getSafeErrorMessage(error);
   } finally {
     dashboardLoading.value = false;
+  }
+}
+
+async function refreshBagianMaster() {
+  bagianMasterLoading.value = true;
+  bagianMasterError.value = '';
+
+  try {
+    const response = await api.getBagianMaster({
+      session: buildSessionPayload(),
+      include_inactive: true,
+    });
+    bagianMasterRows.value = response.data?.bagian || [];
+  } catch (error) {
+    bagianMasterError.value = getSafeErrorMessage(error);
+  } finally {
+    bagianMasterLoading.value = false;
+  }
+}
+
+function editBagianMaster(row) {
+  bagianMasterForm.value = {
+    bagian_id: row.bagian_id || '',
+    bagian_name: row.bagian_name || '',
+    description: row.description || '',
+    unit_rate: Number(row.unit_rate || 0),
+    monthly_target_unit: Number(row.monthly_target_unit || 0),
+    target_salary: Number(row.target_salary || 3500000),
+    status_aktif: row.status_aktif !== false,
+  };
+}
+
+function resetBagianMasterForm() {
+  bagianMasterForm.value = {
+    bagian_id: '',
+    bagian_name: '',
+    description: '',
+    unit_rate: 0,
+    monthly_target_unit: 0,
+    target_salary: 3500000,
+    status_aktif: true,
+  };
+}
+
+async function saveBagianMaster() {
+  bagianMasterLoading.value = true;
+  bagianMasterError.value = '';
+  bagianMasterMessage.value = '';
+
+  try {
+    const response = await api.upsertBagianMaster({
+      session: buildSessionPayload(),
+      bagian: {
+        ...bagianMasterForm.value,
+        unit_rate: Number(bagianMasterForm.value.unit_rate || 0),
+        monthly_target_unit: Number(bagianMasterForm.value.monthly_target_unit || 0),
+        target_salary: Number(bagianMasterForm.value.target_salary || 0),
+      },
+    });
+    bagianMasterMessage.value = response.data?.created ? 'Bagian baru tersimpan.' : 'Bagian diperbarui.';
+    resetBagianMasterForm();
+    await refreshBagianMaster();
+    await refreshManagementDashboard();
+  } catch (error) {
+    bagianMasterError.value = getSafeErrorMessage(error);
+  } finally {
+    bagianMasterLoading.value = false;
+  }
+}
+
+async function deactivateBagian(row) {
+  bagianMasterLoading.value = true;
+  bagianMasterError.value = '';
+  bagianMasterMessage.value = '';
+
+  try {
+    await api.deactivateBagianMaster({
+      session: buildSessionPayload(),
+      bagian_id: row.bagian_id,
+    });
+    bagianMasterMessage.value = `${row.bagian_name || row.bagian_id} dinonaktifkan.`;
+    await refreshBagianMaster();
+    await refreshManagementDashboard();
+  } catch (error) {
+    bagianMasterError.value = getSafeErrorMessage(error);
+  } finally {
+    bagianMasterLoading.value = false;
+  }
+}
+
+async function seedBagianDefaults() {
+  bagianMasterLoading.value = true;
+  bagianMasterError.value = '';
+  bagianMasterMessage.value = '';
+
+  try {
+    const response = await api.seedBagianMaster({
+      session: buildSessionPayload(),
+    });
+    const inserted = response.data?.inserted || [];
+    bagianMasterMessage.value = inserted.length
+      ? `Seed Bagian ditambahkan: ${inserted.join(', ')}.`
+      : 'Default Bagian sudah lengkap.';
+    await refreshBagianMaster();
+    await refreshManagementDashboard();
+  } catch (error) {
+    bagianMasterError.value = getSafeErrorMessage(error);
+  } finally {
+    bagianMasterLoading.value = false;
   }
 }
 
@@ -1185,15 +1513,10 @@ async function refreshProductionTarget() {
   productionTargetError.value = '';
 
   try {
+    const filter = buildProductionTargetFilter();
     const response = await api.getProductionTarget({
       session: buildSessionPayload(),
-      filter: {
-        factory_date: new Date().toISOString().slice(0, 10),
-        line_id: form.value.line_id,
-        shift_id: form.value.shift_id,
-        machine_id: form.value.machine_id,
-        operator_email: selectedOperatorEmail.value || sessionContext.value?.email || 'ALL',
-      },
+      filter,
       include_inactive: activeView.value === 'mandor',
     });
     productionTargetData.value = response.data;
@@ -1208,7 +1531,33 @@ async function refreshProductionTarget() {
   }
 }
 
+function buildProductionTargetFilter() {
+  if (activeView.value === 'mandor' && activeFeatureId.value === 'mandor-target') {
+    const scopeType = targetForm.value.scope_type;
+    return {
+      factory_date: targetForm.value.factory_date || targetForm.value.effective_from || new Date().toISOString().slice(0, 10),
+      line_id: targetForm.value.line_id,
+      shift_id: targetForm.value.shift_id,
+      machine_id: scopeType === 'LINE_SHIFT' || scopeType === 'ALL_USERS' ? 'ALL' : targetForm.value.machine_id,
+      operator_email: scopeType === 'OPERATOR_ONLY' ? targetForm.value.operator_email : 'ALL',
+    };
+  }
+
+  return {
+    factory_date: new Date().toISOString().slice(0, 10),
+    line_id: form.value.line_id,
+    shift_id: form.value.shift_id,
+    machine_id: form.value.machine_id,
+    operator_email: selectedOperatorEmail.value || sessionContext.value?.email || 'ALL',
+  };
+}
+
 function normalizeTargetFormPayload() {
+  const validationMessage = validateTargetFormBeforeSave();
+  if (validationMessage) {
+    throw new Error(validationMessage);
+  }
+
   const scopeType = targetForm.value.scope_type;
   return {
     ...targetForm.value,
@@ -1219,12 +1568,55 @@ function normalizeTargetFormPayload() {
   };
 }
 
+function validateTargetFormBeforeSave() {
+  const scopeType = targetForm.value.scope_type;
+
+  if (scopeType === 'MACHINE_SCOPE' && (!targetForm.value.machine_id || targetForm.value.machine_id === 'ALL')) {
+    return 'Pilih mesin spesifik untuk scope "Mesin ini". Gunakan scope "Line/shift" atau "Semua user" jika ingin berlaku untuk ALL mesin.';
+  }
+
+  if (scopeType === 'OPERATOR_ONLY' && (!targetForm.value.operator_email || targetForm.value.operator_email === 'ALL')) {
+    return 'Pilih operator spesifik untuk scope "Satu operator".';
+  }
+
+  return '';
+}
+
+function syncTargetScopeDefaults() {
+  const scopeType = targetForm.value.scope_type;
+
+  if (scopeType === 'LINE_SHIFT' || scopeType === 'ALL_USERS') {
+    if (targetForm.value.machine_id !== 'ALL') {
+      targetForm.value.machine_id = 'ALL';
+    }
+    if (targetForm.value.operator_email !== 'ALL') {
+      targetForm.value.operator_email = 'ALL';
+    }
+    return;
+  }
+
+  if (scopeType === 'MACHINE_SCOPE') {
+    if (!targetForm.value.machine_id || targetForm.value.machine_id === 'ALL') {
+      targetForm.value.machine_id = machineScopedOptions.value[0]?.value || form.value.machine_id || '';
+    }
+    if (targetForm.value.operator_email !== 'ALL') {
+      targetForm.value.operator_email = 'ALL';
+    }
+    return;
+  }
+
+  if (scopeType === 'OPERATOR_ONLY' && (!targetForm.value.operator_email || targetForm.value.operator_email === 'ALL')) {
+    targetForm.value.operator_email = selectedOperatorEmail.value || operatorOptions.value[0]?.value || '';
+  }
+}
+
 async function saveProductionTarget() {
   productionTargetLoading.value = true;
   productionTargetError.value = '';
   productionTargetMessage.value = '';
 
   try {
+    syncTargetScopeDefaults();
     const response = await api.upsertProductionTarget({
       session: buildSessionPayload(),
       target: normalizeTargetFormPayload(),
@@ -1236,14 +1628,77 @@ async function saveProductionTarget() {
     };
     await refreshProductionTarget();
   } catch (error) {
+    productionTargetError.value = error instanceof ApiAdapterError ? getSafeErrorMessage(error) : error.message || getSafeErrorMessage(error);
+  } finally {
+    productionTargetLoading.value = false;
+  }
+}
+
+function editProductionTarget(target) {
+  if (!target?.target_id) {
+    return;
+  }
+
+  targetForm.value = {
+    ...targetForm.value,
+    target_id: target.target_id,
+    factory_date: target.factory_date || '',
+    effective_from: target.effective_from || new Date().toISOString().slice(0, 10),
+    effective_until: target.effective_until || '',
+    line_id: target.line_id || targetForm.value.line_id,
+    shift_id: target.shift_id || targetForm.value.shift_id,
+    machine_id: target.machine_id || 'ALL',
+    operator_email: target.operator_email || 'ALL',
+    target_harian: Number(target.target_harian || 0),
+    scope_type: target.scope_type || 'LINE_SHIFT',
+    status_aktif: Boolean(target.status_aktif),
+  };
+  productionTargetMessage.value = `Target ${target.target_id} siap diedit.`;
+  productionTargetError.value = '';
+  syncTargetScopeDefaults();
+}
+
+async function activateProductionTarget(target) {
+  if (!target?.target_id) {
+    return;
+  }
+
+  productionTargetLoading.value = true;
+  productionTargetError.value = '';
+  productionTargetMessage.value = '';
+
+  try {
+    await api.upsertProductionTarget({
+      session: buildSessionPayload(),
+      target: buildProductionTargetPayloadFromRow(target, true),
+    });
+    productionTargetMessage.value = 'Target diaktifkan.';
+    await refreshProductionTarget();
+  } catch (error) {
     productionTargetError.value = getSafeErrorMessage(error);
   } finally {
     productionTargetLoading.value = false;
   }
 }
 
-async function deactivateProductionTarget(target) {
-  if (!target?.target_id || !window.confirm('Nonaktifkan target ini?')) {
+function buildProductionTargetPayloadFromRow(target, statusAktif) {
+  return {
+    target_id: target.target_id,
+    factory_date: target.factory_date || '',
+    effective_from: target.effective_from || new Date().toISOString().slice(0, 10),
+    effective_until: target.effective_until || '',
+    line_id: target.line_id,
+    shift_id: target.shift_id,
+    machine_id: target.machine_id,
+    operator_email: target.operator_email,
+    target_harian: Number(target.target_harian || 0),
+    scope_type: target.scope_type,
+    status_aktif: statusAktif,
+  };
+}
+
+async function deactivateProductionTarget(target, options = {}) {
+  if (!target?.target_id || (!options.skipConfirm && !window.confirm('Nonaktifkan target ini?'))) {
     return;
   }
 
@@ -1265,6 +1720,14 @@ async function deactivateProductionTarget(target) {
   }
 }
 
+async function deleteProductionTarget(target) {
+  if (!target?.target_id || !window.confirm('Hapus target ini dari daftar aktif? Data akan dinonaktifkan sebagai soft delete.')) {
+    return;
+  }
+
+  await deactivateProductionTarget(target, { skipConfirm: true });
+}
+
 async function submitOperatorReportWithSession() {
   return submitOperatorReport({
     session: buildSessionPayload(),
@@ -1279,6 +1742,10 @@ async function syncQueueWithSession() {
     simulatedRole: selectedRole.value,
   });
   await refreshOperatorDashboard();
+  if (activeView.value === 'mandor' || activeView.value === 'supervisor') {
+    syncSupervisorFiltersFromOperator();
+    await refreshSupervisorControlCenter();
+  }
   return result;
 }
 
@@ -1356,11 +1823,17 @@ async function switchView(viewId) {
     await refreshProductionTarget();
   }
 
+  if (viewId === 'mandor') {
+    syncSupervisorFiltersFromOperator();
+    await refreshSupervisorControlCenter();
+  }
+
   if (viewId === 'supervisor' && !supervisorLoaded.value) {
     await refreshSupervisorControlCenter();
   }
 
   if (viewId === 'management' && !dashboardLoaded.value) {
+    await refreshBagianMaster();
     await refreshManagementDashboard();
   }
 
@@ -1393,6 +1866,9 @@ async function switchNavigationItem(item) {
       };
       await refreshProductionTarget();
     }
+    if (item.id === 'management-bagian' && bagianMasterRows.value.length === 0) {
+      await refreshBagianMaster();
+    }
     return;
   }
 
@@ -1409,7 +1885,7 @@ function ensureVisibleActiveView() {
 
 function buildSessionPayload() {
   return {
-    simulated_role: selectedRole.value,
+    simulated_role: activeWorkspaceRole.value,
   };
 }
 
@@ -1425,6 +1901,16 @@ function formatDateTime(timestamp) {
     minute: '2-digit',
     hour12: false,
   }).format(new Date(timestamp));
+}
+
+function maskEmailForUi(email) {
+  const value = String(email || '').trim();
+  if (!value || !value.includes('@')) {
+    return '-';
+  }
+
+  const [name, domain] = value.split('@');
+  return `${name.slice(0, 2)}***@${domain}`;
 }
 
 function formatPercent(value) {
@@ -1754,7 +2240,11 @@ function getSafeErrorMessage(error) {
     return `${error.code}: ${error.message}`;
   }
 
-  return 'Aksi gagal. Periksa koneksi atau permission SuperAdmin.';
+  if (error?.message) {
+    return error.message;
+  }
+
+  return 'Aksi gagal. Periksa koneksi atau permission role aktif.';
 }
 
 function handleBrandTap() {
@@ -1832,6 +2322,25 @@ watch(() => [form.value.line_id, form.value.shift_id, form.value.machine_id, sel
   }
 });
 
+watch(() => [
+  targetForm.value.scope_type,
+  targetForm.value.factory_date,
+  targetForm.value.effective_from,
+  targetForm.value.line_id,
+  targetForm.value.shift_id,
+  targetForm.value.machine_id,
+  targetForm.value.operator_email,
+], () => {
+  syncTargetScopeDefaults();
+  if (activeView.value === 'mandor' && activeFeatureId.value === 'mandor-target') {
+    void refreshProductionTarget();
+  }
+});
+
+watch([machineOptions, operatorOptions], () => {
+  syncTargetScopeDefaults();
+});
+
 onBeforeUnmount(() => {
   operatorTrendChart?.destroy();
   destroyOperatorDonutCharts();
@@ -1866,8 +2375,10 @@ async function inspectSuperAdminLocalData() {
 
   try {
     const indexedDbSnapshot = await inspectLocalData();
+    const mockGasSnapshot = await loadMockGasDemoState();
     localMaintenanceSnapshot.value = {
       indexed_db: indexedDbSnapshot,
+      mock_gas_indexed_db: summarizeMockGasSnapshot(mockGasSnapshot),
       local_storage: readOptiflowLocalStorageSnapshot(),
     };
     localMaintenanceError.value = '';
@@ -1909,7 +2420,7 @@ async function resetSuperAdminIndexedDb() {
   const result = await Swal.fire({
     icon: 'warning',
     title: 'Reset database IndexedDB?',
-    html: '<p>Database IndexedDB lokal akan dihapus total dan dibuat ulang saat aplikasi dipakai lagi.</p><p>Data backend tidak berubah.</p>',
+    html: '<p>Database IndexedDB lokal akan dihapus total dan dibuat ulang saat aplikasi dipakai lagi.</p><p>Snapshot mock GAS demo juga akan dikosongkan agar seed awal dibuat ulang.</p><p>Data backend tidak berubah.</p>',
     showCancelButton: true,
     confirmButtonText: 'Reset database',
     cancelButtonText: 'Batal',
@@ -1921,6 +2432,7 @@ async function resetSuperAdminIndexedDb() {
   }
 
   await resetLocalDatabase();
+  await clearMockGasDemoState();
   sessionMessage.value = 'Database IndexedDB lokal sudah direset.';
   await inspectSuperAdminLocalData();
 }
@@ -1933,7 +2445,7 @@ async function resetSuperAdminLocalData() {
   const result = await Swal.fire({
     icon: 'warning',
     title: 'Reset data lokal device?',
-    html: '<p>Draft Operator, queue IndexedDB, dan preferensi Try Role di browser ini akan dihapus.</p><p>Data Google Sheets dan Script Properties tidak akan disentuh.</p>',
+    html: '<p>Draft Operator, queue IndexedDB, snapshot mock GAS demo, dan preferensi Try Role di browser ini akan dihapus.</p><p>Data Google Sheets dan Script Properties tidak akan disentuh.</p>',
     showCancelButton: true,
     confirmButtonText: 'Reset lokal',
     cancelButtonText: 'Batal',
@@ -1945,9 +2457,10 @@ async function resetSuperAdminLocalData() {
   }
 
   await resetLocalData();
+  await clearMockGasDemoState();
   clearLocalRolePreferences();
   selectedRole.value = 'Operator';
-  visibleRoles.value = ['Operator', 'Mandor', 'Management'];
+  visibleRoles.value = ['Operator', 'Mandor', 'Supervisor', 'Management'];
   activeView.value = 'operator';
   activeRoleFeatures.value = {
     ...activeRoleFeatures.value,
@@ -1958,6 +2471,44 @@ async function resetSuperAdminLocalData() {
   sessionMessage.value = 'Data lokal device sudah direset. Role demo kembali ke default.';
 
   await refreshSessionContext();
+}
+
+async function loadMockGasDemoState() {
+  try {
+    const { createMockGasPersistence } = await import('./services/mockGasPersistence.js');
+    return await createMockGasPersistence().loadState();
+  } catch {
+    return null;
+  }
+}
+
+async function clearMockGasDemoState() {
+  try {
+    const { createMockGasPersistence } = await import('./services/mockGasPersistence.js');
+    await createMockGasPersistence().clearState();
+  } catch {
+    // Mock GAS persistence exists only for local/demo runtime.
+  }
+}
+
+function summarizeMockGasSnapshot(snapshot) {
+  if (!snapshot) {
+    return {
+      status: 'EMPTY',
+      note: 'Seed demo akan dibuat saat mock GAS berjalan.',
+    };
+  }
+
+  return {
+    status: 'PERSISTED',
+    raw_logs: snapshot.rawLogs?.length || 0,
+    quarantine: snapshot.quarantine?.length || 0,
+    target_master: snapshot.targetMaster?.length || 0,
+    defect_categories: snapshot.defectCategories?.length || 0,
+    user_roles: snapshot.userRoles?.length || 0,
+    line_master: snapshot.lineMaster?.length || 0,
+    shift_master: snapshot.shiftMaster?.length || 0,
+  };
 }
 
 function reloadAppFromSuperAdmin() {
@@ -1987,9 +2538,9 @@ function readVisibleRoles() {
     const validRoles = Array.isArray(storedRoles)
       ? storedRoles.filter((role) => roleOptions.includes(role))
       : [];
-    return validRoles.length ? [...new Set(validRoles)] : ['Operator', 'Mandor', 'Management'];
+    return validRoles.length ? [...new Set(validRoles)] : ['Operator', 'Mandor', 'Supervisor', 'Management'];
   } catch {
-    return ['Operator', 'Mandor', 'Management'];
+    return ['Operator', 'Mandor', 'Supervisor', 'Management'];
   }
 }
 
@@ -2085,13 +2636,24 @@ function clearLocalRolePreferences() {
       </button>
     </nav>
 
-    <div class="operator-progress">
+    <div v-if="activeView === 'operator'" class="operator-progress">
       <div>
-        <span>Progress OK</span>
-        <strong>{{ formatNumber(operatorDashboardSummary.ok_today) }} / {{ formatNumber(operatorDashboardSummary.target_today) }}</strong>
+        <span>Progress Realisasi</span>
+        <strong>{{ formatNumber(Number(operatorDashboardSummary.ok_today || 0) + Number(operatorDashboardSummary.reject_today || 0)) }} / {{ formatNumber(operatorDashboardSummary.target_today) }}</strong>
       </div>
       <div class="progress-track">
         <span :style="{ width: `${operatorOkPercent}%` }"></span>
+      </div>
+    </div>
+
+    <div v-else-if="activeView === 'mandor'" class="role-progress mandor-progress">
+      <div>
+        <span>Progress Tim Mandor</span>
+        <strong>{{ formatNumber(mandorProgressSummary.actual) }} / {{ formatNumber(mandorProgressSummary.target) }}</strong>
+        <small>{{ supervisorFilters.line_id }} / {{ supervisorFilters.shift_id }} - {{ supervisorFilters.factory_date }}</small>
+      </div>
+      <div class="progress-track">
+        <span :style="{ width: `${mandorProgressPercent}%` }"></span>
       </div>
     </div>
 
@@ -2493,7 +3055,7 @@ function clearLocalRolePreferences() {
         </div>
 
         <div class="task-kicker compact-flow">
-          <span>2</span>
+          <span aria-hidden="true">↻</span>
           <strong>Draft dan retry</strong>
           <small>Periksa antrean hanya saat ada pending sync.</small>
         </div>
@@ -2540,6 +3102,56 @@ function clearLocalRolePreferences() {
           <span class="status conflict">! Bentrok {{ approvalSummary.conflict }}</span>
           <span class="status warning">Review {{ approvalSummary.pending }}</span>
           <span class="status success">Selesai {{ approvalSummary.resolved }}</span>
+        </div>
+
+        <div v-if="activeFeatureId === 'mandor-dashboard'" class="table-wrap">
+          <div class="table-heading">
+            <div>
+              <span>Monitoring</span>
+              <strong>Submit operator terbaru</strong>
+            </div>
+            <button class="button secondary compact-button" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
+          </div>
+          <div v-if="supervisorPending" class="table-skeleton" aria-hidden="true">
+            <span v-for="item in skeletonRows.slice(0, 4)" :key="`mandor-raw-skeleton-${item}`" class="skeleton-line wide"></span>
+          </div>
+          <table v-else>
+            <thead>
+              <tr>
+                <th>Transaction</th>
+                <th>Machine</th>
+                <th>OK</th>
+                <th>Reject</th>
+                <th>Status</th>
+                <th>Review</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in supervisorRawRows" :key="row.transaction_id">
+                <td>
+                  <strong class="transaction-id">{{ row.transaction_id }}</strong>
+                  <small class="transaction-meta">
+                    {{ row.operator_email_masked || maskEmailForUi(row.operator_email) }} - {{ row.line_id }} / {{ row.shift_id }} - {{ formatDateTime(row.device_timestamp) }}
+                  </small>
+                </td>
+                <td>{{ row.machine_id }}</td>
+                <td>{{ formatNumber(row.perolehan_ok) }}</td>
+                <td>{{ formatNumber(row.perolehan_reject) }}</td>
+                <td><span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : 'success']">{{ row.status }}</span></td>
+                <td>
+                  <div v-if="row.status === 'ACCEPTED'" class="review-actions" aria-label="Pre-closing review actions">
+                    <button class="icon-button danger" type="button" title="Void" @click="createProductionReviewFromRow(row, 'VOID')">Void</button>
+                    <button class="icon-button warning" type="button" title="Request correction" @click="createProductionReviewFromRow(row, 'REQUEST_CORRECTION')">Request</button>
+                    <button class="icon-button" type="button" title="Pre-closing correction" @click="createProductionReviewFromRow(row, 'PRE_CLOSING_CORRECTION')">Koreksi</button>
+                  </div>
+                  <span v-else class="muted-text">Quarantine flow</span>
+                </td>
+              </tr>
+              <tr v-if="supervisorRawRows.length === 0">
+                <td colspan="6">Belum ada submit operator pada filter Mandor saat ini.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div v-if="activeFeatureId === 'mandor-approval' || activeFeatureId === 'mandor-conflict'" class="approval-filters" aria-label="Filter approval">
@@ -2597,6 +3209,9 @@ function clearLocalRolePreferences() {
                       {{ row.status === 'CONFLICT_PENDING' ? '! Bentrok Data' : row.status }}
                     </span>
                   </td>
+                </tr>
+                <tr v-if="displayedApprovalCases.length === 0">
+                  <td colspan="4">Tidak ada approval aktif untuk filter ini.</td>
                 </tr>
               </tbody>
             </table>
@@ -2701,15 +3316,20 @@ function clearLocalRolePreferences() {
               <label class="field">
                 <span>Machine</span>
                 <select v-model="targetForm.machine_id" :disabled="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" aria-label="Machine target">
-                  <option value="ALL">ALL</option>
-                  <option v-for="option in machineOptions" :key="option.value" :value="option.value">
+                  <option v-if="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" value="ALL">ALL</option>
+                  <option v-for="option in machineScopedOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
                   </option>
                 </select>
               </label>
               <label class="field">
                 <span>Operator email</span>
-                <input v-model="targetForm.operator_email" :readonly="targetForm.scope_type !== 'OPERATOR_ONLY'" aria-label="Operator email target" />
+                <select v-model="targetForm.operator_email" :disabled="targetForm.scope_type !== 'OPERATOR_ONLY'" aria-label="Operator email target">
+                  <option v-if="targetForm.scope_type !== 'OPERATOR_ONLY'" value="ALL">ALL</option>
+                  <option v-for="option in operatorOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
               </label>
               <label class="number-field">
                 <span>Target</span>
@@ -2767,9 +3387,30 @@ function clearLocalRolePreferences() {
                     <td>{{ formatNumber(target.target_harian) }}</td>
                     <td><span :class="['status', target.status_aktif ? 'success' : 'warning']">{{ target.status_aktif ? 'Active' : 'Inactive' }}</span></td>
                     <td>
-                      <button class="button secondary compact-button" type="button" :disabled="!target.status_aktif" @click="deactivateProductionTarget(target)">
-                        Nonaktifkan
-                      </button>
+                      <div class="table-action-row">
+                        <button class="button secondary compact-button" type="button" @click="editProductionTarget(target)">
+                          Edit
+                        </button>
+                        <button
+                          v-if="target.status_aktif"
+                          class="button secondary compact-button"
+                          type="button"
+                          @click="deactivateProductionTarget(target)"
+                        >
+                          Nonaktif
+                        </button>
+                        <button
+                          v-else
+                          class="button primary compact-button"
+                          type="button"
+                          @click="activateProductionTarget(target)"
+                        >
+                          Aktifkan
+                        </button>
+                        <button class="button danger-button compact-button" type="button" :disabled="!target.status_aktif" @click="deleteProductionTarget(target)">
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   <tr v-if="productionTargetRows.length === 0">
@@ -2971,24 +3612,15 @@ function clearLocalRolePreferences() {
             <input v-model="dashboardFilters.factory_date" aria-label="Tanggal dashboard" />
           </label>
           <label class="field">
-            <span>Line</span>
-            <select v-model="dashboardFilters.line_id" aria-label="Line dashboard">
-              <option value="">Semua line</option>
-              <option v-for="option in lineOptions" :key="option.value" :value="option.value">
+            <span>Bagian</span>
+            <select v-model="dashboardFilters.bagian_id" aria-label="Bagian dashboard">
+              <option value="">Semua bagian</option>
+              <option v-for="option in bagianMasterOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
           </label>
-          <label class="field">
-            <span>Shift</span>
-            <select v-model="dashboardFilters.shift_id" aria-label="Shift dashboard">
-              <option value="">Semua shift</option>
-              <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </label>
-          <button class="button primary" type="button" @click="runRecapAndDashboard">Run recap</button>
+          <button class="button primary" type="button" @click="runRecapAndDashboard">Refresh</button>
         </div>
 
         <div v-if="dashboardPending" class="mini-metrics" aria-hidden="true">
@@ -3008,48 +3640,174 @@ function clearLocalRolePreferences() {
         <div v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-pending'" class="approval-summary" aria-label="Status dashboard">
           <span class="status warning">Quarantine {{ dashboardData?.summary?.pending_quarantine || 0 }}</span>
           <span class="status warning">Open closing {{ dashboardData?.summary?.open_closing || 0 }}</span>
+          <span class="status success">Hadir {{ managementAttendanceSummary.present_count || 0 }}</span>
+          <span class="status warning">Absen {{ managementAttendanceSummary.absent_count || 0 }}</span>
         </div>
 
         <div v-if="dashboardError" class="inline-error" role="alert">
           {{ dashboardError }}
         </div>
 
-        <div v-if="activeFeatureId === 'management-recap' || activeFeatureId === 'management-pareto'" class="split-tables single-surface">
-          <div v-if="activeFeatureId === 'management-recap'" class="table-wrap">
-            <div class="table-heading">
-              <div>
-                <span>Final KPI</span>
-                <strong>Recap rows</strong>
-              </div>
+        <article v-if="activeFeatureId === 'management-bagian'" class="task-panel master-policy-panel">
+          <div class="table-heading">
+            <div>
+              <span>Master kebijakan</span>
+              <strong>CRUD Bagian dan upah per item</strong>
             </div>
-            <div v-if="dashboardPending" class="table-skeleton" aria-hidden="true">
-              <span v-for="item in skeletonRows" :key="`recap-skeleton-${item}`" class="skeleton-line wide"></span>
+            <button class="button secondary compact-button" type="button" :disabled="bagianMasterLoading" @click="seedBagianDefaults">
+              Seed default
+            </button>
+          </div>
+          <div class="control-filters bagian-master-form" aria-label="Form master Bagian">
+            <label class="field">
+              <span>ID Bagian</span>
+              <input v-model="bagianMasterForm.bagian_id" placeholder="SOLDER" aria-label="ID Bagian" />
+            </label>
+            <label class="field">
+              <span>Nama Bagian</span>
+              <input v-model="bagianMasterForm.bagian_name" placeholder="Bagian Solder" aria-label="Nama Bagian" />
+            </label>
+            <label class="field wide-field">
+              <span>Deskripsi</span>
+              <input v-model="bagianMasterForm.description" placeholder="Deskripsi singkat tanpa PII" aria-label="Deskripsi Bagian" />
+            </label>
+            <label class="field">
+              <span>Upah / item</span>
+              <input v-model.number="bagianMasterForm.unit_rate" type="number" min="0" aria-label="Upah per item" />
+            </label>
+            <label class="field">
+              <span>Target unit/bulan</span>
+              <input v-model.number="bagianMasterForm.monthly_target_unit" type="number" min="0" aria-label="Target unit bulanan" />
+            </label>
+            <label class="field">
+              <span>Target gaji</span>
+              <input v-model.number="bagianMasterForm.target_salary" type="number" min="0" aria-label="Target gaji bulanan" />
+            </label>
+            <label class="field checkbox-field">
+              <span>Aktif</span>
+              <input v-model="bagianMasterForm.status_aktif" type="checkbox" aria-label="Status aktif Bagian" />
+            </label>
+            <div class="form-actions">
+              <button class="button primary" type="button" :disabled="bagianMasterLoading" @click="saveBagianMaster">Simpan</button>
+              <button class="button secondary" type="button" :disabled="bagianMasterLoading" @click="resetBagianMasterForm">Reset</button>
             </div>
-            <table v-else>
+          </div>
+          <p v-if="bagianMasterMessage" class="inline-success">{{ bagianMasterMessage }}</p>
+          <p v-if="bagianMasterError" class="inline-error" role="alert">{{ bagianMasterError }}</p>
+          <div class="table-wrap compact-table">
+            <table>
               <thead>
                 <tr>
-                  <th>Line</th>
-                  <th>Shift</th>
-                  <th>Machine</th>
-                  <th>OK</th>
-                  <th>Reject</th>
+                  <th>Bagian</th>
+                  <th>Upah</th>
+                  <th>Target/bulan</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in dashboardRows" :key="row.recap_id">
-                  <td>{{ row.line_id }}</td>
-                  <td>{{ row.shift_id }}</td>
-                  <td>{{ row.machine_id }}</td>
-                  <td>{{ formatCompact(row.ok_total) }}</td>
-                  <td>{{ formatCompact(row.reject_total) }}</td>
+                <tr v-for="row in bagianMasterRows" :key="row.bagian_id">
+                  <td>
+                    <strong>{{ row.bagian_name }}</strong>
+                    <small>{{ row.bagian_id }} - {{ row.description || 'Tanpa deskripsi' }}</small>
+                  </td>
+                  <td>Rp{{ formatCompact(row.unit_rate) }}</td>
+                  <td>{{ formatCompact(row.monthly_target_unit) }} unit</td>
+                  <td><span :class="['status', row.status_aktif ? 'success' : 'warning']">{{ row.status_aktif ? 'Aktif' : 'Nonaktif' }}</span></td>
+                  <td>
+                    <div class="action-row">
+                      <button class="button secondary compact-button" type="button" @click="editBagianMaster(row)">Edit</button>
+                      <button class="button danger compact-button" type="button" :disabled="!row.status_aktif || bagianMasterLoading" @click="deactivateBagian(row)">Nonaktif</button>
+                    </div>
+                  </td>
                 </tr>
-                <tr v-if="dashboardRows.length === 0">
-                  <td colspan="5">Recap belum tersedia untuk filter ini.</td>
+                <tr v-if="bagianMasterRows.length === 0">
+                  <td colspan="5">Belum ada master Bagian. Jalankan seed default atau tambah Bagian baru.</td>
                 </tr>
               </tbody>
             </table>
           </div>
+        </article>
 
+        <div v-if="['management-dashboard', 'management-bagian', 'management-wage', 'management-attendance', 'management-flow'].includes(activeFeatureId)" class="management-demo-grid">
+          <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-bagian'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Bagian</span>
+                <strong>Output terverifikasi Supervisor</strong>
+              </div>
+            </div>
+            <div class="bagian-list">
+              <div v-for="item in managementBagianSummary" :key="item.bagian_id" class="bagian-row">
+                <div>
+                  <strong>{{ item.bagian_name }}</strong>
+                <small>{{ item.verification_status }} - pencatat {{ maskEmailForUi(item.recorder) }} - verifikator Supervisor {{ maskEmailForUi(item.verifier) }}</small>
+                </div>
+                <div class="bagian-metrics">
+                  <span>Target {{ formatCompact(item.target_total) }}</span>
+                  <span>Realisasi {{ formatCompact(item.actual_total) }}</span>
+                  <span>Reject {{ formatCompact(item.qc_reject_total) }}</span>
+                  <strong>{{ item.achievement_rate }}%</strong>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-attendance'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Absensi</span>
+                <strong>Rekap hari ini</strong>
+              </div>
+            </div>
+            <div class="mini-metrics compact-metrics">
+              <article v-for="card in managementAttendanceCards" :key="card.label" :class="['mini-metric', card.tone]">
+                <span>{{ card.label }}</span>
+                <strong>{{ card.value }}</strong>
+              </article>
+            </div>
+            <div class="hint-box">
+              Karyawan menekan Masuk/Keluar; Mandor melakukan check/check all dan menetapkan Izin, Sakit, atau Alpha.
+            </div>
+          </article>
+
+          <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-flow'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Traceability</span>
+                <strong>Sumber bahan ke Lem</strong>
+              </div>
+            </div>
+            <ul class="flow-list">
+              <li v-for="flow in managementMaterialFlow" :key="flow.flow_id">
+                <strong>{{ flow.target_employee_no }} menerima {{ formatCompact(flow.received_units) }} unit</strong>
+                <span>Dari {{ flow.source_employee_nos.join(', ') }} - verified {{ formatCompact(flow.verified_units) }}</span>
+                <small>{{ flow.note }}</small>
+              </li>
+            </ul>
+          </article>
+
+          <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-wage'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Upah unit</span>
+                <strong>Kondisi UMR bulanan</strong>
+              </div>
+            </div>
+            <ul class="flow-list">
+              <li v-for="row in managementWageRows" :key="row.bagian_id">
+                <span :class="['status', row.tone]">{{ row.statusLabel }}</span>
+                <strong>{{ row.bagian_name }} - Rp{{ formatCompact(row.unit_rate) }}/unit</strong>
+                <span>Estimasi bulan ini Rp{{ formatCompact(row.monthly_wage_estimate) }} dari target Rp{{ formatCompact(row.umr_monthly) }}</span>
+                <small v-if="row.umr_status === 'BELOW_UMR'">Gap {{ formatCompact(row.wage_gap_units) }} unit atau Rp{{ formatCompact(row.wage_gap_amount) }}.</small>
+                <small v-else-if="row.umr_status === 'POLICY_PENDING'">Harga satuan atau target gaji belum disahkan.</small>
+                <small v-else>Target gaji bulanan sudah terpenuhi berdasarkan output tervalidasi Supervisor saat ini.</small>
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <div v-if="activeFeatureId === 'management-pareto'" class="split-tables single-surface">
           <div v-if="activeFeatureId === 'management-pareto'" class="table-wrap">
             <div class="table-heading">
               <div>
@@ -3131,7 +3889,7 @@ function clearLocalRolePreferences() {
             <div class="table-heading">
               <div>
                 <span>Directory</span>
-                <strong>User access masked</strong>
+                <strong>Dummy employee directory</strong>
               </div>
             </div>
             <div v-if="hrdPending" class="table-skeleton" aria-hidden="true">
@@ -3140,25 +3898,39 @@ function clearLocalRolePreferences() {
             <table v-else>
               <thead>
                 <tr>
-                  <th>User</th>
+                  <th>ID</th>
+                  <th>Nama</th>
+                  <th>Alamat</th>
+                  <th>Email</th>
+                  <th>No WA</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th>Last login</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="user in hrdUsers" :key="user.user_id">
-                  <td>{{ user.email_masked }}</td>
-                  <td>{{ user.role }}</td>
+                  <td><strong>{{ user.employee_no || user.user_id }}</strong></td>
+                  <td>{{ user.full_name || '-' }}</td>
+                  <td>{{ user.address || '-' }}</td>
+                  <td>{{ user.email || user.email_masked }}</td>
+                  <td>
+                    <a v-if="user.wa_url" class="wa-link" :href="user.wa_url" target="_blank" rel="noopener noreferrer">
+                      {{ user.wa_number }}
+                    </a>
+                    <span v-else>-</span>
+                  </td>
+                  <td>{{ (user.roles || [user.role]).join(', ') }}</td>
                   <td>
                     <span :class="['status', user.is_deleted ? 'danger' : user.status_aktif ? 'success' : 'warning']">
                       {{ user.is_deleted ? 'Deleted' : user.status_aktif ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
-                  <td>{{ user.last_login ? formatDateTime(user.last_login) : '-' }}</td>
                 </tr>
               </tbody>
             </table>
+            <div class="hint-box">
+              Data ini dummy untuk verifikasi UI HRD. Production PII tetap harus melewati workflow detail HRD terotorisasi.
+            </div>
           </article>
 
           <article v-if="activeFeatureId === 'hrd-roles'" class="task-panel">
@@ -3203,7 +3975,8 @@ function clearLocalRolePreferences() {
             </div>
             <ul class="readiness-list">
               <li><span class="status success">Masked</span><strong>Email tampil sebagai `xx***@domain`.</strong></li>
-              <li><span class="status danger">Blocked</span><strong>Nama, telepon, encrypted PII, blind index, dan Script Properties tidak dikirim ke UI.</strong></li>
+              <li><span class="status warning">Demo only</span><strong>Nama, alamat, email, dan WA boleh tampil hanya dari dataset dummy/mock.</strong></li>
+              <li><span class="status danger">Blocked</span><strong>Encrypted PII, blind index, profile base64, dan Script Properties tidak dikirim ke UI normal.</strong></li>
               <li><span class="status warning">Audit</span><strong>HRD melihat ringkasan event, bukan `metadata_json` mentah.</strong></li>
             </ul>
           </article>

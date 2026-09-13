@@ -15,6 +15,13 @@ Komposisi visual wajib mengikuti rasio arah desain:
 
 Rasio ini adalah batas arah desain, bukan ukuran matematis per halaman. Jika ada konflik antara estetika dan keterbacaan operasional, keterbacaan, kontras, dan kecepatan input selalu menang.
 
+Kontrak i18n:
+- UI harus siap alih bahasa untuk `ID`, `EN`, dan `CN`.
+- Bahasa default adalah `ID`.
+- Full translation dilakukan setelah rebaseline proses bisnis stabil agar istilah domain tidak diterjemahkan berulang.
+- Istilah yang masih perlu dikunci sebelum translation penuh mencakup `Bagian`, `Tandon`, `Pencatat`, `Verifikator`, status absensi, target harian, target bulanan, dan upah per unit.
+- Missing translation key wajib fallback deterministik ke `ID` atau key development yang mudah diaudit.
+
 Status implementasi 2026-09-09:
 - App shell multi-view, workspace navigation per role, Help/Cara penggunaan per role, Operator mobile UI, autosave/sync status, defect conditional field, Pareto preview, ChartJS Operator dashboard, SweetAlert2 metric help, hidden SuperAdmin console, dan Mandor approval inbox UI sudah ada di `src/App.vue`.
 - Scope M5/M6 runtime lokal sudah menambahkan control center desktop, daily closing action, adjustment review, management dashboard read-only, dan HRD read-only access dashboard sebagai view terpisah.
@@ -74,6 +81,7 @@ Tujuan UI mobile operator adalah one-hand reporting.
 Wajib:
 - Form ringkas untuk line, shift, machine, operator demo, target, tandon, OK, reject, dan kategori defect.
 - Pada mode development/demo, field Line, Shift, Mesin, dan Operator harus berupa selector dari response `getOperatorReferenceData` sehingga tester dapat meniru transaksi multi-user tanpa mengganti email Google.
+- Perubahan data demo seperti target planning dan submit mock harus tetap terlihat setelah reload karena state mock GAS tersimpan di IndexedDB.
 - UI wajib menjelaskan bahwa target dibandingkan dengan `OK + Reject`; `Tandon` adalah konteks buffer/sisa yang tidak masuk realisasi target dan boleh tetap diisi walaupun target tercapai.
 - Target harian Operator idealnya auto-filled dari `TARGET_MASTER` dan tampil sebagai read-only/locked value. Input manual target hanya boleh tampil sebagai fallback warning jika target master belum tersedia.
 - Input angka besar dan mudah disentuh.
@@ -98,11 +106,49 @@ Dilarang:
 - Metric strip Operator untuk `Target`, `OK`, `Reject`, dan `Queue` wajib bisa diklik/tap untuk membuka bantuan ringkas yang menjelaskan arti metric, rumus, dan tindakan yang perlu dilakukan user.
 - Help role wajib tersedia sebagai menu fitur, bukan modal tersembunyi, agar user awam dapat memahami urutan kerja tanpa membaca dokumentasi repository. Saat Help aktif, panel kerja role lain tidak boleh ikut tampil sehingga layar tetap fokus.
 - Riwayat dan Status Operator harus punya empty/loading/error state yang jelas, serta tetap menggabungkan informasi mock/backend dengan queue lokal tanpa membuat user membaca log teknis.
-- Mandor workspace wajib action-first: pending approval, conflict, dan closing harus dipisah sebagai task surface yang mudah dipindai.
-- Mandor workspace perlu memiliki target management flow saat `TARGET_MASTER` diimplementasikan: pilih scope target, pilih apakah berlaku untuk semua operator atau satu operator, preview dampak multi-user, lalu simpan dengan audit.
-- Supervisor workspace wajib alert-first: conflict, closing terbuka, adjustment pending, dan transaksi anomali tampil sebelum tabel mentah.
-- Management workspace wajib insight-first dan read-only: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data.
-- HRD workspace wajib privacy-first: dashboard user access, role assignment, permission readiness, dan audit summary tampil dengan PII masked dan tanpa akses secret. Default HRD adalah Dashboard; menu Users menampilkan direktori akses masked, Roles menampilkan matriks permission, Audit menampilkan ringkasan event aman, dan Privacy menampilkan batas data yang tidak boleh dibuka. Walaupun seed `USER_ROLES` dapat berisi username, field terenkripsi, dan `profile_base64`, dashboard akses read-only HRD tidak boleh merender avatar/profile atau PII detail sampai ada workflow HRD detail yang disetujui kontrak.
+- Mandor workspace wajib field-operations-first dengan menu `Dashboard`, `Absensi Tim`, `Target Harian`, `Hasil Operator`, `Approval & Koreksi`, `Closing Harian`, `Defect Request`, dan `Help`.
+- `Dashboard` Mandor menampilkan kesiapan tim hari ini: hadir/belum dikonfirmasi, target yang sudah/belum ditetapkan, output masuk, correction queue, conflict/actionable queue, dan status closing. Dashboard hanya ringkasan dengan drilldown ke menu terkait.
+- `Absensi Tim` wajib menyediakan check per karyawan, check all, dan pengecualian `Izin`, `Sakit`, `Alpha` dengan catatan. UI harus mencegah konfirmasi massal untuk karyawan resign/nonaktif.
+- `Target Harian` wajib menyediakan flow pilih Bagian/tanggal/jenis pekerjaan, pilih operator atau semua operator dalam scope, preview dampak multi-user, lalu simpan dengan audit.
+- `Hasil Operator` wajib menjadi layar monitoring submit normal `ACCEPTED` dan output terbaru. Tabel tidak boleh hanya menampilkan UUID; tampilkan konteks employee id/nama termasking bila perlu, Bagian, timestamp, OK, Reject, Tandon, dan status.
+- `Approval & Koreksi` wajib menggabungkan conflict queue, pending review, `VOID`, `REQUEST_CORRECTION`, dan `PRE_CLOSING_CORRECTION` sebagai pekerjaan aktif. Status final tidak boleh tetap berada di queue aktif.
+- `Closing Harian` wajib membantu Mandor memeriksa absensi, target, output, correction queue, dan conflict sebelum mengunci laporan harian atau mengirim ke verifikator Supervisor.
+- `Defect Request` wajib memisahkan usulan defect lapangan dari master defect final yang hanya disahkan Supervisor atau SuperAdmin.
+- Dashboard Mandor wajib menampilkan monitoring submit operator terbaru untuk data `ACCEPTED`/raw scoped view, sehingga laporan normal terlihat tanpa mencampurnya ke Approval Inbox.
+- Tabel monitoring submit Mandor tidak boleh hanya menampilkan UUID transaksi mentah; setiap transaction cell wajib memiliki metadata ringkas seperti operator termasking, line/shift, dan waktu device agar Mandor dapat memahami konteks tanpa membuka detail teknis.
+- Work Queue Mandor hanya boleh menampilkan kasus actionable `PENDING` dan `CONFLICT_PENDING`; setelah keputusan `Approve`, `Reject`, atau `Request correction`, baris harus hilang dari queue aktif dan detail aktif berpindah ke kasus berikutnya atau empty state.
+- Mandor perlu memiliki surface review sebelum closing untuk submit normal `ACCEPTED` dengan aksi `VOID`, `REQUEST_CORRECTION`, dan `PRE_CLOSING_CORRECTION`; UI tidak boleh memberi kesan Mandor mengedit angka transaksi asal secara langsung.
+- Tombol pre-closing review wajib muncul dekat konteks submit terbaru: transaction id, operator masked/email, line, shift, machine, timestamp, OK, Reject, dan status.
+- Mandor boleh membuat draft/request kategori defect baru dari temuan lapangan, tetapi UI harus membedakan request tersebut dari master defect final yang hanya bisa disahkan Supervisor atau SuperAdmin.
+- Mandor workspace perlu memiliki target management flow: pilih scope target, pilih apakah berlaku untuk semua operator atau satu operator, preview dampak multi-user, lalu simpan dengan audit. Tabel target aktif wajib menyediakan aksi edit, aktifkan, nonaktifkan, dan hapus berbasis soft delete; hard delete tetap dilarang.
+- Supervisor workspace wajib memakai menu bisnis `Dashboard`, `Verifikasi QC`, `Defect & Pareto`, `Closing & Koreksi`, `Target & Tim`, `Detail Data`, dan `Help`. Menu teknis lama seperti `Reports`, `Quarantine`, `Raw Logs`, dan `Audit` tidak boleh menjadi navigasi utama; istilah tersebut hanya boleh muncul sebagai sumber data/detail investigasi.
+- `Dashboard` Supervisor menampilkan ringkasan output tervalidasi, output menunggu verifikasi QC, closing terbuka, defect dominan, risiko target, dan performa tim.
+- `Verifikasi QC` adalah work queue utama untuk validasi `OK + Reject` per Bagian, karyawan, tanggal, dan transaksi. Aksi harus jelas, auditable, dan tidak memberi kesan mengubah transaksi asal.
+- `Defect & Pareto` menampung master defect final, draft/request defect dari Mandor, Pareto defect, severity, dan `qcc_factor`.
+- `Closing & Koreksi` menampilkan void, request correction, pre-closing correction, adjustment, dan status closing dengan bahasa proses bisnis.
+- `Target & Tim` menampilkan target per operator/tim, kapasitas berbasis absensi, gap target vs realisasi, serta ranking tim sesuai scope.
+- `Detail Data` menggantikan `Raw Logs` sebagai drilldown aman. Data teknis berat wajib lazy-load dan termasking sesuai permission.
+- Management workspace wajib insight-first untuk transaksi produksi: KPI final, Pareto defect, dan status pending tampil tanpa kontrol mutasi data produksi.
+- Management boleh memiliki workflow CRUD khusus untuk `BAGIAN_MASTER` dan kebijakan upah per item. UI harus jelas membedakan "master kebijakan" dari "data transaksi"; tombol simpan/nonaktifkan wajib berada di menu Bagian/Upah dan menampilkan status sukses/error singkat.
+- Management workspace rebaseline wajib dapat menampilkan dummy/real insight per Bagian: output tervalidasi Supervisor, kehadiran, absen, tandon sebagai angka konteks, performa terhadap target, dan sinyal payroll-ready tanpa membuka PII detail. Fungsi QC melekat pada Supervisor dan tidak ditampilkan sebagai role terpisah.
+- Menu Management target adalah `Dashboard`, `Bagian & Upah`, `Produksi`, `Absensi`, `Risiko & Pareto`, `Risiko & Pending`, dan `Help`. `Bagian & Upah` wajib menyediakan tabel master Bagian aktif/nonaktif, form create/update, tombol seed default, aksi nonaktif berbasis soft delete, `unit_rate`, `monthly_target_unit`, dan `target_salary`.
+- `Produksi` wajib menjadi menu khusus performa output: target vs realisasi, OK, Reject, reject rate, tren, perbandingan Bagian, serta status output tervalidasi Supervisor.
+- `Risiko & Pareto` wajib memakai bahasa improvement Management: defect terbesar, konsentrasi reject, Bagian terdampak, tren risiko, dan prioritas QCC.
+- `Risiko & Pending` mengganti istilah teknis `Pending` menjadi bahasa keputusan: conflict, output belum verified, closing terbuka, policy pending, master data belum lengkap, dan rekap yang belum bisa dipercaya.
+- `Laporan/Export` belum menjadi menu wajib. Jika dibutuhkan, kontrak export harus menentukan format, masking, audit, dan izin sebelum implementasi.
+- Halaman `Upah UMR` wajib read-only dan menampilkan kondisi `Memenuhi UMR`, `Di bawah UMR`, atau `Policy pending` berdasarkan proyeksi gaji bulanan dibanding target gaji/UMR.
+- Jika satu akun memiliki beberapa role, session/role switcher wajib menampilkan daftar role yang diizinkan untuk akun tersebut dan berpindah workspace tanpa reload penuh.
+- HRD workspace wajib privacy-first dengan empat menu utama: `Dashboard`, `Karyawan`, `Absensi`, dan `Akses & Audit`.
+- `Dashboard` HRD menampilkan total karyawan aktif, resign/nonaktif, absensi hari ini, pending konfirmasi Mandor, data belum lengkap, dan ringkasan payroll-ready; jangan gunakan judul "PII".
+- `Karyawan` menggabungkan konsep lama User Masked dan Privacy Safe: ID karyawan 5 digit, nama, Bagian, status aktif/resign, email, tombol WhatsApp `wa.me`, alamat, kelengkapan data, dan mode masking/detail access.
+- `Absensi` menampilkan rekap harian/bulanan, status Hadir/Izin/Sakit/Alpha/Resign, jam masuk/keluar, status konfirmasi Mandor, dan export payroll-ready.
+- `Akses & Audit` menggabungkan Roles RBAC dan audit ringan: role aktif/nonaktif, multi-role user, anomali akses, perubahan data karyawan/role, login terakhir, dan akses ditolak. Jangan tampilkan log teknis backend penuh, secret, Script Properties, atau raw audit metadata.
+- Walaupun seed `USER_ROLES` dapat berisi username, field terenkripsi, dan `profile_base64`, dashboard akses read-only HRD tidak boleh merender avatar/profile atau PII detail sampai ada workflow HRD detail yang disetujui kontrak.
+- Mode mock/demo HRD boleh menampilkan direktori dummy berisi ID karyawan 5 digit, nama lengkap, alamat, email, dan tombol WhatsApp `wa.me` untuk verifikasi UI. Tampilan wajib tetap memberi konteks dummy/demo dan tidak boleh diperlakukan sebagai izin membuka PII production.
+- Statistik performa Operator wajib role-aware: Operator hanya melihat dirinya sendiri, Mandor/Supervisor boleh melihat ranking tim, dan Management hanya melihat agregat tanpa PII.
+- Progress header tidak boleh memakai komponen/data yang sama untuk semua role. Operator memakai progress personal, Mandor memakai progress tim Operator bawahannya, Supervisor memakai progress area, dan Management memakai KPI final agregat.
+- Jika relasi Mandor-Operator belum lengkap, UI Mandor wajib menampilkan progress sebagai scoped team view berdasarkan filter yang tersedia dan tidak menyebutnya sebagai progress personal.
+- Pareto defect wajib mengikuti filter dan batas akses role; UI harus menampilkan filter periode, line, shift, machine, jenis pekerjaan, operator/team sesuai permission tanpa membocorkan data lintas role.
 
 ## 5. Mobile Mandor
 
@@ -119,17 +165,17 @@ Wajib:
 
 ## 6. Desktop Supervisor
 
-Desktop Supervisor adalah control center.
+Desktop Supervisor adalah workspace QC/verifikator.
 
 Wajib:
-- Sidebar atau navigasi tetap untuk Dashboard, Reports, Quarantine, Closing, Master Data, dan Audit.
-- Filter server-side untuk tanggal, line, shift, machine, operator, dan status.
+- Sidebar atau navigasi tetap untuk `Dashboard`, `Verifikasi QC`, `Defect & Pareto`, `Closing & Koreksi`, `Target & Tim`, `Detail Data`, dan `Help`.
+- Filter server-side untuk tanggal, Bagian, karyawan/operator, status verifikasi, status closing, defect, dan status koreksi.
 - Table dengan server-side pagination.
-- Detail drawer untuk review tanpa kehilangan konteks tabel.
+- Detail drawer untuk review/verifikasi tanpa kehilangan konteks tabel.
 - Timeline event sourcing untuk transaksi konflik.
-- Approval inbox desktop memakai tabel di kiri dan detail comparison drawer atau pane di kanan.
+- Work queue verifikasi desktop memakai tabel di kiri dan detail comparison drawer atau pane di kanan.
 - `CONFLICT_PENDING` harus memiliki highlight baris, badge teks, dan alasan konflik yang terlihat tanpa membuka detail.
-- Closing dan adjustment harus memakai confirmation dialog dan status badge yang jelas.
+- Closing, void, correction request, dan adjustment harus memakai confirmation dialog dan status badge yang jelas.
 
 ## 7. Desktop Management
 

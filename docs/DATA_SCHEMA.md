@@ -10,8 +10,9 @@ OPTIFLOW menggunakan beberapa sheet yang dipisahkan berdasarkan fungsi agar tran
 | :--- | :--- | :--- |
 | `USER_ROLES` | Master user, role, status aktif, dan PII terenkripsi | Tidak boleh hard-delete. PII mentah tidak boleh disimpan. |
 | `ROLE_PERMISSIONS` | Matrix permission per role | Dipakai backend untuk least privilege. |
-| `LINE_MASTER` | Master lini/area produksi | Dipakai untuk filtering dashboard dan scope Mandor. |
+| `LINE_MASTER` | Master lini/area produksi legacy | Dipakai sementara untuk kompatibilitas runtime lama; rebaseline baru memakai `BAGIAN_MASTER`. |
 | `SHIFT_MASTER` | Master shift dan jam kerja pabrik | Batas waktu memakai timezone `Asia/Jakarta`. |
+| `BAGIAN_MASTER` | Master Bagian dan kebijakan upah per item | Sumber opsi Bagian, status aktif, `unit_rate`, target gaji/UMR, dan target unit bulanan. |
 | `DEFECT_CATEGORIES` | Master kategori reject/defect | Dipakai untuk Pareto defect dan improvement QCC. |
 | `RAW_LOGS` | Landing zone append-only untuk semua transaksi produksi | Tidak boleh memakai formula. Tidak boleh diedit manual untuk koreksi. |
 | `QUARANTINE` | Data konflik/anomali yang menunggu keputusan Mandor/Supervisor | Semua keputusan wajib diaudit. |
@@ -34,7 +35,7 @@ Status implementasi 2026-09-05:
 | :--- | :--- | :--- |
 | `user_id` | String UUID | ID unik pengguna. |
 | `email` | String | Email Google untuk `Session.getActiveUser().getEmail()`. |
-| `role` | Enum | `Operator`, `Mandor`, `Management`, `HRD`, `SuperAdmin`. |
+| `role` | Enum | Primary/default role untuk kompatibilitas lama: `Operator`, `Mandor`, `Supervisor`, `Management`, `HRD`, `SuperAdmin`. Fungsi QC berada di `Supervisor`. |
 | `nama_lengkap_encrypted` | String | Nama lengkap terenkripsi di backend. |
 | `nomor_telepon_encrypted` | String | Nomor telepon terenkripsi di backend. |
 | `phone_blind_index` | String | HMAC-SHA256 untuk pencarian nomor telepon. |
@@ -47,15 +48,55 @@ Status implementasi 2026-09-05:
 | `username` | String | Username internal untuk tampilan/admin lookup; harus unik per user jika diaktifkan. |
 | `alamat_encrypted` | String | Alamat pengguna terenkripsi di backend. |
 | `profile_base64` | String atau kosong | Avatar/profile image base64 untuk kebutuhan HRD/admin; dianggap data pribadi dan tidak boleh dikirim ke workspace non-HRD. |
+| `mandor_email` | String atau kosong | Email Mandor penanggung jawab langsung untuk user Operator; kosong untuk role non-Operator atau jika relasi ditentukan dari master lain. |
 
-Seed dummy development wajib mengisi variasi role minimal `Operator`, `Mandor`, `Management`, `HRD`, `SuperAdmin`, dan satu user nonaktif. Field nama, alamat, nomor telepon, dan profile dummy boleh ada untuk validasi UI/HRD, tetapi data production wajib mengikuti aturan enkripsi dan masking di kontrak keamanan.
+Seed dummy development wajib mengisi variasi role minimal `Operator`, `Mandor`, `Supervisor`, `Management`, `HRD`, `SuperAdmin`, dan satu user nonaktif. Field nama, alamat, nomor telepon, dan profile dummy boleh ada untuk validasi UI/HRD, tetapi data production wajib mengikuti aturan enkripsi dan masking di kontrak keamanan.
+
+Relasi Mandor-Operator:
+- Satu `Mandor` boleh membawahi banyak `Operator`.
+- Tidak semua `Operator` pada line yang sama otomatis memiliki Mandor yang sama; filtering tim Mandor wajib memakai mapping eksplisit seperti `USER_ROLES.mandor_email` atau sheet assignment yang disahkan kemudian.
+- Dashboard Mandor tidak boleh memakai progress personal Operator sebagai progress tim. Progress Mandor wajib dihitung dari agregasi Operator dalam scope tanggung jawabnya.
+
+Kontrak multi-role:
+- `USER_ROLES.role` tetap dipertahankan sebagai primary/default role agar data lama tidak rusak.
+- Akses multi-role wajib dimodelkan melalui sheet assignment terpisah seperti `USER_ROLE_ASSIGNMENTS`, bukan menyimpan daftar role bebas di satu cell untuk authorization production.
+- Satu `user_id`/email boleh memiliki banyak role aktif, misalnya `Management` dan `Supervisor`.
+- Session context wajib mengembalikan daftar role yang diizinkan. Frontend boleh meminta role aktif, tetapi backend harus memvalidasi role tersebut terhadap assignment aktif.
+
+## 2A. Schema Rencana `USER_ROLE_ASSIGNMENTS`
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `assignment_id` | String UUID | ID assignment role. |
+| `user_id` | String | Referensi karyawan/user. |
+| `email` | String | Email login untuk lookup cepat. |
+| `role` | Enum | Role yang diberikan. |
+| `scope_type` | Enum | `GLOBAL`, `BAGIAN`, atau scope lain yang disahkan. |
+| `scope_id` | String atau kosong | ID Bagian/scope jika tidak global. |
+| `status_aktif` | Boolean | `TRUE` jika role aktif. |
+| `created_at` | String UTC | Waktu dibuat. |
+| `updated_at` | String UTC | Waktu diperbarui. |
+
+## 2B. Schema Rencana Absensi
+
+Absensi wajib event-based agar tombol `Masuk`, `Keluar`, konfirmasi Mandor, dan koreksi status tetap auditable.
+
+Sheet rencana:
+- `EMPLOYEE_MASTER`: nomor karyawan, nama, status aktif/resign, Bagian default, dan field HRD tambahan yang dimasking/terenkripsi sesuai kebutuhan.
+- `ATTENDANCE_EVENTS`: event `CLOCK_IN`, `CLOCK_OUT`, `MANDOR_CHECK`, `MANDOR_CHECK_ALL`, `SET_STATUS`.
+- `ATTENDANCE_DAILY_RECAP`: output harian per karyawan dan Bagian.
+- `ATTENDANCE_MONTHLY_RECAP`: output bulanan payroll-ready.
+
+Status kehadiran minimal: `HADIR`, `IZIN`, `SAKIT`, `ALPHA`, `RESIGN`, `BELUM_KONFIRMASI`.
+
+Mandor boleh melakukan `check` atau `check all`, dan boleh menetapkan `Izin`, `Sakit`, atau `Alpha` dengan `keterangan`. HRD/Management membaca rekap sesuai permission; data pribadi tidak boleh terbuka di dashboard operasional.
 
 ## 3. Schema `ROLE_PERMISSIONS`
 
 | Kolom | Tipe | Keterangan |
 | :--- | :--- | :--- |
 | `permission_id` | String | ID permission unik, misalnya `operator.submit_report`. |
-| `role` | Enum | `Operator`, `Mandor`, `Management`, `HRD`, `SuperAdmin`. |
+| `role` | Enum | `Operator`, `Mandor`, `Supervisor`, `Management`, `HRD`, `SuperAdmin`. |
 | `resource` | String | Resource aplikasi, misalnya `production_report`, `quarantine`, `user_role`, `dashboard`, atau `test_runner`. |
 | `action` | String | Aksi yang diizinkan, misalnya `create`, `read`, `approve`, `reject`, `update`, `soft_delete`, atau `run`. |
 | `is_allowed` | Boolean | `TRUE` jika role diizinkan melakukan aksi. |
@@ -68,9 +109,17 @@ Resource `test_runner` hanya memiliki action `run` dan ditujukan untuk smoke tes
 Resource `audit_log` hanya memiliki action `read` untuk ringkasan audit aman. HRD boleh membaca ringkasan audit akses dan role tanpa payload mentah atau PII mentah.
 
 Resource `reference_data` hanya memiliki action `read` untuk master data non-PII seperti `LINE_MASTER`, `SHIFT_MASTER`, mesin dari data produksi/target, dan daftar operator aktif yang dimasking. Frontend wajib memakai response backend sebagai sumber opsi line/shift/mesin/operator ketika tersedia; fallback lokal hanya boleh dipakai untuk development/offline sementara.
-Mode development/demo wajib memakai response mock GAS dengan shape yang sama agar pertukaran data, queue IndexedDB, dan transaksi submit terasa seperti runtime GAS.
+Mode development/demo wajib memakai response mock GAS dengan shape yang sama agar pertukaran data, queue IndexedDB, dan transaksi submit terasa seperti runtime GAS. Snapshot state mock GAS wajib bertahan di IndexedDB dan seed default hanya dibuat saat snapshot demo kosong.
 
 Resource `production_target` memiliki action `read`, `create`, `update`, `bulk_update`, dan `soft_delete`. Operator hanya boleh membaca target aktif. Mandor dan role di atasnya boleh mengatur target sesuai scope permission. Management tetap read-only kecuali diberi permission eksplisit untuk perencanaan target.
+
+Resource `bagian_master` memiliki action `read`, `create`, `update`, `soft_delete`, dan `seed`. Management dan SuperAdmin boleh membuat/mengubah/nonaktifkan Bagian dan mengatur `unit_rate`, `monthly_target_unit`, serta `target_salary`. Supervisor membaca untuk verifikasi/output; Mandor/Operator membaca sesuai workflow. Perubahan master Bagian wajib audit-log dan tidak boleh mengubah transaksi historis.
+
+Resource `work_master` memiliki action `read`, `create`, `update`, dan `soft_delete` untuk master jenis pekerjaan, line, dan machine. Owner utama adalah `Supervisor` dan `SuperAdmin`; role lain hanya membaca sesuai kebutuhan workflow.
+
+Resource `defect_change_request` memiliki action `create`, `read`, `approve`, dan `reject`. `Mandor` boleh membuat request/draft defect baru dari temuan lapangan, sedangkan approval menjadi tanggung jawab `Supervisor` atau `SuperAdmin`.
+
+Resource `production_review` memiliki action `read`, `void`, `request_correction`, dan `pre_closing_correction`. Resource ini dipakai Mandor/Supervisor untuk review submit normal `ACCEPTED` sebelum daily closing tanpa mengedit baris asal `RAW_LOGS`.
 
 ## 4. Schema `RAW_LOGS`
 
@@ -98,6 +147,7 @@ Catatan target:
 - `target_harian` pada `RAW_LOGS` adalah snapshot target yang berlaku saat operator submit, bukan master target yang diedit langsung di log transaksi.
 - Realisasi target hanya dihitung dari `perolehan_ok + perolehan_reject`; `tandon` tidak masuk pembanding target dan boleh bernilai 0 atau lebih selama tetap integer non-negatif.
 - Frontend Operator wajib membaca target dari backend berdasarkan scope aktif dan tidak menjadikan input manual sebagai sumber utama.
+- Dashboard Operator wajib memakai target aktif dari `TARGET_MASTER` untuk progress harian bila tersedia. Snapshot `RAW_LOGS.target_harian` hanya menjadi fallback historis jika target master tidak ditemukan untuk tanggal/scope tersebut.
 - Jika target belum ditemukan, fallback manual hanya boleh tampil dengan status warning dan tetap tunduk validasi backend.
 
 ## 4A. Schema `TARGET_MASTER`
@@ -141,6 +191,24 @@ Aturan `TARGET_MASTER`:
 | `created_at` | String UTC | Waktu dibuat. |
 | `updated_at` | String UTC | Waktu diperbarui. |
 
+## 5A. Schema `BAGIAN_MASTER`
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `bagian_id` | String | ID unik uppercase, contoh `SOLDER`, `LEM`, atau `PACKING`. |
+| `bagian_name` | String | Nama tampil Bagian, maksimal 80 karakter. |
+| `description` | String | Deskripsi ringkas tanpa PII, maksimal 160 karakter. |
+| `unit_rate` | Number | Upah per item dalam rupiah, integer `0..999999`. Nilai `0` berarti kebijakan belum ditetapkan. |
+| `monthly_target_unit` | Number | Target unit bulanan, integer `0..999999`. |
+| `target_salary` | Number | Target gaji/UMR bulanan dalam rupiah, integer `0..999999999`. |
+| `status_aktif` | Boolean | `TRUE` jika boleh dipakai di transaksi/filter. |
+| `created_by` | Email | Email pembuat. |
+| `updated_by` | Email | Email updater terakhir. |
+| `created_at` | String UTC | Waktu dibuat. |
+| `updated_at` | String UTC | Waktu diperbarui. |
+
+Default bootstrap/seed development wajib mengisi minimal `SOLDER`, `LEM`, dan `PACKING`. `SOLDER` memakai contoh `unit_rate=94`, `monthly_target_unit=37234`, `target_salary=3500000`; `LEM` memakai `unit_rate=83`, `monthly_target_unit=42169`, `target_salary=3500000`; `PACKING` boleh `unit_rate=0` agar UI menampilkan `POLICY_PENDING`.
+
 ## 6. Schema `SHIFT_MASTER`
 
 | Kolom | Tipe | Keterangan |
@@ -170,8 +238,8 @@ Default bootstrap/seed wajib mengisi katalog MVP jika sheet masih kosong atau it
 
 Hak akses master defect:
 - `Operator`: `read` saja. Operator boleh melihat dan memilih kategori defect aktif, tetapi tidak boleh menambah, mengubah, seed, atau menonaktifkan reference data.
-- `Mandor`: `read`, `create`, `update`, dan `soft_delete`. Mandor boleh mengelola kategori defect operasional karena paling dekat dengan validasi lapangan, tetapi seluruh perubahan wajib tervalidasi dan diaudit.
-- `Supervisor`: jika role `Supervisor` resmi ditambahkan ke `USER_ROLES`, berikan `read`, `create`, `update`, dan `soft_delete` untuk kontrol lintas line. `seed` tetap bukan aksi harian.
+- `Mandor`: `read` untuk master aktif dan `defect_change_request.create` untuk mengusulkan atau membuat draft defect baru. Mandor tidak boleh langsung mengubah master final tanpa approval role owner.
+- `Supervisor`: `read`, `create`, `update`, `soft_delete`, `approve`, dan `reject` untuk fungsi QC/verifikasi kualitas dan kontrol defect lintas Bagian. `seed` tetap bukan aksi harian.
 - `Management`: `read` saja. Management membaca insight/Pareto dan tidak boleh mengubah master defect agar independensi data KPI tetap terjaga.
 - `SuperAdmin`: full access termasuk `seed`, karena seed adalah aksi administrasi sistem.
 
@@ -230,7 +298,7 @@ Hak akses master defect:
 | `factory_date` | String | Tanggal operasional terdampak. |
 | `line_id` | String | Lini terdampak. |
 | `shift_id` | String | Shift terdampak. |
-| `adjustment_type` | Enum | `CORRECTION`, `POST_CLOSING_ADJUSTMENT`, `VOID`. |
+| `adjustment_type` | Enum | `CORRECTION`, `POST_CLOSING_ADJUSTMENT`, `VOID`, `REQUEST_CORRECTION`, `PRE_CLOSING_CORRECTION`. |
 | `delta_json` | String JSON | Perubahan angka/field dengan allowlist. |
 | `reason` | String | Alasan koreksi, tidak boleh berisi PII. |
 | `status` | Enum | `PENDING`, `APPROVED`, `REJECTED`. |
@@ -240,6 +308,15 @@ Hak akses master defect:
 | `created_at` | String UTC | Waktu dibuat. |
 
 `delta_json` hanya boleh memuat field produksi yang disetujui: `target_harian`, `tandon`, `perolehan_ok`, `perolehan_reject`, `defect_category_id`, dan `defect_notes`. Nilai numerik memakai delta integer, sedangkan field defect memakai nilai pengganti yang tervalidasi.
+
+Kontrak pre-closing review:
+- Submit normal `ACCEPTED` boleh masuk rekap harian sementara sampai daily closing.
+- Sebelum closing, Mandor/Supervisor boleh membuat event `VOID`, `REQUEST_CORRECTION`, atau `PRE_CLOSING_CORRECTION` melalui resource `production_review`.
+- Event pre-closing wajib append-only dan mereferensikan `source_transaction_id`; baris `RAW_LOGS` asal tidak boleh diubah langsung.
+- `VOID` dan `PRE_CLOSING_CORRECTION` yang dibuat role berwenang sebelum closing langsung berstatus `APPROVED`; `REQUEST_CORRECTION` berstatus `PENDING` sampai operator mengirim submit koreksi baru.
+- `MASTER_RECAP` wajib mengecualikan transaksi dengan event latest `VOID:APPROVED` atau `REQUEST_CORRECTION:PENDING/APPROVED`, lalu menerapkan delta dari `PRE_CLOSING_CORRECTION:APPROVED`.
+- `createProductionReview(request)` menerima `session`, `source_transaction_id`, `action`, optional `delta`, dan `reason`.
+- Setelah daily closing, koreksi wajib memakai workflow adjustment post-closing yang sudah ada.
 
 ## 12. Schema `AUDIT_LOGS`
 
@@ -429,8 +506,9 @@ Setelah expiry gate lolos, `doGet()` wajib membaca `REQUIRE_REGISTERED_EMAIL_LOG
 - Jika `perolehan_reject > 0`, `defect_category_id` wajib merujuk kategori aktif di `DEFECT_CATEGORIES`; kategori tidak aktif atau tidak dikenal wajib ditolak oleh frontend dan backend.
 - Callable master defect:
   - `getDefectCategories({ session, include_inactive? })` mengembalikan `categories` dari `DEFECT_CATEGORIES`; Operator/Management hanya menerima kategori aktif.
-  - `upsertDefectCategory({ session, category })` membuat/memperbarui satu kategori dengan validasi ID, nama, `qcc_factor`, `severity`, dan `status_aktif`; hanya Mandor/Supervisor resmi/SuperAdmin.
-  - `deactivateDefectCategory({ session, defect_category_id })` melakukan soft delete dengan `status_aktif=FALSE`; hanya Mandor/Supervisor resmi/SuperAdmin.
+  - `upsertDefectCategory({ session, category })` membuat/memperbarui satu kategori dengan validasi ID, nama, `qcc_factor`, `severity`, dan `status_aktif`; hanya `Supervisor` atau `SuperAdmin`.
+  - `requestDefectCategoryChange({ session, draft })` membuat request/draft defect dari Mandor untuk ditinjau owner utama sebelum masuk master final.
+  - `deactivateDefectCategory({ session, defect_category_id })` melakukan soft delete dengan `status_aktif=FALSE`; hanya `Supervisor` atau `SuperAdmin`.
   - `seedDefectCategories({ session })` menambahkan default seed yang belum ada tanpa menghapus kategori existing; hanya SuperAdmin atau menu administrasi terkontrol.
 
 ## 18. Kontrak Callable M5
@@ -463,10 +541,15 @@ Callable HRD:
 - `getHrdAccessDashboard({ session, filter?, page?, page_size? })` membutuhkan permission `user_role:read` dan `audit_log:read`.
 - Response hanya boleh memuat `summary`, `users`, `role_matrix`, dan `audit_summary`.
 - `users.items[]` memuat `user_id`, `email_masked`, `role`, `status_aktif`, `is_deleted`, `last_login`, `created_at`, dan `updated_at`; tidak boleh memuat `email` mentah, `nama_lengkap_encrypted`, `alamat_encrypted`, `nomor_telepon_encrypted`, `phone_blind_index`, atau `profile_base64` pada dashboard akses read-only.
+- Untuk mode mock/demo HRD yang diberi label jelas sebagai data dummy, response boleh menambahkan `employee_no` 5 digit, `full_name`, `address`, `email`, `wa_number`, dan `wa_url` agar UI direktori HRD bisa diuji tanpa data pribadi production. Production tetap wajib memakai workflow HRD detail yang terotorisasi sebelum membuka PII mentah.
 - `role_matrix[]` memuat role, total permission aktif, resource aktif, dan flag readiness.
 - `audit_summary` memuat hitungan action login/RBAC/user-role dan timestamp terakhir; tidak boleh memuat `AUDIT_LOGS.metadata_json` mentah.
 
 Callable reference data:
+- `getBagianMaster({ session, include_inactive? })` membutuhkan permission `bagian_master:read`.
+- `upsertBagianMaster({ session, bagian })` membuat/memperbarui satu Bagian dengan validasi ID, nama, deskripsi, `unit_rate`, `monthly_target_unit`, `target_salary`, dan `status_aktif`; hanya `Management` atau `SuperAdmin`.
+- `deactivateBagianMaster({ session, bagian_id })` melakukan soft delete dengan `status_aktif=FALSE`; hanya `Management` atau `SuperAdmin`.
+- `seedBagianMaster({ session })` mengisi default Bagian yang belum ada; hanya `Management` atau `SuperAdmin`.
 - `getShiftOptions({ session, include_inactive? })` membutuhkan permission `reference_data:read`.
 - Response memuat `shifts[]` dari `SHIFT_MASTER` dengan `value`, `label`, `shift_id`, `shift_name`, `start_time`, `end_time`, `timezone`, dan `status_aktif`.
 - `getOperatorReferenceData({ session, include_inactive? })` membutuhkan permission `reference_data:read`.

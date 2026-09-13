@@ -16,21 +16,24 @@ This file does not replace the contracts. It tells the agent which contract to r
 - Security rule: every external GAS input path starts with `Input Validation & Sanitization`.
 - Bootstrap rule: `bootstrapSheets()` may bypass session/RBAC only during first-run foundational sheet creation.
 - Data rule: operator sync is append-only event sourcing into `RAW_LOGS`; conflicts become `CONFLICT_PENDING`.
-- Runtime implementation scope: `OPT-001` through `OPT-035` is present locally; tracker/GitHub closure may still require explicit review and sync for review-stage items.
+- Runtime implementation scope: `OPT-001` through `OPT-036` is present locally; tracker/GitHub closure may still require explicit review and sync for review-stage items.
 - Current next roadmap item: GitHub sync/closure review for `OPT-028` through `OPT-033`, then production pilot execution evidence after M6/M7 artifact closure.
 
 ## Implemented Runtime Features
 
 - Frontend: Vue 3 production workspaces per role, cross-role Help/Cara Penggunaan, operator form, autosave draft, sync queue controls, SuperAdmin session maintenance cards for Script Properties/diagnostics/local database inspect/clear/reset/reload, Pareto defect preview, ChartJS operator performance charts, SweetAlert2 metric help, Mandor approval inbox UI, Supervisor control center, Management dashboard, HRD access/audit surface, and hidden SuperAdmin maintenance console.
 - Services: API adapter allowlist/timeout/safe response, mock GAS, IndexedDB persistence, operator report store, approval helpers, and defect/Pareto helpers.
-- Backend: access gate for expiry, registered-user render access, demo/trial email-gate bypass, audit, auth/session, RBAC permissions, sheet bootstrap/health with additive header migration, spreadsheet admin toolbar with project links, spreadsheet-backed defect category CRUD/seed, `TARGET_MASTER` target scope CRUD/seed, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, HRD access dashboard API, Script Properties maintenance, native test runner, and validation.
+- Backend: access gate for expiry, registered-user render access, demo/trial email-gate bypass, audit, auth/session, RBAC permissions, sheet bootstrap/health with additive header migration, spreadsheet admin toolbar with project links, spreadsheet-backed defect category CRUD/seed, `TARGET_MASTER` target scope CRUD/seed, production append-only submit, duplicate detection, conflict quarantine, quarantine approval mutation, pre-closing production review/void/correction, daily closing, adjustment, `MASTER_RECAP`, dashboard APIs, HRD access dashboard API, Script Properties maintenance, native test runner, and validation.
 - HRD scope: read-only access dashboard is implemented with masked user directory, role permission matrix, safe audit summary, and privacy boundary; normal HRD workspace must not expose raw email, encrypted PII, blind index, raw audit metadata, secrets, or Script Properties.
 - HRD/user seed: development seed now includes user email, username, encrypted-placeholder name/address/phone, phone blind index, role, active status, and profile base64 in `USER_ROLES`; HRD access dashboard still returns masked/status-only data.
 - Spreadsheet menu bootstrap: creates/migrates sheet headers and, when `AUTH_MODE` is not `ON`, fills missing dev dummy master rows for empty/missing master data; production `AUTH_MODE=ON` skips automatic dummy seed.
 - Shift reference data: UI wording/payloads use `shift`; runtime shift options come from `SHIFT_MASTER` through `getShiftOptions`, with local fallback only for development/offline resilience.
 - Operator reference data: development/demo Operator selectors for line, shift, machine, and operator come from `getOperatorReferenceData` with mock GAS parity; fallback constants are only resilience defaults.
+- Mock GAS state: development mock state persists in IndexedDB `optiflow-demo-gas-state`; default demo seeds are created only when that snapshot is empty.
 - Tests: frontend API/approval/defect/M5/operator/state tests, GAS validation/sheets/auth/permissions/production logs/M5/script properties/test-runner/spreadsheet-menu tests, single-file build verification, and GAS deploy preparation.
 - Remaining major gaps: target-environment smoke evidence, field pilot execution, and actual QCC benefit validation from pilot data.
+- Business process rebaseline pending: new field information says daily reporting is Bagian-based (`Solder`, `Lem`), Mandor records/sets daily targets, QC verifies authoritative `OK + Reject`, employee attendance/status and unit-rate wage targets are required, and Lem output may trace material from multiple Solder employees. Treat OPT-037 through OPT-044 as the next planning gate before more production workflow coding.
+- Management rebaseline has started: `BAGIAN_MASTER` is now an additive official sheet/permission surface for Bagian CRUD, `unit_rate`, `monthly_target_unit`, and `target_salary`; Management/SuperAdmin can mutate this master policy, while production transactions remain read-only for Management.
 
 ## Context Routing Matrix
 

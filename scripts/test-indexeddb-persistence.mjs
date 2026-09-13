@@ -9,6 +9,7 @@ import {
   createOperatorReportPayload,
   initialOperatorReportForm,
 } from '../src/services/operatorReportForm.js';
+import { createMockGasPersistence } from '../src/services/mockGasPersistence.js';
 
 const dbName = `optiflow-test-${Date.now()}`;
 const persistence = createIndexedDbPersistence({
@@ -110,6 +111,31 @@ await memory.resetDatabase();
 const resetMemorySnapshot = await memory.loadSnapshot();
 if (resetMemorySnapshot.draft || resetMemorySnapshot.queue.length !== 0) {
   throw new Error('Expected memory persistence resetDatabase to remove draft and queue.');
+}
+
+const mockGasPersistence = createMockGasPersistence({
+  indexedDB,
+  dbName: `optiflow-mock-gas-test-${Date.now()}`,
+  now: () => '2026-09-10T00:00:00.000Z',
+});
+const emptyMockState = await mockGasPersistence.loadState();
+if (emptyMockState !== null) {
+  throw new Error('Expected empty mock GAS IndexedDB state before first seed.');
+}
+
+await mockGasPersistence.saveState({
+  targetMaster: [{ target_id: 'persisted-target', target_harian: 1300 }],
+  rawLogs: [{ transaction_id: 'persisted-log' }],
+});
+const persistedMockState = await mockGasPersistence.loadState();
+if (persistedMockState.targetMaster[0].target_harian !== 1300
+  || persistedMockState.rawLogs[0].transaction_id !== 'persisted-log') {
+  throw new Error('Expected mock GAS IndexedDB state to persist demo data.');
+}
+
+await mockGasPersistence.clearState();
+if (await mockGasPersistence.loadState() !== null) {
+  throw new Error('Expected mock GAS IndexedDB state clear to remove demo snapshot.');
 }
 
 console.log('indexeddb persistence test ok');

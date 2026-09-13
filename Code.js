@@ -204,6 +204,47 @@ function getOperatorReferenceData(request) {
   return OptiflowReferenceData.getOperatorReferenceData(payload, session);
 }
 
+function getBagianMaster(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateBagianMasterListRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'bagian_master',
+    action: 'read',
+  });
+
+  return OptiflowBagianMaster.list(payload, session);
+}
+
+function upsertBagianMaster(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateBagianMasterUpsertRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {});
+
+  return OptiflowBagianMaster.upsert(payload, session);
+}
+
+function deactivateBagianMaster(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateBagianMasterDeactivateRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'bagian_master',
+    action: 'soft_delete',
+  });
+
+  return OptiflowBagianMaster.deactivate(payload, session);
+}
+
+function seedBagianMaster(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateBagianMasterSeedRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'bagian_master',
+    action: 'seed',
+  });
+
+  return OptiflowBagianMaster.seedDefaults(payload, session);
+}
+
 function getProductionTarget(request) {
   // Input Validation & Sanitization
   var payload = OptiflowValidation.validateProductionTargetGetRequest(arguments, request);
@@ -353,6 +394,22 @@ function rejectAdjustment(request) {
   });
 
   return OptiflowAdjustments.reject(payload, session);
+}
+
+function createProductionReview(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateProductionReviewRequest(arguments, request);
+  var permissionAction = {
+    VOID: 'void',
+    REQUEST_CORRECTION: 'request_correction',
+    PRE_CLOSING_CORRECTION: 'pre_closing_correction',
+  }[payload.action];
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'production_review',
+    action: permissionAction,
+  });
+
+  return OptiflowProductionReview.create(payload, session);
 }
 
 function runMasterRecap(request) {

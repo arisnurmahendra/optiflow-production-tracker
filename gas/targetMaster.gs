@@ -134,6 +134,10 @@ var OptiflowTargetMaster = (function () {
     })[0] || null;
   }
 
+  function resolveActiveTarget(filter) {
+    return selectTarget(listTargets(filter, false), filter);
+  }
+
   function matchesScope(target, filter) {
     if (filter.line_id && target.line_id !== filter.line_id) {
       return false;
@@ -211,6 +215,7 @@ var OptiflowTargetMaster = (function () {
   return Object.freeze({
     deactivate: deactivate,
     get: get,
+    resolveActiveTarget: resolveActiveTarget,
     upsert: upsert,
   });
 })();
