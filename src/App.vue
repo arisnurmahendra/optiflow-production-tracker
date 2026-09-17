@@ -352,84 +352,84 @@ const roleHelpGuides = Object.freeze({
     role: 'Operator',
     headline: 'Input produksi cepat tanpa kehilangan data saat koneksi tidak stabil.',
     steps: Object.freeze([
-      'Cek header shift aktif: line, shift, mesin, dan operator.',
-      'Buka Input, isi Target, Tandon, OK, Reject, lalu pilih kategori defect jika Reject lebih dari 0.',
-      'Cek Dashboard untuk melihat Target vs Realisasi, OK, Reject, dan Tandon hari ini maupun kemarin.',
-      'Buka Riwayat untuk memastikan submit terakhir tercatat.',
-      'Buka Status untuk melihat draft lokal, queue IndexedDB, retry sync, dan status online.',
+      '📋 Cek header shift aktif: line, shift, mesin, dan operator.',
+      '📝 Buka Input, isi Target, Tandon, OK, Reject, lalu pilih kategori defect jika Reject lebih dari 0.',
+      '📊 Cek Dashboard untuk melihat Target vs Realisasi, OK, Reject, dan Tandon hari ini maupun kemarin.',
+      '🕰️ Buka Riwayat untuk memastikan submit terakhir tercatat.',
+      '📶 Buka Status untuk melihat draft lokal, queue IndexedDB, retry sync, dan status online.',
     ]),
-    process: 'Realisasi produksi dihitung dari OK + Reject. Tandon hanya ditampilkan sebagai konteks buffer dan tidak masuk realisasi. Data offline masuk queue lebih dulu, lalu dikirim ke GAS saat online.',
+    process: '💡 Realisasi produksi dihitung dari OK + Reject. Tandon hanya ditampilkan sebagai konteks buffer dan tidak masuk realisasi. Data offline masuk queue lebih dulu, lalu dikirim ke GAS saat online.',
     troubleshooting: Object.freeze([
-      'Shift kosong: jalankan menu bootstrap/seed master data atau refresh data master dari spreadsheet.',
-      'Kategori defect tidak muncul: minta Mandor/Supervisor/Management memastikan DEFECT_CATEGORIES aktif.',
-      'Queue tidak kosong: cek koneksi, izin GAS, lalu tekan Retry di menu Status.',
+      '❓ Shift kosong: jalankan menu bootstrap/seed master data atau refresh data master dari spreadsheet.',
+      '❓ Kategori defect tidak muncul: minta Mandor/Supervisor/Management memastikan DEFECT_CATEGORIES aktif.',
+      '❓ Queue tidak kosong: cek koneksi, izin GAS, lalu tekan Retry di menu Status.',
     ]),
   }),
   mandor: Object.freeze({
     role: 'Mandor',
     headline: 'Menjaga data operator agar valid sebelum masuk proses final.',
     steps: Object.freeze([
-      'Buka Dashboard untuk melihat pending approval, conflict, dan kesiapan closing.',
-      'Buka Approval untuk review submit operator yang perlu keputusan.',
-      'Buka Conflict untuk memilih data valid atau menolak data bentrok.',
-      'Buka Closing setelah approval dan conflict selesai.',
+      '📊 Buka Dashboard untuk melihat pending approval, conflict, dan kesiapan closing.',
+      '✅ Buka Approval untuk review submit operator yang perlu keputusan.',
+      '⚠️ Buka Conflict untuk memilih data valid atau menolak data bentrok.',
+      '🔒 Buka Closing setelah approval dan conflict selesai.',
     ]),
-    process: 'Mandor adalah Human-in-the-Loop. Data CONFLICT_PENDING tidak boleh masuk rekap sampai Mandor menyelesaikan keputusan.',
+    process: '💡 Mandor adalah Human-in-the-Loop. Data CONFLICT_PENDING tidak boleh masuk rekap sampai Mandor menyelesaikan keputusan.',
     troubleshooting: Object.freeze([
-      'Data operator tidak terlihat: pastikan operator sudah sync dan status backend bukan draft lokal.',
-      'Conflict tidak bisa selesai: cek permission role dan audit trail.',
-      'Closing gagal: pastikan tidak ada approval/conflict aktif di line dan shift yang sama.',
+      '❓ Data operator tidak terlihat: pastikan operator sudah sync dan status backend bukan draft lokal.',
+      '❓ Conflict tidak bisa selesai: cek permission role dan audit trail.',
+      '❓ Closing gagal: pastikan tidak ada approval/conflict aktif di line dan shift yang sama.',
     ]),
   }),
   supervisor: Object.freeze({
     role: 'Supervisor',
     headline: 'Control center untuk memantau alert, raw logs, quarantine, dan adjustment.',
     steps: Object.freeze([
-      'Buka Dashboard untuk ringkasan Bagian/shift yang perlu perhatian.',
-      'Gunakan Alerts untuk prioritas conflict, closing terbuka, dan adjustment pending.',
-      'Gunakan Raw Logs untuk inspeksi transaksi terfilter.',
-      'Gunakan Quarantine untuk memantau anomali yang belum boleh masuk KPI.',
-      'Gunakan Adjustment hanya sebagai event koreksi terpisah dengan audit trail.',
+      '📊 Buka Dashboard untuk ringkasan Bagian/shift yang perlu perhatian.',
+      '🚨 Gunakan Alerts untuk prioritas conflict, closing terbuka, dan adjustment pending.',
+      '📄 Gunakan Raw Logs untuk inspeksi transaksi terfilter.',
+      '🛡️ Gunakan Quarantine untuk memantau anomali yang belum boleh masuk KPI.',
+      '⚖️ Gunakan Adjustment hanya sebagai event koreksi terpisah dengan audit trail.',
     ]),
-    process: 'Supervisor mengawasi kualitas proses, bukan menimpa transaksi asal. Adjustment selalu append-only dan terpisah dari raw event.',
+    process: '💡 Supervisor mengawasi kualitas proses, bukan menimpa transaksi asal. Adjustment selalu append-only dan terpisah dari raw event.',
     troubleshooting: Object.freeze([
-      'Data filter kosong: cek tanggal, line, shift, dan status seed master data.',
-      'Run action gagal: cek permission role dan response validasi GAS.',
-      'Quarantine membesar: eskalasi ke Mandor untuk penyelesaian conflict.',
+      '❓ Data filter kosong: cek tanggal, line, shift, dan status seed master data.',
+      '❓ Run action gagal: cek permission role dan response validasi GAS.',
+      '❓ Quarantine membesar: eskalasi ke Mandor untuk penyelesaian conflict.',
     ]),
   }),
   management: Object.freeze({
     role: 'Management',
     headline: 'Melihat KPI final yang sudah aman dari conflict dan data pending.',
     steps: Object.freeze([
-      'Buka Dashboard untuk KPI ringkas berbasis MASTER_RECAP.',
-      'Gunakan Recap untuk melihat baris final per line, shift, dan mesin.',
-      'Gunakan Pareto untuk prioritas improvement defect.',
-      'Gunakan Pending untuk melihat data yang dikecualikan dari KPI final.',
+      '📊 Buka Dashboard untuk KPI ringkas berbasis MASTER_RECAP.',
+      '📋 Gunakan Recap untuk melihat baris final per line, shift, dan mesin.',
+      '📉 Gunakan Pareto untuk prioritas improvement defect.',
+      '⏳ Gunakan Pending untuk melihat data yang dikecualikan dari KPI final.',
     ]),
-    process: 'Management bersifat read-only. Dashboard hanya memakai data final; quarantine, conflict, dan closing terbuka tetap dipisahkan.',
+    process: '💡 Management bersifat read-only. Dashboard hanya memakai data final; quarantine, conflict, dan closing terbuka tetap dipisahkan.',
     troubleshooting: Object.freeze([
-      'KPI terlihat lebih kecil dari raw logs: cek Pending karena data belum final memang dikecualikan.',
-      'Pareto kosong: belum ada Reject final dengan kategori defect aktif.',
-      'Recap tidak berubah: jalankan Run recap setelah proses approval/closing selesai.',
+      '❓ KPI terlihat lebih kecil dari raw logs: cek Pending karena data belum final memang dikecualikan.',
+      '❓ Pareto kosong: belum ada Reject final dengan kategori defect aktif.',
+      '❓ Recap tidak berubah: jalankan Run recap setelah proses approval/closing selesai.',
     ]),
   }),
   hrd: Object.freeze({
     role: 'HRD',
     headline: 'Mengelola data karyawan, absensi, akses, dan audit dengan batas privasi yang jelas.',
     steps: Object.freeze([
-      'Buka Dashboard untuk melihat 4 metrik utama (karyawan aktif, absensi hari ini, kelengkapan data, payroll-ready) dan 4 grafik interaktif (Donut kehadiran, Bar distribusi bagian, Pie kelengkapan data, Line tren kehadiran 7 hari).',
-      'Buka Karyawan untuk mengelola direktori karyawan: tambah, edit, set resign, search global, sorting kolom, filter bagian/status/role/kelengkapan, dan toggle tampilan masked/detail.',
-      'Buka Absensi untuk melihat 3 blok terpisah: (1) Filter rekap payroll-ready, (2) Kartu harian dengan metrik dan tabel sortable, (3) Kartu bulanan dengan metrik dan tabel sortable.',
-      'Buka Akses & Audit untuk memeriksa role readiness, anomali akses, multi-role users, dan ringkasan audit event.',
+      '📊 Buka Dashboard untuk melihat 4 metrik utama (karyawan aktif, absensi hari ini, kelengkapan data, payroll-ready) dan 4 grafik interaktif (Donut kehadiran, Bar distribusi bagian, Pie kelengkapan data, Line tren kehadiran 7 hari).',
+      '👥 Buka Karyawan untuk mengelola direktori karyawan: tambah, edit, set resign, search global, sorting kolom, filter bagian/status/role/kelengkapan, dan toggle tampilan masked/detail.',
+      '📅 Buka Absensi untuk melihat 3 blok terpisah: (1) Filter rekap payroll-ready, (2) Kartu harian dengan metrik dan tabel sortable, (3) Kartu bulanan dengan metrik dan tabel sortable.',
+      '🛡️ Buka Akses & Audit untuk memeriksa role readiness, anomali akses, multi-role users, dan ringkasan audit event.',
     ]),
-    process: 'HRD menjadi awal kualitas data: karyawan dan akses harus rapi sebelum Management, Mandor, Operator, Supervisor/QC, dan laporan akhir memakai data tersebut. Status payroll-ready mengharuskan data karyawan lengkap dan konfirmasi Mandor selesai.',
+    process: '💡 HRD menjadi awal kualitas data: karyawan dan akses harus rapi sebelum Management, Mandor, Operator, Supervisor/QC, dan laporan akhir memakai data tersebut. Status payroll-ready mengharuskan data karyawan lengkap dan konfirmasi Mandor selesai.',
     troubleshooting: Object.freeze([
-      'Karyawan tidak muncul: cek status aktif/resign, filter Bagian, kelengkapan data, dan gunakan search box untuk pencarian cepat.',
-      'User tidak bisa masuk: cek USER_ROLES, REQUIRE_REGISTERED_EMAIL_LOGIN, dan status_aktif di menu Akses & Audit.',
-      'Data detail tidak tampil: pastikan role HRD/SuperAdmin memakai endpoint detail terotorisasi; tampilan default tetap masked untuk keamanan PII.',
-      'Grafik dashboard kosong: pastikan data HRD sudah dimuat (tunggu loading selesai) dan koneksi ke backend/mock aktif.',
-      'Tabel tidak bisa di-sort: klik pada header kolom yang memiliki tanda panah (🔼/🔽) untuk mengurutkan data.',
+      '❓ Karyawan tidak muncul: cek status aktif/resign, filter Bagian, kelengkapan data, dan gunakan search box untuk pencarian cepat.',
+      '❓ User tidak bisa masuk: cek USER_ROLES, REQUIRE_REGISTERED_EMAIL_LOGIN, dan status_aktif di menu Akses & Audit.',
+      '❓ Data detail tidak tampil: pastikan role HRD/SuperAdmin memakai endpoint detail terotorisasi; tampilan default tetap masked untuk keamanan PII.',
+      '❓ Grafik dashboard kosong: pastikan data HRD sudah dimuat (tunggu loading selesai) dan koneksi ke backend/mock aktif.',
+      '❓ Tabel tidak bisa di-sort: klik pada header kolom yang memiliki tanda panah (🔼/🔽) untuk mengurutkan data.',
     ]),
   }),
 });
@@ -3868,7 +3868,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div class="field-grid">
           <label class="field">
-            <span>Bagian</span>
+            <span>🏭 Bagian</span>
             <select v-model="form.bagian_id" aria-label="Bagian" @change="clearFieldError('bagian_id')">
               <option v-for="option in bagianOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -4310,7 +4310,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div v-if="activeFeatureId === 'mandor-approval' || activeFeatureId === 'mandor-conflict'" class="approval-filters" aria-label="Filter approval">
           <label class="field">
-            <span>Status</span>
+            <span>📌 Status</span>
             <select v-model="approvalStatusFilter" aria-label="Filter status approval">
               <option v-for="option in approvalStatusOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -4318,7 +4318,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             </select>
           </label>
           <label class="field">
-            <span>Bagian</span>
+            <span>🏭 Bagian</span>
             <select v-model="approvalLineFilter" aria-label="Filter Bagian approval">
               <option v-for="option in approvalLineOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -4341,7 +4341,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   <th>Case</th>
                   <th>Jenis pekerjaan</th>
                   <th>Reason</th>
-                  <th>Status</th>
+                  <th>📌 Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -4452,7 +4452,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 <input v-model="targetForm.effective_until" aria-label="Akhir berlaku target" placeholder="Opsional" />
               </label>
               <label class="field">
-                <span>Bagian</span>
+                <span>🏭 Bagian</span>
                 <select v-model="targetForm.line_id" aria-label="Bagian target">
                   <option v-for="option in lineOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
@@ -4609,11 +4609,11 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div class="control-filters" aria-label="Filter supervisor">
           <label class="field">
-            <span>Tanggal</span>
+            <span>📅 Tanggal</span>
             <input v-model="supervisorFilters.factory_date" aria-label="Tanggal supervisor" />
           </label>
           <label class="field">
-            <span>Bagian</span>
+            <span>🏭 Bagian</span>
             <select v-model="supervisorFilters.line_id" aria-label="Line supervisor">
               <option v-for="option in lineOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -4675,7 +4675,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   <th>Jenis pekerjaan</th>
                   <th>OK</th>
                   <th>Reject</th>
-                  <th>Status</th>
+                  <th>📌 Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -4709,7 +4709,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   <th>Case</th>
                   <th>Reason</th>
                   <th>Jenis pekerjaan</th>
-                  <th>Status</th>
+                  <th>📌 Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -4767,11 +4767,11 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div class="control-filters" aria-label="Filter dashboard">
           <label class="field">
-            <span>Tanggal</span>
+            <span>📅 Tanggal</span>
             <input v-model="dashboardFilters.factory_date" aria-label="Tanggal dashboard" />
           </label>
           <label class="field">
-            <span>Bagian</span>
+            <span>🏭 Bagian</span>
             <select v-model="dashboardFilters.bagian_id" aria-label="Bagian dashboard">
               <option value="">Semua bagian</option>
               <option v-for="option in bagianMasterOptions" :key="option.value" :value="option.value">
@@ -4847,7 +4847,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               <input v-model="bagianMasterForm.status_aktif" type="checkbox" aria-label="Status aktif Bagian" />
             </label>
             <div class="form-actions">
-              <button class="button primary" type="button" :disabled="bagianMasterLoading" @click="saveBagianMaster">Simpan</button>
+              <button class="button primary" type="button" :disabled="bagianMasterLoading" @click="saveBagianMaster">💾 Simpan</button>
               <button class="button secondary" type="button" :disabled="bagianMasterLoading" @click="resetBagianMasterForm">Reset</button>
             </div>
           </div>
@@ -4857,10 +4857,10 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <table>
               <thead>
                 <tr>
-                  <th>Bagian</th>
+                  <th>🏭 Bagian</th>
                   <th>Upah</th>
                   <th>Target/bulan</th>
-                  <th>Status</th>
+                  <th>📌 Status</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -4875,7 +4875,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   <td><span :class="['status', row.status_aktif ? 'success' : 'warning']">{{ row.status_aktif ? 'Aktif' : 'Nonaktif' }}</span></td>
                   <td>
                     <div class="action-row">
-                      <button class="button secondary compact-button" type="button" @click="editBagianMaster(row)">Edit</button>
+                      <button class="button secondary compact-button" type="button" @click="editBagianMaster(row)">✏️ Edit</button>
                       <button class="button danger compact-button" type="button" :disabled="!row.status_aktif || bagianMasterLoading" @click="deactivateBagian(row)">Nonaktif</button>
                     </div>
                   </td>
@@ -4892,7 +4892,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-bagian'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Bagian</span>
+                <span>🏭 Bagian</span>
                 <strong>Output terverifikasi Supervisor</strong>
               </div>
             </div>
@@ -4915,7 +4915,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-attendance'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Absensi</span>
+                <span>📅 Absensi</span>
                 <strong>Rekap hari ini</strong>
               </div>
             </div>
@@ -5200,20 +5200,20 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <div class="hrd-attendance-card">
               <div class="table-heading">
               <div>
-                <span>Absensi</span>
-                <strong>Rekap payroll-ready</strong>
+                <span>📅 Absensi</span>
+                <strong>💰 Rekap payroll-ready</strong>
               </div>
               <div class="control-filters">
                 <label class="field">
-                  <span>Tanggal</span>
+                  <span>📅 Tanggal</span>
                   <input v-model="hrdFilters.factory_date" type="date" aria-label="Tanggal absensi HRD" />
                 </label>
                 <label class="field">
-                  <span>Bulan</span>
+                  <span>📆 Bulan</span>
                   <input v-model="hrdFilters.period_month" type="month" aria-label="Periode bulanan absensi HRD" />
                 </label>
                 <label class="field">
-                  <span>Bagian</span>
+                  <span>🏭 Bagian</span>
                   <select v-model="hrdFilters.bagian_id" aria-label="Filter bagian absensi HRD">
                     <option value="ALL">Semua Bagian</option>
                     <option v-for="bagian in hrdAttendanceFilters.bagian_options" :key="bagian" :value="bagian">
@@ -5222,7 +5222,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   </select>
                 </label>
                 <label class="field">
-                  <span>Status</span>
+                  <span>📌 Status</span>
                   <select v-model="hrdFilters.attendance_status" aria-label="Filter status absensi HRD">
                     <option v-for="status in hrdAttendanceFilters.status_options" :key="status" :value="status">
                       {{ status }}
@@ -5749,7 +5749,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               <tr>
                 <th>Key</th>
                 <th>Type</th>
-                <th>Status</th>
+                <th>📌 Status</th>
                 <th>Preview</th>
                 <th>Action</th>
               </tr>
