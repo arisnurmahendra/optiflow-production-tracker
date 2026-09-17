@@ -3782,7 +3782,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
     <div v-if="activeView === 'operator'" class="operator-progress">
       <div>
-        <span>Progress Realisasi</span>
+        <span>📈 Progress Realisasi</span>
         <strong>{{ formatNumber(Number(operatorDashboardSummary.ok_today || 0) + Number(operatorDashboardSummary.reject_today || 0)) }} / {{ formatNumber(operatorDashboardSummary.target_today) }}</strong>
       </div>
       <div class="progress-track">
@@ -3792,7 +3792,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
     <div v-else-if="activeView === 'mandor'" class="role-progress mandor-progress">
       <div>
-        <span>Progress Tim Mandor</span>
+        <span>👥 Progress Tim Mandor</span>
         <strong>{{ formatNumber(mandorProgressSummary.actual) }} / {{ formatNumber(mandorProgressSummary.target) }}</strong>
         <small>{{ supervisorFilters.line_id }} / {{ supervisorFilters.shift_id }} - {{ supervisorFilters.factory_date }}</small>
       </div>
@@ -3877,7 +3877,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <small v-if="formErrors.bagian_id" class="field-error">{{ formErrors.bagian_id }}</small>
           </label>
           <label class="field">
-            <span>Shift</span>
+            <span>🕒 Shift</span>
             <select v-model="form.shift_id" aria-label="Shift" @change="clearFieldError('shift_id')">
               <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -3888,7 +3888,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <small v-if="formErrors.shift_id" class="field-error">{{ formErrors.shift_id }}</small>
           </label>
           <label class="field">
-            <span>Jenis pekerjaan</span>
+            <span>🛠️ Jenis pekerjaan</span>
             <select v-model="form.work_category_id" aria-label="Jenis pekerjaan" @change="clearFieldError('work_category_id')">
               <option v-for="option in workCategoryOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -3897,7 +3897,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <small v-if="formErrors.work_category_id" class="field-error">{{ formErrors.work_category_id }}</small>
           </label>
           <label class="field">
-            <span>Operator</span>
+            <span>👨‍🔧 Operator</span>
             <select v-model="selectedOperatorEmail" aria-label="Operator demo">
               <option v-for="option in operatorOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -3909,7 +3909,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div class="number-grid">
           <label class="number-field">
-            <span>Target</span>
+            <span>🎯 Target</span>
             <input
               v-model.number="form.target_harian"
               inputmode="numeric"
@@ -3922,17 +3922,17 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <small v-if="formErrors.target_harian" class="field-error">{{ formErrors.target_harian }}</small>
           </label>
           <label class="number-field">
-            <span>Tandon</span>
+            <span>📦 Tandon</span>
             <input v-model.number="form.tandon" inputmode="numeric" aria-label="Tandon" @input="clearFieldError('tandon')" />
             <small v-if="formErrors.tandon" class="field-error">{{ formErrors.tandon }}</small>
           </label>
           <label class="number-field">
-            <span>OK</span>
+            <span>✔️ OK</span>
             <input v-model.number="form.perolehan_ok" inputmode="numeric" aria-label="OK" @input="clearFieldError('perolehan_ok')" />
             <small v-if="formErrors.perolehan_ok" class="field-error">{{ formErrors.perolehan_ok }}</small>
           </label>
           <label class="number-field danger">
-            <span>Reject</span>
+            <span>❌ Reject</span>
             <input v-model.number="form.perolehan_reject" inputmode="numeric" aria-label="Reject" @input="normalizeRejectState" />
             <small v-if="formErrors.perolehan_reject" class="field-error">{{ formErrors.perolehan_reject }}</small>
           </label>
@@ -3940,7 +3940,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div v-if="shouldShowDefect" class="defect-row">
           <label class="field">
-            <span>Kategori defect</span>
+            <span>🏷️ Kategori defect</span>
             <select v-model="form.defect_category_id" aria-label="Kategori defect" @change="clearFieldError('defect_category_id')">
               <option v-for="option in defectOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -3951,7 +3951,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <small v-if="formErrors.defect_category_id" class="field-error">{{ formErrors.defect_category_id }}</small>
           </label>
           <label class="field">
-            <span>Catatan</span>
+            <span>📝 Catatan</span>
             <input v-model="form.defect_notes" aria-label="Catatan defect" maxlength="140" @input="clearFieldError('defect_notes')" />
             <small v-if="formErrors.defect_notes" class="field-error">{{ formErrors.defect_notes }}</small>
           </label>
@@ -3959,11 +3959,11 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div v-if="shouldShowDefect" class="defect-insight" aria-label="Defect Pareto preview">
           <div>
-            <span>Faktor QCC</span>
+            <span>🔬 Faktor QCC</span>
             <strong>{{ selectedDefectCategory?.qcc_factor || '-' }}</strong>
           </div>
           <div>
-            <span>Severity</span>
+            <span>⚠️ Severity</span>
             <strong>{{ selectedDefectCategory?.severity || '-' }}</strong>
           </div>
           <div>
@@ -4137,11 +4137,11 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div class="defect-insight" aria-label="Defect Pareto preview">
           <div>
-            <span>Faktor QCC</span>
+            <span>🔬 Faktor QCC</span>
             <strong>{{ selectedDefectCategory?.qcc_factor || '-' }}</strong>
           </div>
           <div>
-            <span>Severity</span>
+            <span>⚠️ Severity</span>
             <strong>{{ selectedDefectCategory?.severity || '-' }}</strong>
           </div>
           <div>
@@ -4256,7 +4256,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div v-if="activeFeatureId === 'mandor-dashboard'" class="table-wrap">
           <div class="table-heading">
             <div>
-              <span>Monitoring</span>
+              <span>🖥️ Monitoring</span>
               <strong>Submit operator terbaru</strong>
             </div>
             <div class="control-filters">
@@ -4331,7 +4331,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <div class="table-wrap">
             <div class="table-heading">
               <div>
-                <span>Work Queue</span>
+                <span>📋 Work Queue</span>
                 <strong>Approval dan conflict</strong>
               </div>
             </div>
@@ -4416,7 +4416,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div v-if="activeFeatureId === 'mandor-closing'" class="task-panel">
           <div class="table-heading">
             <div>
-              <span>Detail/Action</span>
+              <span>⚙️ Detail/Action</span>
               <strong>Daily closing readiness</strong>
             </div>
           </div>
@@ -4429,14 +4429,14 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article class="task-panel target-form-panel">
             <div class="table-heading">
               <div>
-                <span>Planning</span>
+                <span>📅 Planning</span>
                 <strong>Atur target harian</strong>
               </div>
             </div>
 
             <div class="field-grid target-field-grid">
               <label class="field">
-                <span>Scope</span>
+                <span>🔍 Scope</span>
                 <select v-model="targetForm.scope_type" aria-label="Scope target">
                   <option v-for="option in targetScopeOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
@@ -4444,11 +4444,11 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 </select>
               </label>
               <label class="field">
-                <span>Mulai berlaku</span>
+                <span>⏳ Mulai berlaku</span>
                 <input v-model="targetForm.effective_from" aria-label="Mulai berlaku target" />
               </label>
               <label class="field">
-                <span>Sampai</span>
+                <span>⌛ Sampai</span>
                 <input v-model="targetForm.effective_until" aria-label="Akhir berlaku target" placeholder="Opsional" />
               </label>
               <label class="field">
@@ -4460,7 +4460,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 </select>
               </label>
               <label class="field">
-                <span>Shift</span>
+                <span>🕒 Shift</span>
                 <select v-model="targetForm.shift_id" aria-label="Shift target">
                   <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
@@ -4468,7 +4468,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 </select>
               </label>
               <label class="field">
-                <span>Jenis pekerjaan</span>
+                <span>🛠️ Jenis pekerjaan</span>
                 <select v-model="targetForm.machine_id" :disabled="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" aria-label="Jenis pekerjaan target">
                   <option v-if="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" value="ALL">ALL</option>
                   <option v-for="option in machineScopedOptions" :key="option.value" :value="option.value">
@@ -4477,7 +4477,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 </select>
               </label>
               <label class="field">
-                <span>Operator email</span>
+                <span>📧 Operator email</span>
                 <select v-model="targetForm.operator_email" :disabled="targetForm.scope_type !== 'OPERATOR_ONLY'" aria-label="Operator email target">
                   <option v-if="targetForm.scope_type !== 'OPERATOR_ONLY'" value="ALL">ALL</option>
                   <option v-for="option in operatorOptions" :key="option.value" :value="option.value">
@@ -4486,7 +4486,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 </select>
               </label>
               <label class="number-field">
-                <span>Target</span>
+                <span>🎯 Target</span>
                 <input v-model.number="targetForm.target_harian" inputmode="numeric" aria-label="Nilai target harian" />
               </label>
             </div>
@@ -4515,7 +4515,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Target aktif</span>
+                <span>🎯 Target aktif</span>
                 <strong>Scope yang cocok</strong>
               </div>
               <div class="control-filters">
@@ -4621,7 +4621,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             </select>
           </label>
           <label class="field">
-            <span>Shift</span>
+            <span>🕒 Shift</span>
             <select v-model="supervisorFilters.shift_id" aria-label="Shift supervisor">
               <option v-for="option in shiftOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -4661,7 +4661,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <div v-if="activeFeatureId === 'supervisor-raw'" class="table-wrap">
             <div class="table-heading">
               <div>
-                <span>Work Queue</span>
+                <span>📋 Work Queue</span>
                 <strong>Raw logs</strong>
               </div>
             </div>
@@ -4696,7 +4696,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <div v-if="activeFeatureId === 'supervisor-quarantine'" class="table-wrap">
             <div class="table-heading">
               <div>
-                <span>Exception Queue</span>
+                <span>⚠️ Exception Queue</span>
                 <strong>Quarantine</strong>
               </div>
             </div>
@@ -4730,7 +4730,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div v-if="activeFeatureId === 'supervisor-adjustment'" class="task-panel">
           <div class="table-heading">
             <div>
-              <span>Detail/Action</span>
+              <span>⚙️ Detail/Action</span>
               <strong>Adjustment control</strong>
             </div>
           </div>
@@ -4810,7 +4810,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <article v-if="activeFeatureId === 'management-bagian'" class="task-panel master-policy-panel">
           <div class="table-heading">
             <div>
-              <span>Master kebijakan</span>
+              <span>📜 Master kebijakan</span>
               <strong>CRUD Bagian dan upah per item</strong>
             </div>
             <button class="button secondary compact-button" type="button" :disabled="bagianMasterLoading" @click="seedBagianDefaults">
@@ -4819,31 +4819,31 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           </div>
           <div class="control-filters bagian-master-form" aria-label="Form master Bagian">
             <label class="field">
-              <span>ID Bagian</span>
+              <span>🆔 ID Bagian</span>
               <input v-model="bagianMasterForm.bagian_id" placeholder="SOLDER" aria-label="ID Bagian" />
             </label>
             <label class="field">
-              <span>Nama Bagian</span>
+              <span>🏷️ Nama Bagian</span>
               <input v-model="bagianMasterForm.bagian_name" placeholder="Bagian Solder" aria-label="Nama Bagian" />
             </label>
             <label class="field wide-field">
-              <span>Deskripsi</span>
+              <span>📝 Deskripsi</span>
               <input v-model="bagianMasterForm.description" placeholder="Deskripsi singkat tanpa PII" aria-label="Deskripsi Bagian" />
             </label>
             <label class="field">
-              <span>Upah / item</span>
+              <span>💰 Upah / item</span>
               <input v-model.number="bagianMasterForm.unit_rate" type="number" min="0" aria-label="Upah per item" />
             </label>
             <label class="field">
-              <span>Target unit/bulan</span>
+              <span>📦 Target unit/bulan</span>
               <input v-model.number="bagianMasterForm.monthly_target_unit" type="number" min="0" aria-label="Target unit bulanan" />
             </label>
             <label class="field">
-              <span>Target gaji</span>
+              <span>💵 Target gaji</span>
               <input v-model.number="bagianMasterForm.target_salary" type="number" min="0" aria-label="Target gaji bulanan" />
             </label>
             <label class="field checkbox-field">
-              <span>Aktif</span>
+              <span>🟢 Aktif</span>
               <input v-model="bagianMasterForm.status_aktif" type="checkbox" aria-label="Status aktif Bagian" />
             </label>
             <div class="form-actions">
@@ -4933,7 +4933,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-flow'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Traceability</span>
+                <span>🔎 Traceability</span>
                 <strong>Sumber bahan ke Lem</strong>
               </div>
             </div>
@@ -4949,7 +4949,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'management-dashboard' || activeFeatureId === 'management-wage'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Upah unit</span>
+                <span>💰 Upah unit</span>
                 <strong>Kondisi UMR bulanan</strong>
               </div>
             </div>
@@ -4970,7 +4970,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <div v-if="activeFeatureId === 'management-pareto'" class="table-wrap">
             <div class="table-heading">
               <div>
-                <span>Improvement</span>
+                <span>🚀 Improvement</span>
                 <strong>Pareto defect</strong>
               </div>
             </div>
@@ -5002,7 +5002,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div v-if="activeFeatureId === 'management-pending'" class="task-panel">
           <div class="table-heading">
             <div>
-              <span>Guardrail</span>
+              <span>🛡️ Guardrail</span>
               <strong>Data yang belum final</strong>
             </div>
           </div>
@@ -5082,7 +5082,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'hrd-employees'" class="task-panel hrd-employee-panel">
             <div class="hrd-directory-head">
               <div class="hrd-directory-title">
-                <span>Direktori karyawan</span>
+                <span>👥 Direktori karyawan</span>
                 <strong>Manajemen data karyawan</strong>
                 <p>Kelola identitas karyawan, Bagian, status kerja, kontak HRD, dan akses role secara privacy-safe.</p>
               </div>
@@ -5237,7 +5237,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
             <div class="table-heading">
               <div>
-                <span>Harian</span>
+                <span>📅 Harian</span>
                 <strong>{{ hrdAttendanceSummary.factory_date || hrdFilters.factory_date }}</strong>
               </div>
               <div class="control-filters">
@@ -5284,7 +5284,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <div class="hrd-attendance-card">
               <div class="table-heading">
               <div>
-                <span>Bulanan</span>
+                <span>🗓️ Bulanan</span>
                 <strong>{{ hrdAttendanceSummary.period_month || hrdFilters.period_month }}</strong>
               </div>
               <div class="control-filters">
@@ -5337,7 +5337,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Akses & Audit</span>
+                <span>🛡️ Akses & Audit</span>
                 <strong>Role readiness</strong>
               </div>
             </div>
@@ -5352,7 +5352,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Anomali akses</span>
+                <span>⚠️ Anomali akses</span>
                 <strong>Perlu review HRD</strong>
               </div>
             </div>
@@ -5371,7 +5371,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Multi-role</span>
+                <span>🎭 Multi-role</span>
                 <strong>Akun dengan lebih dari satu role</strong>
               </div>
             </div>
@@ -5390,15 +5390,15 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Audit ringan</span>
+                <span>🔍 Audit ringan</span>
                 <strong>Safe event summary</strong>
               </div>
             </div>
             <div class="mini-metrics">
-              <article class="mini-metric success"><span>Session</span><strong>{{ formatNumber(hrdAuditSummary.session) }}</strong></article>
-              <article class="mini-metric warning"><span>RBAC</span><strong>{{ formatNumber(hrdAuditSummary.rbac) }}</strong></article>
-              <article class="mini-metric neutral"><span>User role</span><strong>{{ formatNumber(hrdAuditSummary.user_role) }}</strong></article>
-              <article class="mini-metric neutral"><span>Other</span><strong>{{ formatNumber(hrdAuditSummary.other) }}</strong></article>
+              <article class="mini-metric success"><span>🔑 Session</span><strong>{{ formatNumber(hrdAuditSummary.session) }}</strong></article>
+              <article class="mini-metric warning"><span>🔐 RBAC</span><strong>{{ formatNumber(hrdAuditSummary.rbac) }}</strong></article>
+              <article class="mini-metric neutral"><span>👤 User role</span><strong>{{ formatNumber(hrdAuditSummary.user_role) }}</strong></article>
+              <article class="mini-metric neutral"><span>⚙️ Other</span><strong>{{ formatNumber(hrdAuditSummary.other) }}</strong></article>
             </div>
             <div class="hint-box">
               Metadata audit mentah tidak ditampilkan. Event terakhir: {{ hrdAuditSummary.last_event_at ? formatDateTime(hrdAuditSummary.last_event_at) : '-' }}.
@@ -5444,7 +5444,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
               <div class="hrd-form-group">
                 <div class="hrd-form-group-title">
-                  <span>Identitas</span>
+                  <span>🪪 Identitas</span>
                   <strong>Data dasar</strong>
                 </div>
                 <div class="hrd-form-grid">
@@ -5476,7 +5476,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
               <div class="hrd-form-group">
                 <div class="hrd-form-group-title">
-                  <span>Kontak & akses</span>
+                  <span>📞 Kontak & akses</span>
                   <strong>Komunikasi dan role</strong>
                 </div>
                 <div class="hrd-form-grid">
@@ -5553,7 +5553,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article class="help-card">
             <div class="table-heading">
               <div>
-                <span>Langkah kerja</span>
+                <span>📋 Langkah kerja</span>
                 <strong>Yang harus dilakukan</strong>
               </div>
             </div>
@@ -5565,7 +5565,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           <article class="help-card">
             <div class="table-heading">
               <div>
-                <span>Troubleshooting</span>
+                <span>🛠️ Troubleshooting</span>
                 <strong>Jika terjadi masalah</strong>
               </div>
             </div>
@@ -5599,12 +5599,12 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div v-else class="settings-grid">
           <article class="settings-card">
-            <span>Session aktif</span>
+            <span>🟢 Session aktif</span>
             <strong>{{ currentSessionLabel }}</strong>
             <p>{{ sessionContext?.email || 'Demo role tidak membutuhkan pergantian email.' }}</p>
           </article>
           <article class="settings-card">
-            <span>Status auth</span>
+            <span>🛡️ Status auth</span>
             <strong>{{ sessionContext?.auth_mode || 'OFF' }}</strong>
             <p>{{ sessionContext?.is_simulated ? 'Simulasi role aktif untuk demo/trial.' : 'Menggunakan akun Google aktif.' }}</p>
           </article>
@@ -5634,7 +5634,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
         <div v-if="selectedRole === 'SuperAdmin'" class="superadmin-local-reset">
           <div>
-            <span>SuperAdmin local maintenance</span>
+            <span>🔧 SuperAdmin local maintenance</span>
             <strong>Database lokal device</strong>
             <p>Lihat dan bersihkan draft, queue IndexedDB, serta preferensi lokal browser tanpa mengubah data GAS.</p>
           </div>
@@ -5664,7 +5664,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div v-if="selectedRole === 'SuperAdmin'" class="superadmin-maintenance-grid">
           <article class="superadmin-maintenance-card">
             <div>
-              <span>System configuration</span>
+              <span>⚙️ System configuration</span>
               <strong>Script Properties</strong>
               <p>Kelola status/update/delete/rotate key allowlisted melalui backend RBAC dan audit.</p>
             </div>
@@ -5679,7 +5679,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
           <article class="superadmin-maintenance-card">
             <div>
-              <span>Operational readiness</span>
+              <span>🚀 Operational readiness</span>
               <strong>Bootstrap & diagnostics</strong>
               <p>Gunakan toolbar spreadsheet untuk sheet default, seed dev, schema health, dan GAS smoke test.</p>
             </div>
@@ -5691,7 +5691,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
           <article class="superadmin-maintenance-card">
             <div>
-              <span>Debug</span>
+              <span>🐛 Debug</span>
               <strong>DevTools console log</strong>
               <p>Aktifkan viewLog untuk mengirim jejak session, role, workspace, dan error ke console bawaan browser.</p>
             </div>
