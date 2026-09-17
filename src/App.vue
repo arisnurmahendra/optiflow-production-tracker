@@ -329,7 +329,7 @@ const roleFeatureViews = Object.freeze({
     { id: 'supervisor-alerts', type: 'role-feature', icon: '🚨', label: 'Alerts', title: 'Production alerts', subtitle: 'Conflict, closing terbuka, dan adjustment pending.', badge: 'Prioritas' },
     { id: 'supervisor-raw', type: 'role-feature', icon: '📋', label: 'Raw Logs', title: 'Raw logs', subtitle: 'Transaksi produksi terfilter dari backend.', badge: 'Data' },
     { id: 'supervisor-quarantine', type: 'role-feature', icon: '🧯', label: 'Quarantine', title: 'Quarantine', subtitle: 'Anomali dan conflict yang perlu pengawasan.', badge: 'Control' },
-    { id: 'supervisor-adjustment', type: 'role-feature', icon: '🛠️', label: 'Adjustment', title: 'Adjustment', subtitle: 'Koreksi pasca closing dengan audit trail.', badge: 'Audit' },
+    { id: 'supervisor-adjustment', type: 'role-feature', icon: '🛠️', label: '⚙️ Adjustment', title: 'Adjustment', subtitle: 'Koreksi pasca closing dengan audit trail.', badge: 'Audit' },
   ]),
   management: appendHelpFeature([
     { id: 'management-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Executive dashboard', subtitle: 'KPI final, attendance, dan status kebijakan.', badge: 'Final' },
@@ -820,19 +820,19 @@ const mandorProgressPercent = computed(() =>
 );
 const operatorTaskCards = computed(() => [
   {
-    label: 'Draft device',
+    label: '📝 Draft device',
     value: draftStatus.value,
     hint: persistenceError.value || 'Aman tersimpan lokal saat koneksi putus.',
     tone: persistenceError.value ? 'danger' : 'success',
   },
   {
-    label: 'Queue sync',
+    label: '🔄 Queue sync',
     value: queueItems.value.length,
     hint: syncStatus.value,
     tone: queueItems.value.length ? 'warning' : 'success',
   },
   {
-    label: 'Validasi input',
+    label: '✅ Validasi input',
     value: 'OK + Reject',
     hint: 'Target dibandingkan dengan realisasi; Tandon hanya konteks.',
     tone: 'success',
@@ -840,19 +840,19 @@ const operatorTaskCards = computed(() => [
 ]);
 const mandorTaskCards = computed(() => [
   {
-    label: 'Butuh keputusan',
+    label: '⚖️ Butuh keputusan',
     value: approvalSummary.value.pending,
     hint: 'Pending approval dari operator.',
     tone: approvalSummary.value.pending ? 'warning' : 'success',
   },
   {
-    label: 'Conflict queue',
+    label: '⚠️ Conflict queue',
     value: approvalSummary.value.conflict,
     hint: 'Wajib diselesaikan sebelum masuk recap.',
     tone: approvalSummary.value.conflict ? 'conflict' : 'success',
   },
   {
-    label: 'Closing harian',
+    label: '📅 Closing harian',
     value: 'Ready',
     hint: 'Jalankan setelah review Bagian/shift lengkap.',
     tone: 'warning',
@@ -860,19 +860,19 @@ const mandorTaskCards = computed(() => [
 ]);
 const supervisorAlertCards = computed(() => [
   {
-    label: 'Open alerts',
+    label: '🚨 Open alerts',
     value: supervisorTiles.value.find((tile) => tile.label === 'Quarantine')?.value || 0,
     hint: 'Prioritas kontrol sebelum membaca raw logs.',
     tone: 'conflict',
   },
   {
-    label: 'Closing status',
+    label: '📊 Closing status',
     value: supervisorTiles.value.find((tile) => tile.label === 'Closing')?.value || 0,
     hint: 'Pantau Bagian/shift yang belum selesai.',
     tone: 'warning',
   },
   {
-    label: 'Adjustment',
+    label: '⚙️ Adjustment',
     value: supervisorTiles.value.find((tile) => tile.label === 'Adjustment')?.value || 0,
     hint: 'Koreksi setelah closing perlu jejak audit.',
     tone: 'success',
@@ -880,19 +880,19 @@ const supervisorAlertCards = computed(() => [
 ]);
 const managementInsightCards = computed(() => [
   {
-    label: 'Final output',
+    label: '📦 Final output',
     value: dashboardTiles.value.find((tile) => tile.label === 'OK')?.value || 0,
     hint: 'Bersumber dari MASTER_RECAP approved.',
     tone: 'success',
   },
   {
-    label: 'Reject risk',
+    label: '📉 Reject risk',
     value: dashboardTiles.value.find((tile) => tile.label === 'Reject')?.value || 0,
     hint: 'Gunakan Pareto untuk improvement.',
     tone: 'danger',
   },
   {
-    label: 'Pending exclude',
+    label: '⚠️ Pending exclude',
     value: dashboardData.value?.summary?.pending_quarantine || 0,
     hint: 'Tidak dihitung dalam KPI final.',
     tone: 'warning',
@@ -926,42 +926,42 @@ const managementWageRows = computed(() => managementBagianSummary.value.map((ite
 })));
 const managementAttendanceCards = computed(() => [
   {
-    label: 'Hadir',
+    label: '✔️ Hadir',
     value: formatNumber(managementAttendanceSummary.value.present_count),
     tone: 'success',
   },
   {
-    label: 'Absen',
+    label: '❌ Absen',
     value: formatNumber(managementAttendanceSummary.value.absent_count),
     tone: Number(managementAttendanceSummary.value.absent_count || 0) > 0 ? 'warning' : 'success',
   },
   {
-    label: 'Pending check',
+    label: '⏳ Pending check',
     value: formatNumber(managementAttendanceSummary.value.pending_confirmation_count),
     tone: Number(managementAttendanceSummary.value.pending_confirmation_count || 0) > 0 ? 'warning' : 'success',
   },
 ]);
 const hrdAccessCards = computed(() => [
   {
-    label: 'Karyawan aktif',
+    label: '🟢 Karyawan aktif',
     value: formatNumber(hrdSummary.value.active_users),
     hint: `${formatNumber(hrdSummary.value.total_users)} karyawan/user terdaftar, ${formatNumber(hrdSummary.value.inactive_users)} nonaktif/resign.`,
     tone: 'success',
   },
   {
-    label: 'Absensi hari ini',
+    label: '📅 Absensi hari ini',
     value: formatNumber(hrdAttendanceSummary.value.present_today),
     hint: `${formatNumber(hrdAttendanceSummary.value.pending_confirmation)} pending konfirmasi Mandor.`,
     tone: hrdAttendanceSummary.value.pending_confirmation > 0 ? 'warning' : 'success',
   },
   {
-    label: 'Data belum lengkap',
+    label: '⚠️ Data belum lengkap',
     value: formatNumber(hrdIncompleteEmployees.value),
     hint: 'Cek menu Karyawan untuk melengkapi email, WA, alamat, Bagian, atau status.',
     tone: hrdIncompleteEmployees.value > 0 ? 'warning' : 'success',
   },
   {
-    label: 'Payroll-ready',
+    label: '💰 Payroll-ready',
     value: hrdPayrollReadyLabel.value,
     hint: 'Siap jika data karyawan, status, absensi, dan konfirmasi Mandor lengkap.',
     tone: hrdPayrollReadyLabel.value === 'Review' ? 'warning' : 'success',
@@ -1125,10 +1125,10 @@ const hrdAttendanceFilters = computed(() => hrdData.value?.attendance_filters ||
   status_options: ['ALL', 'HADIR', 'IZIN', 'SAKIT', 'ALPHA', 'BELUM_KONFIRMASI', 'RESIGN'],
 });
 const hrdAttendanceCards = computed(() => [
-  { label: 'Hadir', value: formatNumber(hrdAttendanceSummary.value.present_today), tone: 'success' },
-  { label: 'Izin/Sakit/Alpha', value: formatNumber(hrdAttendanceSummary.value.absent_today), tone: hrdAttendanceSummary.value.absent_today > 0 ? 'warning' : 'success' },
-  { label: 'Belum konfirmasi', value: formatNumber(hrdAttendanceSummary.value.pending_confirmation), tone: hrdAttendanceSummary.value.pending_confirmation > 0 ? 'warning' : 'success' },
-  { label: 'Payroll-ready', value: `${formatNumber(hrdAttendanceSummary.value.payroll_ready_count)} siap`, tone: hrdAttendanceSummary.value.payroll_blocked_count > 0 ? 'warning' : 'success' },
+  { label: '✔️ Hadir', value: formatNumber(hrdAttendanceSummary.value.present_today), tone: 'success' },
+  { label: '🤒 Izin/Sakit/Alpha', value: formatNumber(hrdAttendanceSummary.value.absent_today), tone: hrdAttendanceSummary.value.absent_today > 0 ? 'warning' : 'success' },
+  { label: '⏳ Belum konfirmasi', value: formatNumber(hrdAttendanceSummary.value.pending_confirmation), tone: hrdAttendanceSummary.value.pending_confirmation > 0 ? 'warning' : 'success' },
+  { label: '💰 Payroll-ready', value: `${formatNumber(hrdAttendanceSummary.value.payroll_ready_count)} siap`, tone: hrdAttendanceSummary.value.payroll_blocked_count > 0 ? 'warning' : 'success' },
 ]);
 
 const hrdAttendanceDonutData = computed(() => [
@@ -1164,10 +1164,10 @@ const hrdTrendLineData = computed(() => {
   };
 });
 const hrdMonthlyAttendanceCards = computed(() => [
-  { label: 'Hadir bulan ini', value: formatNumber(hrdAttendanceSummary.value.monthly_hadir_count), tone: 'success' },
-  { label: 'Izin', value: formatNumber(hrdAttendanceSummary.value.monthly_izin_count), tone: 'neutral' },
-  { label: 'Sakit', value: formatNumber(hrdAttendanceSummary.value.monthly_sakit_count), tone: 'neutral' },
-  { label: 'Alpha', value: formatNumber(hrdAttendanceSummary.value.monthly_alpha_count), tone: hrdAttendanceSummary.value.monthly_alpha_count > 0 ? 'warning' : 'success' },
+  { label: '📅 Hadir bulan ini', value: formatNumber(hrdAttendanceSummary.value.monthly_hadir_count), tone: 'success' },
+  { label: '✉️ Izin', value: formatNumber(hrdAttendanceSummary.value.monthly_izin_count), tone: 'neutral' },
+  { label: '🤒 Sakit', value: formatNumber(hrdAttendanceSummary.value.monthly_sakit_count), tone: 'neutral' },
+  { label: '❌ Alpha', value: formatNumber(hrdAttendanceSummary.value.monthly_alpha_count), tone: hrdAttendanceSummary.value.monthly_alpha_count > 0 ? 'warning' : 'success' },
 ]);
 const hrdGovernanceSummary = computed(() => hrdData.value?.governance_summary || {
   multi_role_user_count: 0,
@@ -3198,7 +3198,7 @@ function renderHrdDashboardCharts() {
         data: {
           labels: data.labels,
           datasets: [
-            { label: 'Hadir', data: data.hadir, borderColor: successColor, backgroundColor: successColor, tension: 0.3 },
+            { label: '✔️ Hadir', data: data.hadir, borderColor: successColor, backgroundColor: successColor, tension: 0.3 },
             { label: 'Absen/Izin', data: data.absen, borderColor: warningColor, backgroundColor: warningColor, tension: 0.3 }
           ]
         },
