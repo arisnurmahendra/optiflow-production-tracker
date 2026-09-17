@@ -3847,7 +3847,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Operator</p>
-            <h2 id="form-title">Laporan cepat</h2>
+            <h2 id="form-title">📝 Laporan cepat</h2>
           </div>
           <span class="badge">{{ draftStatus }}</span>
         </div>
@@ -3996,7 +3996,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Riwayat</p>
-            <h2 id="history-title">Submit terakhir hari ini</h2>
+            <h2 id="history-title">🕰️ Submit terakhir hari ini</h2>
           </div>
           <span class="badge">{{ operatorRecentSubmissions.length }} item</span>
         </div>
@@ -4040,7 +4040,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Dashboard</p>
-            <h2 id="operator-dashboard-title">Target dan realisasi</h2>
+            <h2 id="operator-dashboard-title">📊 Target dan realisasi</h2>
           </div>
           <span class="badge">Hari ini vs kemarin</span>
         </div>
@@ -4130,7 +4130,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Defect</p>
-            <h2 id="operator-defect-title">Reject dan Pareto mini</h2>
+            <h2 id="operator-defect-title">⚠️ Reject dan Pareto mini</h2>
           </div>
           <span class="badge">{{ shouldShowDefect ? 'Reject aktif' : 'Tidak ada reject' }}</span>
         </div>
@@ -4191,7 +4191,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title compact">
           <div>
             <p class="eyebrow">Sync</p>
-            <h2 id="queue-title">Antrean device</h2>
+            <h2 id="queue-title">📶 Antrean device</h2>
           </div>
           <button class="icon-button" type="button" aria-label="Retry sync" :disabled="isSyncing" @click="syncQueueWithSession">
             Retry
@@ -4234,7 +4234,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Mandor</p>
-            <h2 id="review-title">Approval inbox</h2>
+            <h2 id="review-title">✅ Approval inbox</h2>
           </div>
           <span class="badge conflict">! {{ approvalSummary.conflict }} konflik</span>
         </div>
@@ -4586,7 +4586,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Supervisor</p>
-            <h2 id="supervisor-title">Control center</h2>
+            <h2 id="supervisor-title">🛡️ Control center</h2>
           </div>
           <span class="badge">{{ supervisorLoading ? 'Memuat' : 'Server-side view' }}</span>
         </div>
@@ -4744,7 +4744,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">Management</p>
-            <h2 id="dashboard-title">Read-only dashboard</h2>
+            <h2 id="dashboard-title">📊 Read-only dashboard</h2>
           </div>
           <span class="badge">{{ dashboardLoading ? 'Memuat' : 'MASTER_RECAP' }}</span>
         </div>
@@ -5539,7 +5539,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">{{ activeHelpGuide.role }}</p>
-            <h2 id="workspace-help-title">Cara penggunaan</h2>
+            <h2 id="workspace-help-title">❓ Cara penggunaan</h2>
           </div>
           <span class="badge">Panduan role</span>
         </div>
@@ -5584,7 +5584,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div class="section-title">
           <div>
             <p class="eyebrow">User</p>
-            <h2 id="settings-title">Pengaturan sesi</h2>
+            <h2 id="settings-title">⚙️ Pengaturan sesi</h2>
           </div>
           <span class="badge">{{ sessionModeLabel }}</span>
         </div>
