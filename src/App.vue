@@ -3987,8 +3987,8 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         </div>
 
         <div class="action-row">
-          <button class="button secondary" type="button" @click="saveDraft">Simpan Draft</button>
-          <button class="button primary" type="button" @click="submitOperatorReportWithSession">Submit</button>
+          <button class="button secondary" type="button" @click="saveDraft">💾 Simpan Draft</button>
+          <button class="button primary" type="button" @click="submitOperatorReportWithSession">🚀 Submit</button>
         </div>
       </section>
 
@@ -4263,7 +4263,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               <label class="field" style="margin: 0; min-width: 150px;">
                 <input type="search" v-model="tblSupervisorRawRows.searchQuery" placeholder="Cari transaksi..." aria-label="Cari transaksi" />
               </label>
-              <button class="button secondary compact-button" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
+              <button class="button secondary compact-button" type="button" @click="refreshSupervisorControlCenter">🔄 Refresh</button>
             </div>
           </div>
           <div v-if="supervisorPending" class="table-skeleton" aria-hidden="true">
@@ -4294,9 +4294,9 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 <td><span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : 'success']">{{ row.status }}</span></td>
                 <td>
                   <div v-if="row.status === 'ACCEPTED'" class="review-actions" aria-label="Pre-closing review actions">
-                    <button class="icon-button danger" type="button" title="Void" @click="createProductionReviewFromRow(row, 'VOID')">Void</button>
-                    <button class="icon-button warning" type="button" title="Request correction" @click="createProductionReviewFromRow(row, 'REQUEST_CORRECTION')">Request</button>
-                    <button class="icon-button" type="button" title="Pre-closing correction" @click="createProductionReviewFromRow(row, 'PRE_CLOSING_CORRECTION')">Koreksi</button>
+                    <button class="icon-button danger" type="button" title="Void" @click="createProductionReviewFromRow(row, 'VOID')">🚫 Void</button>
+                    <button class="icon-button warning" type="button" title="Request correction" @click="createProductionReviewFromRow(row, 'REQUEST_CORRECTION')">📤 Request</button>
+                    <button class="icon-button" type="button" title="Pre-closing correction" @click="createProductionReviewFromRow(row, 'PRE_CLOSING_CORRECTION')">✍️ Koreksi</button>
                   </div>
                   <span v-else class="muted-text">Quarantine flow</span>
                 </td>
@@ -4628,7 +4628,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               </option>
             </select>
           </label>
-          <button class="button secondary" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
+          <button class="button secondary" type="button" @click="refreshSupervisorControlCenter">🔄 Refresh</button>
         </div>
 
         <div v-if="supervisorPending && activeFeatureId === 'supervisor-dashboard'" class="mini-metrics" aria-hidden="true">
@@ -4653,8 +4653,8 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         </div>
 
         <div v-if="activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-adjustment'" class="control-actions">
-          <button class="button primary" type="button" @click="closeCurrentScope">Close Bagian/shift</button>
-          <button class="button secondary" type="button" @click="createAdjustmentFromFirstRow">Create adjustment</button>
+          <button class="button primary" type="button" @click="closeCurrentScope">🔒 Close Bagian/shift</button>
+          <button class="button secondary" type="button" @click="createAdjustmentFromFirstRow">⚖️ Create adjustment</button>
         </div>
 
         <div v-if="activeFeatureId === 'supervisor-raw' || activeFeatureId === 'supervisor-quarantine'" class="split-tables single-surface">
@@ -4779,7 +4779,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               </option>
             </select>
           </label>
-          <button class="button primary" type="button" @click="runRecapAndDashboard">Refresh</button>
+          <button class="button primary" type="button" @click="runRecapAndDashboard">🔄 Refresh</button>
         </div>
 
         <div v-if="dashboardPending" class="mini-metrics" aria-hidden="true">
@@ -4848,7 +4848,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             </label>
             <div class="form-actions">
               <button class="button primary" type="button" :disabled="bagianMasterLoading" @click="saveBagianMaster">💾 Simpan</button>
-              <button class="button secondary" type="button" :disabled="bagianMasterLoading" @click="resetBagianMasterForm">Reset</button>
+              <button class="button secondary" type="button" :disabled="bagianMasterLoading" @click="resetBagianMasterForm">🔄 Reset</button>
             </div>
           </div>
           <p v-if="bagianMasterMessage" class="inline-success">{{ bagianMasterMessage }}</p>
@@ -4876,7 +4876,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   <td>
                     <div class="action-row">
                       <button class="button secondary compact-button" type="button" @click="editBagianMaster(row)">✏️ Edit</button>
-                      <button class="button danger compact-button" type="button" :disabled="!row.status_aktif || bagianMasterLoading" @click="deactivateBagian(row)">Nonaktif</button>
+                      <button class="button danger compact-button" type="button" :disabled="!row.status_aktif || bagianMasterLoading" @click="deactivateBagian(row)">🔴 Nonaktif</button>
                     </div>
                   </td>
                 </tr>
@@ -5019,7 +5019,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <h2 id="hrd-title">{{ currentRoleFeatureMeta.title }}</h2>
           </div>
           <button class="button secondary compact-button" type="button" @click="refreshHrdAccessDashboard">
-            {{ hrdLoading ? 'Memuat' : 'Refresh' }}
+            {{ hrdLoading ? '⏳ Memuat' : '🔄 Refresh' }}
           </button>
         </div>
 
@@ -5700,7 +5700,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               <span class="status warning">{{ debugLogs.length }} log</span>
             </div>
             <button class="button primary" type="button" @click="toggleViewLog">
-              {{ viewLog ? 'Matikan log' : 'Aktifkan log' }}
+              {{ viewLog ? '🚫 Matikan log' : '✅ Aktifkan log' }}
             </button>
           </article>
         </div>
