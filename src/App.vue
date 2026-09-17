@@ -4161,7 +4161,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                 <input type="search" v-model="tblDefectOptions.searchQuery" placeholder="Cari kategori..." aria-label="Cari kategori defect" />
               </label>
               <button class="button secondary compact-button" type="button" @click="refreshDefectCategories">
-                Refresh
+                🔄 Refresh
               </button>
             </div>
           </div>
@@ -4194,7 +4194,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <h2 id="queue-title">📶 Antrean device</h2>
           </div>
           <button class="icon-button" type="button" aria-label="Retry sync" :disabled="isSyncing" @click="syncQueueWithSession">
-            Retry
+            🔁 Retry
           </button>
         </div>
 
@@ -4401,13 +4401,13 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
             <div class="approval-actions">
               <button class="button primary" type="button" @click="stageApprovalAction('APPROVE_CURRENT')">
-                Approve current
+                ✅ Approve current
               </button>
               <button class="button secondary" type="button" @click="stageApprovalAction('REQUEST_CORRECTION')">
-                Request correction
+                📝 Request correction
               </button>
               <button class="button danger-button" type="button" @click="stageApprovalAction('REJECT_BOTH')">
-                Reject both
+                ❌ Reject both
               </button>
             </div>
           </aside>
@@ -4504,10 +4504,10 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 
             <div class="action-row inline-actions">
               <button class="button secondary" type="button" @click="refreshProductionTarget">
-                Refresh
+                🔄 Refresh
               </button>
               <button class="button primary" type="button" :disabled="productionTargetLoading" @click="saveProductionTarget">
-                Simpan target
+                💾 Simpan target
               </button>
             </div>
           </article>
@@ -4548,7 +4548,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                     <td>
                       <div class="table-action-row">
                         <button class="button secondary compact-button" type="button" @click="editProductionTarget(target)">
-                          Edit
+                          ✏️ Edit
                         </button>
                         <button
                           v-if="target.status_aktif"
@@ -4556,7 +4556,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                           type="button"
                           @click="deactivateProductionTarget(target)"
                         >
-                          Nonaktif
+                          🔴 Nonaktif
                         </button>
                         <button
                           v-else
@@ -4564,10 +4564,10 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                           type="button"
                           @click="activateProductionTarget(target)"
                         >
-                          Aktifkan
+                          🟢 Aktifkan
                         </button>
                         <button class="button danger-button compact-button" type="button" :disabled="!target.status_aktif" @click="deleteProductionTarget(target)">
-                          Hapus
+                          🗑️ Hapus
                         </button>
                       </div>
                     </td>
@@ -4814,7 +4814,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               <strong>CRUD Bagian dan upah per item</strong>
             </div>
             <button class="button secondary compact-button" type="button" :disabled="bagianMasterLoading" @click="seedBagianDefaults">
-              Seed default
+              🌱 Seed default
             </button>
           </div>
           <div class="control-filters bagian-master-form" aria-label="Form master Bagian">
@@ -5430,7 +5430,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                   {{ hrdEmployeeFormMode === 'EDIT' ? '✏️ Edit data karyawan' : '➕ Tambah karyawan baru' }}
                 </h2>
               </div>
-              <button class="icon-button" type="button" aria-label="Tutup editor karyawan" @click="closeHrdEmployeeEditor">X</button>
+              <button class="icon-button" type="button" aria-label="Tutup editor karyawan" @click="closeHrdEmployeeEditor">✖️</button>
             </div>
 
             <div class="hrd-employee-editor modal-employee-editor">
@@ -5640,19 +5640,19 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
           </div>
           <div class="superadmin-local-actions">
             <button class="button secondary compact-button" type="button" @click="inspectSuperAdminLocalData">
-              Lihat data
+              👁️ Lihat data
             </button>
             <button class="button secondary compact-button" type="button" @click="clearSuperAdminLocalStores">
-              Kosongkan DB
+              🗑️ Kosongkan DB
             </button>
             <button class="button danger-button compact-button" type="button" @click="resetSuperAdminIndexedDb">
-              Reset DB
+              🔄 Reset DB
             </button>
             <button class="button danger-button compact-button" type="button" @click="resetSuperAdminLocalData">
-              Reset semua
+              🔄 Reset semua
             </button>
             <button class="button primary compact-button" type="button" @click="reloadAppFromSuperAdmin">
-              Reload
+              🔄 Reload
             </button>
           </div>
           <div v-if="localMaintenanceError" class="inline-error" role="alert">
@@ -5673,7 +5673,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
               <span class="status warning">Secret masked</span>
             </div>
             <button class="button primary" type="button" @click="openMaintenanceConsole">
-              Buka console
+              💻 Buka console
             </button>
           </article>
 
@@ -5726,7 +5726,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
             <h2 id="maintenance-title">Maintenance console</h2>
           </div>
           <button class="icon-button" type="button" aria-label="Tutup maintenance console" @click="closeMaintenanceConsole">
-            X
+            ✖️
           </button>
         </div>
 
@@ -5772,7 +5772,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                       :disabled="isMaintenanceLoading || !property.updatable"
                       @click="updateMaintenanceProperty(property)"
                     >
-                      Update
+                      🆙 Update
                     </button>
                     <button
                       class="button secondary compact-button"
@@ -5780,7 +5780,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                       :disabled="isMaintenanceLoading || !property.deletable"
                       @click="deleteMaintenanceProperty(property)"
                     >
-                      Delete
+                      🗑️ Delete
                     </button>
                     <button
                       class="button primary compact-button"
@@ -5788,7 +5788,7 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
                       :disabled="isMaintenanceLoading || !property.rotatable"
                       @click="rotateMaintenanceProperty(property)"
                     >
-                      Rotate
+                      🔄 Rotate
                     </button>
                   </div>
                 </td>
