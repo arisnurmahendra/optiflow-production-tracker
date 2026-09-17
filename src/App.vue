@@ -3096,6 +3096,7 @@ function renderHrdDashboardCharts() {
   // 1. Donut Chart (Kehadiran Hari Ini)
   if (hrdAttendanceDonutCanvas.value) {
     const data = hrdAttendanceDonutData.value;
+    if (hrdAttendanceDonutChart && hrdAttendanceDonutChart.canvas !== hrdAttendanceDonutCanvas.value) { hrdAttendanceDonutChart.destroy(); hrdAttendanceDonutChart = null; }
     if (hrdAttendanceDonutChart) {
       hrdAttendanceDonutChart.data.datasets[0].data = data;
       hrdAttendanceDonutChart.options.color = textPrimary;
@@ -3124,6 +3125,7 @@ function renderHrdDashboardCharts() {
   // 2. Bar Chart (Distribusi Pekerja)
   if (hrdWorkforceBarCanvas.value) {
     const data = hrdWorkforceBarData.value;
+    if (hrdWorkforceBarChart && hrdWorkforceBarChart.canvas !== hrdWorkforceBarCanvas.value) { hrdWorkforceBarChart.destroy(); hrdWorkforceBarChart = null; }
     if (hrdWorkforceBarChart) {
       hrdWorkforceBarChart.data.labels = data.labels;
       hrdWorkforceBarChart.data.datasets[0].data = data.data;
@@ -3154,6 +3156,7 @@ function renderHrdDashboardCharts() {
   // 3. Pie Chart (Readiness Kelengkapan)
   if (hrdReadinessPieCanvas.value) {
     const data = hrdReadinessPieData.value;
+    if (hrdReadinessPieChart && hrdReadinessPieChart.canvas !== hrdReadinessPieCanvas.value) { hrdReadinessPieChart.destroy(); hrdReadinessPieChart = null; }
     if (hrdReadinessPieChart) {
       hrdReadinessPieChart.data.datasets[0].data = data;
       hrdReadinessPieChart.options.color = textPrimary;
@@ -3182,6 +3185,7 @@ function renderHrdDashboardCharts() {
   // 4. Line Chart (Tren Kehadiran Mingguan)
   if (hrdTrendLineCanvas.value) {
     const data = hrdTrendLineData.value;
+    if (hrdTrendLineChart && hrdTrendLineChart.canvas !== hrdTrendLineCanvas.value) { hrdTrendLineChart.destroy(); hrdTrendLineChart = null; }
     if (hrdTrendLineChart) {
       hrdTrendLineChart.data.labels = data.labels;
       hrdTrendLineChart.data.datasets[0].data = data.hadir;
@@ -5046,28 +5050,28 @@ const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
         <div v-if="activeFeatureId === 'hrd-dashboard'" class="hrd-workflow hrd-workflow-full">
           <div class="hrd-chart-grid">
             <div class="hrd-chart-card">
-              <h3>Komposisi Kehadiran Hari Ini</h3>
+              <h3>📊 Komposisi Kehadiran Hari Ini</h3>
               <div class="hrd-chart-canvas-frame">
                 <canvas ref="hrdAttendanceDonutCanvas" role="img" aria-label="Donut Chart Kehadiran"></canvas>
               </div>
             </div>
 
             <div class="hrd-chart-card">
-              <h3>Distribusi Karyawan per Bagian</h3>
+              <h3>👥 Distribusi Karyawan per Bagian</h3>
               <div class="hrd-chart-canvas-frame">
                 <canvas ref="hrdWorkforceBarCanvas" role="img" aria-label="Bar Chart Pekerja"></canvas>
               </div>
             </div>
 
             <div class="hrd-chart-card">
-              <h3>Kelengkapan Data Karyawan</h3>
+              <h3>✅ Kelengkapan Data Karyawan</h3>
               <div class="hrd-chart-canvas-frame">
                 <canvas ref="hrdReadinessPieCanvas" role="img" aria-label="Pie Chart Kelengkapan Data"></canvas>
               </div>
             </div>
 
             <div class="hrd-chart-card">
-              <h3>Tren Kehadiran (7 Hari Terakhir)</h3>
+              <h3>📈 Tren Kehadiran (7 Hari Terakhir)</h3>
               <div class="hrd-chart-canvas-frame">
                 <canvas ref="hrdTrendLineCanvas" role="img" aria-label="Line Chart Tren Kehadiran"></canvas>
               </div>
