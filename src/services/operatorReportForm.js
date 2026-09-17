@@ -23,6 +23,12 @@ export const lineOptions = Object.freeze([
   { value: 'ASSY-01', label: 'ASSY-01' },
 ]);
 
+export const bagianOptions = Object.freeze([
+  { value: 'SOLDER', label: 'Bagian Solder' },
+  { value: 'LEM', label: 'Bagian Lem' },
+  { value: 'PACKING', label: 'Bagian Packing' },
+]);
+
 export const shiftOptions = Object.freeze([
   { value: 'SHIFT-1', label: 'Shift 1' },
   { value: 'SHIFT-2', label: 'Shift 2' },
@@ -35,7 +41,15 @@ export const machineOptions = Object.freeze([
   { value: 'ASM-03', label: 'ASM-03' },
 ]);
 
+export const workCategoryOptions = Object.freeze([
+  { value: 'SOLDER', label: 'Solder' },
+  { value: 'LEM', label: 'Lem' },
+  { value: 'PACKING', label: 'Packing' },
+]);
+
 export const initialOperatorReportForm = Object.freeze({
+  bagian_id: 'SOLDER',
+  work_category_id: 'SOLDER',
   line_id: 'SMT-02',
   shift_id: 'SHIFT-1',
   machine_id: 'SLD-14',
@@ -53,9 +67,11 @@ const integerField = z.coerce.number()
   .max(999999, 'Angka terlalu besar.');
 
 export const operatorReportSchema = z.object({
-  line_id: z.string().min(1, 'Line wajib dipilih.'),
+  bagian_id: z.string().min(1, 'Bagian wajib dipilih.'),
+  work_category_id: z.string().min(1, 'Jenis pekerjaan wajib dipilih.'),
+  line_id: z.string().min(1, 'Bagian legacy wajib tersedia.'),
   shift_id: z.string().min(1, 'Shift wajib dipilih.'),
-  machine_id: z.string().min(1, 'Machine wajib dipilih.'),
+  machine_id: z.string().min(1, 'Jenis pekerjaan legacy wajib tersedia.'),
   target_harian: integerField,
   tandon: integerField,
   perolehan_ok: integerField,

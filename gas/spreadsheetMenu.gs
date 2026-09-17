@@ -123,6 +123,8 @@ var OptiflowSpreadsheetMenu = (function () {
       .concat(seedLineMaster())
       .concat(seedShiftMaster())
       .concat(seedBagianMaster())
+      .concat(seedEmployeeMaster())
+      .concat(seedAttendanceRecaps())
       .concat(seedTargetMaster());
   }
 
@@ -354,7 +356,9 @@ var OptiflowSpreadsheetMenu = (function () {
       },
       HRD: {
         audit_log: ['read'],
+        attendance_recap: ['read', 'export'],
         bagian_master: ['read'],
+        employee_master: ['read', 'create', 'update', 'soft_delete'],
         reference_data: ['read'],
         user_role: ['read'],
       },
@@ -409,7 +413,12 @@ var OptiflowSpreadsheetMenu = (function () {
 
   function seedBagianMaster() {
     var now = new Date().toISOString();
-    return appendMissingRecords('BAGIAN_MASTER', 'bagian_id', OPTIFLOW_DEFAULT_BAGIAN_MASTER.map(function (bagian) {
+    var supportBagian = [
+      { bagian_id: 'QC', bagian_name: 'Bagian QC', description: 'Verifikasi kualitas dan output produksi.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true },
+      { bagian_id: 'HRD', bagian_name: 'Bagian HRD', description: 'Administrasi karyawan, absensi, dan payroll-ready.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true },
+      { bagian_id: 'MANAGEMENT', bagian_name: 'Management', description: 'Pemantauan KPI, kebijakan upah, dan laporan perusahaan.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true },
+    ];
+    return appendMissingRecords('BAGIAN_MASTER', 'bagian_id', OPTIFLOW_DEFAULT_BAGIAN_MASTER.concat(supportBagian).map(function (bagian) {
       return {
         bagian_id: bagian.bagian_id,
         bagian_name: bagian.bagian_name,
@@ -424,6 +433,38 @@ var OptiflowSpreadsheetMenu = (function () {
         updated_at: now,
       };
     }));
+  }
+
+  function seedEmployeeMaster() {
+    var now = new Date().toISOString();
+    return appendMissingRecords('EMPLOYEE_MASTER', 'employee_no', [
+      { employee_id: '10001', employee_no: '10001', nama_lengkap: 'Rina Wulandari', bagian_id: 'SOLDER', status_karyawan: 'AKTIF', email: 'operator@example.com', no_wa: '628121110001', alamat: 'Jl. Melati 12, Bogor', username: 'rina.solder', role: 'Operator', roles: 'Operator', mandor_email: 'mandor@example.com', created_at: now, updated_at: now },
+      { employee_id: '10002', employee_no: '10002', nama_lengkap: 'Budi Hartono', bagian_id: 'SOLDER', status_karyawan: 'AKTIF', email: 'mandor@example.com', no_wa: '628121110002', alamat: 'Kp. Cikaret RT 03/02, Bogor', username: 'budi.mandor', role: 'Mandor', roles: 'Mandor', mandor_email: '', created_at: now, updated_at: now },
+      { employee_id: '10003', employee_no: '10003', nama_lengkap: 'Maya Safitri', bagian_id: 'MANAGEMENT', status_karyawan: 'AKTIF', email: 'management@example.com', no_wa: '628121110003', alamat: 'Perum Griya Asri Blok C7, Depok', username: 'maya.management', role: 'Management', roles: 'Management,Supervisor', mandor_email: '', created_at: now, updated_at: now },
+      { employee_id: '10004', employee_no: '10004', nama_lengkap: 'Dewi Anggraeni', bagian_id: 'HRD', status_karyawan: 'AKTIF', email: 'hrd@example.com', no_wa: '628121110004', alamat: 'Jl. Kenanga 5, Cibinong', username: 'dewi.hrd', role: 'HRD', roles: 'HRD', mandor_email: '', created_at: now, updated_at: now },
+      { employee_id: '10005', employee_no: '10005', nama_lengkap: 'Agus Prasetyo', bagian_id: 'LEM', status_karyawan: 'AKTIF', email: 'agus.lem@example.com', no_wa: '628121110005', alamat: 'Jl. Raya Tajur 88, Bogor', username: 'agus.lem', role: 'Operator', roles: 'Operator', mandor_email: 'mandor@example.com', created_at: now, updated_at: now },
+      { employee_id: '10006', employee_no: '10006', nama_lengkap: 'Siti Nurhaliza', bagian_id: 'SOLDER', status_karyawan: 'RESIGN', email: 'inactive.operator@example.com', no_wa: '628121110006', alamat: 'Jl. Pahlawan 21, Sukabumi', username: 'siti.resign', role: 'Operator', roles: 'Operator', mandor_email: 'mandor@example.com', created_at: now, updated_at: now },
+      { employee_id: '10007', employee_no: '10007', nama_lengkap: 'Yanto Saputra', bagian_id: 'LEM', status_karyawan: 'AKTIF', email: '', no_wa: '628121110007', alamat: 'Jl. Cendana 9, Bogor', username: 'yanto.lem', role: 'Operator', roles: 'Operator', mandor_email: 'mandor@example.com', created_at: now, updated_at: now },
+      { employee_id: '10008', employee_no: '10008', nama_lengkap: 'Rio Pratama', bagian_id: 'QC', status_karyawan: 'AKTIF', email: 'supervisor@example.com', no_wa: '628121110008', alamat: 'Jl. Mawar 3, Cibinong', username: 'rio.supervisor', role: 'Supervisor', roles: 'Supervisor', mandor_email: '', created_at: now, updated_at: now },
+    ]);
+  }
+
+  function seedAttendanceRecaps() {
+    var now = new Date().toISOString();
+    return []
+      .concat(appendMissingRecords('ATTENDANCE_DAILY_RECAP', 'daily_attendance_id', [
+        { daily_attendance_id: 'ATT-D-20260903-10001', factory_date: '2026-09-03', employee_id: '10001', employee_no: '10001', nama_lengkap: 'Rina Wulandari', bagian_id: 'SOLDER', attendance_status: 'HADIR', clock_in_at: '2026-09-03T00:56:00.000Z', clock_out_at: '2026-09-03T09:02:00.000Z', confirmed_by: 'mandor@example.com', confirmed_at: '2026-09-03T01:18:00.000Z', notes: '', payroll_ready: true, updated_at: now },
+        { daily_attendance_id: 'ATT-D-20260903-10002', factory_date: '2026-09-03', employee_id: '10002', employee_no: '10002', nama_lengkap: 'Budi Hartono', bagian_id: 'SOLDER', attendance_status: 'HADIR', clock_in_at: '2026-09-03T00:48:00.000Z', clock_out_at: '2026-09-03T09:12:00.000Z', confirmed_by: 'supervisor@example.com', confirmed_at: '2026-09-03T01:10:00.000Z', notes: 'Mandor pencatat.', payroll_ready: true, updated_at: now },
+        { daily_attendance_id: 'ATT-D-20260903-10005', factory_date: '2026-09-03', employee_id: '10005', employee_no: '10005', nama_lengkap: 'Agus Prasetyo', bagian_id: 'LEM', attendance_status: 'BELUM_KONFIRMASI', clock_in_at: '2026-09-03T01:03:00.000Z', clock_out_at: '', confirmed_by: '', confirmed_at: '', notes: 'Menunggu check Mandor.', payroll_ready: false, updated_at: now },
+        { daily_attendance_id: 'ATT-D-20260903-10006', factory_date: '2026-09-03', employee_id: '10006', employee_no: '10006', nama_lengkap: 'Siti Nurhaliza', bagian_id: 'SOLDER', attendance_status: 'RESIGN', clock_in_at: '', clock_out_at: '', confirmed_by: 'hrd@example.com', confirmed_at: '2026-09-03T01:00:00.000Z', notes: 'Tidak masuk target produksi baru.', payroll_ready: true, updated_at: now },
+        { daily_attendance_id: 'ATT-D-20260903-10007', factory_date: '2026-09-03', employee_id: '10007', employee_no: '10007', nama_lengkap: 'Yanto Saputra', bagian_id: 'LEM', attendance_status: 'SAKIT', clock_in_at: '', clock_out_at: '', confirmed_by: 'mandor@example.com', confirmed_at: '2026-09-03T01:25:00.000Z', notes: 'Surat sakit diterima HRD.', payroll_ready: true, updated_at: now },
+      ]))
+      .concat(appendMissingRecords('ATTENDANCE_MONTHLY_RECAP', 'monthly_attendance_id', [
+        { monthly_attendance_id: 'ATT-M-202609-10001', period_month: '2026-09', employee_id: '10001', employee_no: '10001', nama_lengkap: 'Rina Wulandari', bagian_id: 'SOLDER', hadir_count: 22, izin_count: 1, sakit_count: 0, alpha_count: 0, resign_count: 0, pending_confirmation_count: 1, payroll_ready: false, updated_at: now },
+        { monthly_attendance_id: 'ATT-M-202609-10002', period_month: '2026-09', employee_id: '10002', employee_no: '10002', nama_lengkap: 'Budi Hartono', bagian_id: 'SOLDER', hadir_count: 23, izin_count: 0, sakit_count: 0, alpha_count: 0, resign_count: 0, pending_confirmation_count: 0, payroll_ready: true, updated_at: now },
+        { monthly_attendance_id: 'ATT-M-202609-10005', period_month: '2026-09', employee_id: '10005', employee_no: '10005', nama_lengkap: 'Agus Prasetyo', bagian_id: 'LEM', hadir_count: 21, izin_count: 0, sakit_count: 1, alpha_count: 1, resign_count: 0, pending_confirmation_count: 2, payroll_ready: false, updated_at: now },
+        { monthly_attendance_id: 'ATT-M-202609-10006', period_month: '2026-09', employee_id: '10006', employee_no: '10006', nama_lengkap: 'Siti Nurhaliza', bagian_id: 'SOLDER', hadir_count: 0, izin_count: 0, sakit_count: 0, alpha_count: 0, resign_count: 1, pending_confirmation_count: 0, payroll_ready: true, updated_at: now },
+      ]));
   }
 
   function seedTargetMaster() {

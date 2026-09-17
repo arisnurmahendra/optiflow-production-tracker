@@ -10,14 +10,20 @@ OPTIFLOW menggunakan beberapa sheet yang dipisahkan berdasarkan fungsi agar tran
 | :--- | :--- | :--- |
 | `USER_ROLES` | Master user, role, status aktif, dan PII terenkripsi | Tidak boleh hard-delete. PII mentah tidak boleh disimpan. |
 | `ROLE_PERMISSIONS` | Matrix permission per role | Dipakai backend untuk least privilege. |
-| `LINE_MASTER` | Master lini/area produksi legacy | Dipakai sementara untuk kompatibilitas runtime lama; rebaseline baru memakai `BAGIAN_MASTER`. |
-| `SHIFT_MASTER` | Master shift dan jam kerja pabrik | Batas waktu memakai timezone `Asia/Jakarta`. |
+| `LINE_MASTER` | Master lini/area produksi legacy | Dipakai sementara untuk kompatibilitas runtime lama; tidak boleh menjadi identitas utama proses baru. |
+| `SHIFT_MASTER` | Master shift dan jam kerja pabrik legacy/opsional | Dipakai sementara untuk runtime lama; proses baru memakai `factory_date + bagian_id` sebagai scope utama laporan harian. |
 | `BAGIAN_MASTER` | Master Bagian dan kebijakan upah per item | Sumber opsi Bagian, status aktif, `unit_rate`, target gaji/UMR, dan target unit bulanan. |
+| `EMPLOYEE_MASTER` | Rencana master karyawan | Sumber nomor karyawan 5 digit, nama, status aktif/resign, Bagian default, dan data HRD yang perlu masking/enkripsi. |
+| `USER_ROLE_ASSIGNMENTS` | Rencana assignment multi-role | Sumber role aktif per email/user dengan scope Bagian atau global. |
+| `ATTENDANCE_EVENTS` | Rencana event absensi | Event Masuk, Keluar, konfirmasi Mandor, dan status Izin/Sakit/Alpha. |
+| `ATTENDANCE_DAILY_RECAP` | Rencana rekap absensi harian | Rekap hadir/absen/status per karyawan dan Bagian. |
+| `ATTENDANCE_MONTHLY_RECAP` | Rencana rekap absensi bulanan | Rekap payroll-ready bulanan untuk HRD/Management sesuai permission. |
+| `WAGE_TARGET_POLICY` | Rencana detail kebijakan upah dan target harian | Opsional jika kebijakan berkembang melebihi field `BAGIAN_MASTER`; menyimpan table hari masuk dan approval policy. |
 | `DEFECT_CATEGORIES` | Master kategori reject/defect | Dipakai untuk Pareto defect dan improvement QCC. |
 | `RAW_LOGS` | Landing zone append-only untuk semua transaksi produksi | Tidak boleh memakai formula. Tidak boleh diedit manual untuk koreksi. |
 | `QUARANTINE` | Data konflik/anomali yang menunggu keputusan Mandor/Supervisor | Semua keputusan wajib diaudit. |
 | `MASTER_RECAP` | Rekap bersih untuk dashboard dan Looker Studio | Dibentuk oleh batch process backend. |
-| `DAILY_CLOSING` | Status closing harian per line/shift | Setelah closing, koreksi wajib lewat adjustment. |
+| `DAILY_CLOSING` | Status closing harian per Bagian | Setelah closing, koreksi wajib lewat adjustment; field line/shift legacy tetap sementara. |
 | `ADJUSTMENT_LOGS` | Koreksi setelah closing atau koreksi administratif | Append-only dan wajib approval. |
 | `AUDIT_LOGS` | Audit trail auth, approval, perubahan konfigurasi, dan error penting | Wajib melakukan masking data sensitif. |
 
@@ -28,6 +34,29 @@ Status implementasi 2026-09-05:
 - `submitProductionReport` sudah menulis append-only ke `RAW_LOGS`, menolak duplicate `transaction_id`, memvalidasi kategori defect aktif, dan merutekan konflik mesin/operator/waktu ke `QUARANTINE`.
 - `DAILY_CLOSING`, `ADJUSTMENT_LOGS`, dan `MASTER_RECAP` sudah memiliki workflow backend M5, termasuk closing/reopen append-only, adjustment approval, dan recap idempotent.
 - `ROLE_PERMISSIONS` sudah mencakup resource `test_runner:run` untuk native smoke runner Apps Script dan `audit_log:read` untuk ringkasan audit aman HRD.
+
+## 1A. Rebaseline Impact List - OPT-037
+
+Kontrak aktif bergerak dari proses lama berbasis `line_id`, `shift_id`, dan `machine_id` menuju proses harian berbasis `Bagian`, karyawan, output, absensi, Mandor sebagai pencatat, dan Supervisor sebagai verifikator/QC.
+
+Impact schema yang wajib diselesaikan bertahap:
+- `BAGIAN_MASTER` menjadi master utama proses produksi dan menggantikan `LINE_MASTER` sebagai opsi bisnis utama di UI baru.
+- `EMPLOYEE_MASTER` menjadi sumber identitas karyawan, nomor karyawan 5 digit, nama, status aktif/resign, Bagian default, dan field HRD tambahan.
+- `USER_ROLE_ASSIGNMENTS` menjadi sumber multi-role production; `USER_ROLES.role` hanya primary/default role untuk kompatibilitas.
+- `TARGET_MASTER` perlu mendukung scope `BAGIAN`, `EMPLOYEE`, `TEAM`, dan `WORK_CATEGORY`; scope legacy `LINE_SHIFT` dan `MACHINE_SCOPE` tetap sementara sampai migrasi selesai.
+- `RAW_LOGS` menerima field migrasi `bagian_id` dan `work_category_id` pada runtime `OPT-042`; field `employee_id`, `recorded_by`, `verified_by`, dan `verification_status` tetap rencana fase berikutnya. Field legacy `line_id`, `shift_id`, dan `machine_id` tidak boleh dihapus sampai migrasi data dan test selesai.
+- `DAILY_CLOSING` perlu berpindah dari identity `factory_date + line_id + shift_id` ke `factory_date + bagian_id`, dengan `recorded_by` Mandor dan `verified_by` Supervisor.
+- `MASTER_RECAP` perlu menghitung agregat per Bagian, karyawan, status absensi, pencatat, dan verifikator; line/shift/machine hanya legacy dimension bila data lama masih ada.
+- `QUARANTINE` dan conflict rules perlu ditinjau ulang: konflik mesin sama hanya berlaku untuk data legacy; proses Bagian membutuhkan rule baru berdasarkan karyawan, Bagian, waktu input, status closing, dan traceability sumber bahan.
+- `Solder` dan `Lem` diperlakukan sebagai data `BAGIAN_MASTER`/work category seed, bukan enum hardcode. Bagian produksi lain harus bisa ditambah lewat master data.
+- `Tandon` tetap angka konteks operasional; tidak masuk target, realisasi, upah, atau payroll sampai ada keputusan bisnis eksplisit.
+
+Open decisions schema:
+- Apakah `work_category_id` cukup satu master global atau perlu relasi many-to-many dengan `BAGIAN_MASTER`.
+- Apakah material traceability Solder-ke-Lem memakai sheet terpisah seperti `MATERIAL_SOURCE_LINKS` atau JSON allowlisted di transaksi.
+- Apakah verifikasi Supervisor disimpan langsung sebagai field status terbaru di `RAW_LOGS` atau sebagai event append-only terpisah.
+- Apakah absensi external import akan ditambahkan; untuk saat ini sumber utama adalah event tombol `Masuk/Keluar` dan konfirmasi Mandor.
+- Apakah kebijakan target harian cukup dihitung dari `BAGIAN_MASTER` atau perlu sheet resmi `WAGE_TARGET_POLICY` untuk menyimpan tabel hari masuk, versi kebijakan, dan approval.
 
 ## 2. Schema `USER_ROLES`
 
@@ -77,19 +106,124 @@ Kontrak multi-role:
 | `created_at` | String UTC | Waktu dibuat. |
 | `updated_at` | String UTC | Waktu diperbarui. |
 
-## 2B. Schema Rencana Absensi
+## 2B. Schema `EMPLOYEE_MASTER`
+
+`EMPLOYEE_MASTER` adalah sumber kebenaran karyawan untuk proses Bagian, absensi, target harian, dan rekap payroll-ready. `USER_ROLES` tetap dipakai untuk login/RBAC, sedangkan `EMPLOYEE_MASTER` dipakai untuk identitas tenaga kerja.
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `employee_id` | String 5 digit | Nomor karyawan, contoh `10001`; unik dan tidak boleh berubah setelah dibuat. |
+| `employee_no` | String 5 digit | Alias nomor karyawan untuk UI HRD dan kompatibilitas seed/mock. |
+| `user_id` | String atau kosong | Link opsional ke `USER_ROLES.user_id` jika karyawan memiliki akses aplikasi. |
+| `email` | String atau kosong | Email login/komunikasi; boleh kosong untuk karyawan tanpa akun aplikasi. |
+| `nama_lengkap` | String | Nama tampil HRD/Mandor sesuai izin; production dapat memakai field terenkripsi jika kebijakan PII mengharuskan. |
+| `bagian_id` | String | Referensi `BAGIAN_MASTER`; wajib untuk karyawan aktif. |
+| `mandor_employee_id` | String atau kosong | ID Mandor penanggung jawab langsung. |
+| `mandor_email` | String atau kosong | Email Mandor untuk kompatibilitas lookup role lama. |
+| `username` | String atau kosong | Username tampilan/legacy untuk direktori HRD. |
+| `role` | Enum atau kosong | Role utama kompatibilitas MVP; authorization final tetap harus memakai RBAC resmi. |
+| `roles` | String CSV atau kosong | Multi-role kompatibilitas sementara untuk tampilan HRD. Implementasi production final tetap diarahkan ke assignment terpisah. |
+| `employment_status` | Enum | `AKTIF`, `RESIGN`, `NONAKTIF`, atau `SUSPEND`. |
+| `status_karyawan` | Enum | Alias runtime untuk `employment_status` pada implementasi HRD saat ini. |
+| `join_date` | String tanggal | Format `YYYY-MM-DD`; boleh kosong untuk data legacy. |
+| `resign_date` | String tanggal atau kosong | Wajib terisi jika `employment_status=RESIGN` setelah data final. |
+| `alamat` | String atau terenkripsi | Data HRD; tidak boleh dikirim ke workspace operasional tanpa izin detail. |
+| `no_wa` | String atau terenkripsi | Nomor WhatsApp; response HRD boleh membuat `wa_url` setelah masking/izin sesuai kontrak. |
+| `emergency_contact` | String atau terenkripsi | Opsional, HRD-only. |
+| `data_completeness_status` | Enum | `COMPLETE`, `INCOMPLETE`, atau `NEEDS_REVIEW`. |
+| `status_aktif` | Boolean | `TRUE` jika boleh dipilih untuk target/absensi/transaksi baru. |
+| `is_deleted` | Boolean | Soft-delete flag; hard delete dilarang. |
+| `created_by` | String | Email/ID pembuat. |
+| `updated_by` | String | Email/ID updater terakhir. |
+| `created_at` | String UTC | Waktu dibuat. |
+| `updated_at` | String UTC | Waktu diperbarui. |
+
+Aturan validasi `EMPLOYEE_MASTER`:
+- `employee_id` wajib tepat 5 digit, unik, dan tidak boleh memakai spasi.
+- Karyawan `RESIGN`, `NONAKTIF`, `SUSPEND`, atau `is_deleted=TRUE` tidak boleh masuk target/absensi/transaksi baru.
+- `bagian_id` wajib aktif di `BAGIAN_MASTER` untuk karyawan aktif.
+- Relasi Mandor-Operator wajib eksplisit melalui `mandor_employee_id`, `mandor_email`, atau assignment resmi berikutnya; satu Bagian tidak otomatis berarti satu Mandor.
+- Menu HRD `Karyawan` boleh melakukan Tambah/Edit/Set Resign melalui permission `employee_master:create/update/soft_delete`; setiap mutasi wajib audit dan tidak boleh membuka secret atau field terenkripsi mentah.
+- Workspace selain HRD/SuperAdmin hanya boleh menerima field minimum: `employee_id`, nama termasking bila perlu, `bagian_id`, status aktif, dan relasi scope.
+
+## 2C. Schema `ATTENDANCE_EVENTS`
 
 Absensi wajib event-based agar tombol `Masuk`, `Keluar`, konfirmasi Mandor, dan koreksi status tetap auditable.
 
-Sheet rencana:
-- `EMPLOYEE_MASTER`: nomor karyawan, nama, status aktif/resign, Bagian default, dan field HRD tambahan yang dimasking/terenkripsi sesuai kebutuhan.
-- `ATTENDANCE_EVENTS`: event `CLOCK_IN`, `CLOCK_OUT`, `MANDOR_CHECK`, `MANDOR_CHECK_ALL`, `SET_STATUS`.
-- `ATTENDANCE_DAILY_RECAP`: output harian per karyawan dan Bagian.
-- `ATTENDANCE_MONTHLY_RECAP`: output bulanan payroll-ready.
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `attendance_event_id` | String UUID | ID event absensi. |
+| `factory_date` | String tanggal | Tanggal operasional `YYYY-MM-DD` berdasarkan `Asia/Jakarta`. |
+| `employee_id` | String 5 digit | Referensi `EMPLOYEE_MASTER`. |
+| `bagian_id` | String | Snapshot Bagian saat event dibuat. |
+| `event_type` | Enum | `CLOCK_IN`, `CLOCK_OUT`, `MANDOR_CHECK`, `MANDOR_CHECK_ALL`, `SET_STATUS`, atau `CORRECTION`. |
+| `attendance_status` | Enum | `HADIR`, `IZIN`, `SAKIT`, `ALPHA`, `RESIGN`, `BELUM_KONFIRMASI`, atau `NEEDS_REVIEW`. |
+| `event_timestamp` | String UTC | Waktu event dari device/backend. |
+| `source` | Enum | `EMPLOYEE_APP`, `MANDOR_APP`, `HRD_ADMIN`, `SYSTEM`, atau `IMPORT`. |
+| `recorded_by` | String | Email/ID actor yang membuat event. |
+| `confirmed_by` | String atau kosong | Email/ID Mandor/HRD yang mengonfirmasi. |
+| `notes` | String | Keterangan singkat; tidak boleh berisi data sensitif berlebihan. |
+| `created_at` | String UTC | Waktu ditulis ke sheet. |
 
-Status kehadiran minimal: `HADIR`, `IZIN`, `SAKIT`, `ALPHA`, `RESIGN`, `BELUM_KONFIRMASI`.
+Aturan validasi `ATTENDANCE_EVENTS`:
+- Event append-only; koreksi dibuat sebagai event baru, bukan mengedit event lama.
+- `CLOCK_IN`/`CLOCK_OUT` hanya untuk karyawan aktif.
+- `MANDOR_CHECK_ALL` wajib diekspansi secara backend menjadi event per karyawan agar audit tetap jelas.
+- `SET_STATUS` ke `IZIN`, `SAKIT`, atau `ALPHA` wajib memiliki `notes`.
+- Karyawan `RESIGN` tidak boleh diubah menjadi `HADIR` tanpa reaktivasi di `EMPLOYEE_MASTER`.
 
-Mandor boleh melakukan `check` atau `check all`, dan boleh menetapkan `Izin`, `Sakit`, atau `Alpha` dengan `keterangan`. HRD/Management membaca rekap sesuai permission; data pribadi tidak boleh terbuka di dashboard operasional.
+## 2D. Schema `ATTENDANCE_DAILY_RECAP`
+
+`ATTENDANCE_DAILY_RECAP` adalah hasil turunan dari event absensi untuk HRD, Mandor, Supervisor, dan Management sesuai izin.
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `daily_attendance_id` | String | ID unik `factory_date + employee_id`. |
+| `factory_date` | String tanggal | Tanggal operasional. |
+| `employee_id` | String 5 digit | Referensi karyawan. |
+| `bagian_id` | String | Bagian untuk rekap hari tersebut. |
+| `mandor_employee_id` | String atau kosong | Mandor penanggung jawab. |
+| `first_clock_in_at` | String UTC atau kosong | Clock-in pertama. |
+| `last_clock_out_at` | String UTC atau kosong | Clock-out terakhir. |
+| `attendance_status` | Enum | `HADIR`, `IZIN`, `SAKIT`, `ALPHA`, `RESIGN`, `BELUM_KONFIRMASI`, atau `NEEDS_REVIEW`. |
+| `mandor_confirmation_status` | Enum | `PENDING`, `CONFIRMED`, `OVERRIDDEN`, atau `REJECTED`. |
+| `confirmed_by` | String atau kosong | Email/ID Mandor/HRD. |
+| `confirmed_at` | String UTC atau kosong | Waktu konfirmasi. |
+| `notes` | String | Ringkasan keterangan terakhir. |
+| `generated_at` | String UTC | Waktu batch recap dibuat. |
+
+Aturan rekap harian:
+- Satu karyawan hanya boleh punya satu row rekap final per `factory_date`.
+- Status default sebelum konfirmasi adalah `BELUM_KONFIRMASI`.
+- Dashboard Mandor boleh menampilkan nama/ID karyawan dalam scope tim; dashboard Management hanya agregat tanpa PII.
+- HRD boleh membaca detail absensi untuk payroll-ready recap sesuai permission.
+
+## 2E. Schema `ATTENDANCE_MONTHLY_RECAP`
+
+`ATTENDANCE_MONTHLY_RECAP` adalah output payroll-ready, bukan payroll final. Perhitungan gaji final tetap mengikuti kebijakan perusahaan dan issue upah `OPT-041`.
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `monthly_attendance_id` | String | ID unik `period_month + employee_id`. |
+| `period_month` | String | Format `YYYY-MM`. |
+| `employee_id` | String 5 digit | Referensi karyawan. |
+| `bagian_id` | String | Bagian dominan/periode. |
+| `hari_hadir` | Integer | Jumlah hari `HADIR`. |
+| `hari_izin` | Integer | Jumlah hari `IZIN`. |
+| `hari_sakit` | Integer | Jumlah hari `SAKIT`. |
+| `hari_alpha` | Integer | Jumlah hari `ALPHA`. |
+| `hari_resign` | Integer | Hari yang tidak dihitung karena status resign/nonaktif. |
+| `hari_belum_konfirmasi` | Integer | Hari yang belum confirmed dan belum payroll-ready. |
+| `total_ok` | Integer | Total OK tervalidasi untuk konteks performa. |
+| `total_reject` | Integer | Total Reject tervalidasi untuk konteks performa. |
+| `total_realisasi` | Integer | `total_ok + total_reject`; `tandon` tidak dihitung. |
+| `payroll_ready_status` | Enum | `READY`, `PENDING_CONFIRMATION`, `INCOMPLETE_DATA`, atau `NEEDS_REVIEW`. |
+| `generated_at` | String UTC | Waktu batch recap dibuat. |
+
+Aturan rekap bulanan:
+- Rekap bulanan membaca `ATTENDANCE_DAILY_RECAP` dan output produksi tervalidasi Supervisor.
+- `payroll_ready_status=READY` hanya jika tidak ada hari kerja yang belum dikonfirmasi dan data karyawan minimum lengkap.
+- HRD melihat detail karyawan; Management melihat agregat Bagian/periode kecuali diberi izin detail eksplisit.
 
 ## 3. Schema `ROLE_PERMISSIONS`
 
@@ -108,18 +242,57 @@ Resource `test_runner` hanya memiliki action `run` dan ditujukan untuk smoke tes
 
 Resource `audit_log` hanya memiliki action `read` untuk ringkasan audit aman. HRD boleh membaca ringkasan audit akses dan role tanpa payload mentah atau PII mentah.
 
-Resource `reference_data` hanya memiliki action `read` untuk master data non-PII seperti `LINE_MASTER`, `SHIFT_MASTER`, mesin dari data produksi/target, dan daftar operator aktif yang dimasking. Frontend wajib memakai response backend sebagai sumber opsi line/shift/mesin/operator ketika tersedia; fallback lokal hanya boleh dipakai untuk development/offline sementara.
+Resource `reference_data` hanya memiliki action `read` untuk master data non-PII seperti `BAGIAN_MASTER`, jenis pekerjaan/work category, daftar operator/karyawan aktif yang dimasking, serta `LINE_MASTER`, `SHIFT_MASTER`, dan mesin legacy selama masa migrasi. Frontend wajib memakai response backend sebagai sumber opsi Bagian/jenis pekerjaan/operator ketika tersedia; fallback lokal hanya boleh dipakai untuk development/offline sementara.
 Mode development/demo wajib memakai response mock GAS dengan shape yang sama agar pertukaran data, queue IndexedDB, dan transaksi submit terasa seperti runtime GAS. Snapshot state mock GAS wajib bertahan di IndexedDB dan seed default hanya dibuat saat snapshot demo kosong.
 
 Resource `production_target` memiliki action `read`, `create`, `update`, `bulk_update`, dan `soft_delete`. Operator hanya boleh membaca target aktif. Mandor dan role di atasnya boleh mengatur target sesuai scope permission. Management tetap read-only kecuali diberi permission eksplisit untuk perencanaan target.
 
 Resource `bagian_master` memiliki action `read`, `create`, `update`, `soft_delete`, dan `seed`. Management dan SuperAdmin boleh membuat/mengubah/nonaktifkan Bagian dan mengatur `unit_rate`, `monthly_target_unit`, serta `target_salary`. Supervisor membaca untuk verifikasi/output; Mandor/Operator membaca sesuai workflow. Perubahan master Bagian wajib audit-log dan tidak boleh mengubah transaksi historis.
 
-Resource `work_master` memiliki action `read`, `create`, `update`, dan `soft_delete` untuk master jenis pekerjaan, line, dan machine. Owner utama adalah `Supervisor` dan `SuperAdmin`; role lain hanya membaca sesuai kebutuhan workflow.
+Resource `work_master` memiliki action `read`, `create`, `update`, dan `soft_delete` untuk master jenis pekerjaan/work category. Master `line` dan `machine` hanya legacy compatibility sampai migrasi `OPT-042`. Owner utama adalah `Supervisor` dan `SuperAdmin`; role lain hanya membaca sesuai kebutuhan workflow.
 
 Resource `defect_change_request` memiliki action `create`, `read`, `approve`, dan `reject`. `Mandor` boleh membuat request/draft defect baru dari temuan lapangan, sedangkan approval menjadi tanggung jawab `Supervisor` atau `SuperAdmin`.
 
 Resource `production_review` memiliki action `read`, `void`, `request_correction`, dan `pre_closing_correction`. Resource ini dipakai Mandor/Supervisor untuk review submit normal `ACCEPTED` sebelum daily closing tanpa mengedit baris asal `RAW_LOGS`.
+
+Matrix role/resource target `OPT-043`:
+
+| Resource | Action | Operator | Mandor | Supervisor | HRD | Management | SuperAdmin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `employee_master` | `read_self` | Ya | Tidak | Tidak | Tidak | Tidak | Ya |
+| `employee_master` | `read_scoped` | Tidak | Ya | Ya | Ya | Tidak | Ya |
+| `employee_master` | `read_aggregate` | Tidak | Ya | Ya | Ya | Ya | Ya |
+| `employee_master` | `create/update/soft_delete` | Tidak | Tidak | Tidak | Ya | Tidak | Ya |
+| `user_role_assignment` | `read` | Tidak | Scope sendiri | Scope sendiri | Ya | Agregat/anomali | Ya |
+| `user_role_assignment` | `create/update/soft_delete` | Tidak | Tidak | Tidak | Ya terbatas operasional | Tidak | Ya |
+| `attendance_event` | `clock_in/clock_out` | Ya, milik sendiri | Tidak | Tidak | Tidak | Tidak | Ya |
+| `attendance_event` | `confirm/check_all/set_status` | Tidak | Ya, tim scope | Koreksi bila diberi izin | Ya, admin payroll-ready | Tidak | Ya |
+| `attendance_recap` | `read_self` | Ya | Tidak | Tidak | Tidak | Tidak | Ya |
+| `attendance_recap` | `read_scoped` | Tidak | Ya | Ya | Ya | Tidak | Ya |
+| `attendance_recap` | `read_aggregate` | Tidak | Ya | Ya | Ya | Ya | Ya |
+| `production_report` | `create/read_self` | Ya | Ya, scoped record | Read scoped | Tidak | Agregat saja | Ya |
+| `production_review` | `read/void/request_correction/pre_closing_correction` | Tidak | Ya, tim scope | Ya, area scope | Tidak | Tidak | Ya |
+| `production_verification` | `read/verify/return` | Tidak | Read status | Ya | Tidak | Agregat status | Ya |
+| `production_target` | `read` | Ya | Ya | Ya | Tidak | Agregat/policy view | Ya |
+| `production_target` | `create/update/bulk_update/soft_delete` | Tidak | Ya, tim scope | Review/correct sesuai izin | Tidak | Tidak, kecuali permission planning eksplisit | Ya |
+| `defect_category` | `read` | Ya | Ya | Ya | Tidak | Ya, agregat/Pareto | Ya |
+| `defect_category` | `create/update/soft_delete/approve/reject` | Tidak | Tidak | Ya | Tidak | Tidak | Ya |
+| `defect_change_request` | `create` | Tidak | Ya | Ya | Tidak | Tidak | Ya |
+| `defect_change_request` | `approve/reject` | Tidak | Tidak | Ya | Tidak | Tidak | Ya |
+| `bagian_master` | `read` | Ya | Ya | Ya | Tidak | Ya | Ya |
+| `bagian_master` | `create/update/soft_delete/seed` | Tidak | Tidak | Tidak | Tidak | Ya | Ya |
+| `wage_policy` | `read` | Tidak | Ringkasan operasional | Ringkasan verifikasi | Payroll-ready view | Ya | Ya |
+| `wage_policy` | `create/update/soft_delete` | Tidak | Tidak | Tidak | Draft/request only jika disahkan | Ya | Ya |
+| `dashboard` | `read` | Self | Tim scope | Area scope | Workforce/access scope | Agregat eksekutif | Ya |
+| `audit_log` | `read` | Tidak | Scoped decision history | Scoped verification history | HRD access/employee audit | Agregat/anomali | Ya |
+| `script_property` | `read_status/update/delete/rotate_secret` | Tidak | Tidak | Tidak | Tidak | Tidak | Ya |
+| `test_runner` | `run` | Tidak | Tidak | Tidak | Tidak | Tidak | Ya |
+
+Aturan boundary data sensitif:
+- PII detail seperti alamat, nomor WA, email mentah, emergency contact, profile base64, dan field terenkripsi hanya boleh dibuka oleh HRD/SuperAdmin atau endpoint detail yang kontraknya disahkan.
+- Payroll-sensitive detail hanya boleh dibuka oleh HRD, Management sesuai izin kebijakan, dan SuperAdmin. Role operasional menerima status payroll-ready/agregat, bukan kalkulasi gaji personal penuh.
+- Management default membaca agregat tanpa PII; pengecualian detail harus menjadi permission eksplisit, diaudit, dan disahkan di kontrak.
+- `SuperAdmin` full access berarti memiliki row permission eksplisit untuk resource/action terkait, bukan bypass kode.
 
 ## 4. Schema `RAW_LOGS`
 
@@ -132,9 +305,12 @@ Resource `production_review` memiliki action `read`, `void`, `request_correction
 | `operator_email` | String | Email operator pengirim. |
 | `client_version` | String | Versi frontend. |
 | `factory_date` | String | Tanggal operasional berdasarkan `Asia/Jakarta`. |
-| `line_id` | String | Referensi ke `LINE_MASTER`. |
-| `shift_id` | String | Referensi ke `SHIFT_MASTER`. |
-| `machine_id` | String | ID mesin atau stasiun kerja. |
+| `employee_id` | String | Rencana field: nomor/ID karyawan dari `EMPLOYEE_MASTER`; wajib setelah migrasi Bagian. |
+| `bagian_id` | String | Rencana field: referensi `BAGIAN_MASTER`; wajib setelah migrasi Bagian. |
+| `work_category_id` | String atau kosong | Rencana field: jenis pekerjaan/work category yang mempengaruhi target, defect, atau form. |
+| `line_id` | String | Legacy runtime: referensi ke `LINE_MASTER` sampai migrasi selesai. |
+| `shift_id` | String | Legacy runtime: referensi ke `SHIFT_MASTER` sampai migrasi selesai. |
+| `machine_id` | String | Legacy runtime: ID mesin atau stasiun kerja sampai migrasi selesai. |
 | `target_harian` | Integer | Target harian operator. |
 | `tandon` | Integer | Jumlah tandon/sisa. |
 | `perolehan_ok` | Integer | Jumlah produk OK. |
@@ -142,6 +318,9 @@ Resource `production_review` memiliki action `read`, `void`, `request_correction
 | `defect_category_id` | String atau kosong | Kategori defect dominan jika ada reject. |
 | `defect_notes` | String atau kosong | Catatan reject singkat, tidak boleh berisi PII. |
 | `status` | Enum | `ACCEPTED`, `CONFLICT_PENDING`, `QUARANTINED`, `DUPLICATE`, `REJECTED`. |
+| `recorded_by` | String | Rencana field: email/ID Mandor atau actor pencatat/penerima hasil. |
+| `verified_by` | String atau kosong | Rencana field: email/ID Supervisor verifikator. |
+| `verification_status` | Enum | Rencana field: `RECORDED`, `PENDING_VERIFICATION`, `VERIFIED`, `RETURNED`, atau `VOIDED`. |
 
 Catatan target:
 - `target_harian` pada `RAW_LOGS` adalah snapshot target yang berlaku saat operator submit, bukan master target yang diedit langsung di log transaksi.
@@ -160,12 +339,15 @@ Catatan target:
 | `factory_date` | String | Tanggal operasional `YYYY-MM-DD` atau kosong jika memakai range. |
 | `effective_from` | String | Tanggal mulai berlaku `YYYY-MM-DD`. |
 | `effective_until` | String atau kosong | Tanggal akhir berlaku inclusive. |
-| `line_id` | String | Referensi ke `LINE_MASTER`. |
-| `shift_id` | String | Referensi ke `SHIFT_MASTER`. |
-| `machine_id` | String atau `ALL` | Mesin spesifik atau semua mesin dalam scope. |
+| `bagian_id` | String atau `ALL` | Rencana field utama: Bagian spesifik atau semua Bagian dalam scope. |
+| `employee_id` | String atau `ALL` | Rencana field utama: karyawan spesifik atau semua karyawan dalam scope. |
+| `work_category_id` | String atau `ALL` | Rencana field utama: jenis pekerjaan spesifik atau semua jenis pekerjaan. |
+| `line_id` | String | Legacy runtime: referensi ke `LINE_MASTER` sampai migrasi selesai. |
+| `shift_id` | String | Legacy runtime: referensi ke `SHIFT_MASTER` sampai migrasi selesai. |
+| `machine_id` | String atau `ALL` | Legacy runtime: mesin spesifik atau semua mesin dalam scope. |
 | `operator_email` | String atau `ALL` | Operator spesifik atau semua operator dalam scope. |
 | `target_harian` | Integer | Target produksi yang berlaku untuk scope tersebut. |
-| `scope_type` | Enum | `ALL_USERS`, `OPERATOR_ONLY`, `LINE_SHIFT`, atau `MACHINE_SCOPE`. |
+| `scope_type` | Enum | Target baru: `ALL_USERS`, `EMPLOYEE`, `BAGIAN`, `TEAM`, atau `WORK_CATEGORY`. Legacy: `OPERATOR_ONLY`, `LINE_SHIFT`, dan `MACHINE_SCOPE`. |
 | `status_aktif` | Boolean | `TRUE` jika target masih berlaku. |
 | `created_by` | String | Email/ID role pembuat target. |
 | `updated_by` | String | Email/ID role pengubah terakhir. |
@@ -174,12 +356,14 @@ Catatan target:
 
 Aturan `TARGET_MASTER`:
 - Penggantian target harian hanya boleh dilakukan oleh `Mandor` atau role di atasnya melalui permission `production_target`.
-- Setiap perubahan wajib memilih scope eksplisit: berlaku ke semua operator dalam line/shift/mesin, atau hanya satu operator tertentu.
+- Setiap perubahan wajib memilih scope eksplisit: satu karyawan/operator, semua operator dalam scope Mandor, satu Bagian, atau satu jenis pekerjaan. Scope line/shift/mesin hanya legacy sampai migrasi `OPT-042`.
 - Perubahan target wajib append/audit-friendly: target lama dinonaktifkan atau diakhiri masa berlakunya; jangan mengubah snapshot `target_harian` pada `RAW_LOGS` historis.
-- Jika ada target lebih dari satu yang cocok, prioritas resolusi adalah `OPERATOR_ONLY`, lalu `MACHINE_SCOPE`, lalu `LINE_SHIFT`, lalu `ALL_USERS`.
+- Jika ada target lebih dari satu yang cocok, prioritas resolusi baru adalah `EMPLOYEE`, lalu `WORK_CATEGORY`, lalu `BAGIAN`, lalu `TEAM`, lalu `ALL_USERS`. Selama masa legacy, `OPERATOR_ONLY`, `MACHINE_SCOPE`, dan `LINE_SHIFT` tetap dipetakan ke prioritas kompatibilitas lama.
 - Semua create/update/bulk update/soft delete wajib tervalidasi, diaudit, dan menolak target negatif atau scope ambigu.
 
-## 5. Schema `LINE_MASTER`
+## 5. Schema Legacy `LINE_MASTER`
+
+`LINE_MASTER` dipertahankan untuk kompatibilitas runtime dan data lama. Proses bisnis baru tidak boleh memperkenalkan fitur yang bergantung pada line sebagai identitas utama tanpa kontrak migrasi.
 
 | Kolom | Tipe | Keterangan |
 | :--- | :--- | :--- |
@@ -209,7 +393,61 @@ Aturan `TARGET_MASTER`:
 
 Default bootstrap/seed development wajib mengisi minimal `SOLDER`, `LEM`, dan `PACKING`. `SOLDER` memakai contoh `unit_rate=94`, `monthly_target_unit=37234`, `target_salary=3500000`; `LEM` memakai `unit_rate=83`, `monthly_target_unit=42169`, `target_salary=3500000`; `PACKING` boleh `unit_rate=0` agar UI menampilkan `POLICY_PENDING`.
 
-## 6. Schema `SHIFT_MASTER`
+Aturan kebijakan upah pada `BAGIAN_MASTER`:
+- `unit_rate`, `monthly_target_unit`, dan `target_salary` adalah policy field, bukan transaksi payroll final.
+- Owner mutasi final adalah `Management` dan `SuperAdmin` melalui permission `bagian_master` atau `wage_policy`.
+- `monthly_target_unit` default dihitung dengan `ceil(target_salary / unit_rate)` jika policy mengizinkan perhitungan otomatis.
+- Jika `unit_rate=0`, `target_salary=0`, atau `monthly_target_unit=0`, status turunan UI/API wajib `POLICY_PENDING`.
+- Estimasi upah memakai output tervalidasi Supervisor: `(ok_verified + reject_verified) * unit_rate`.
+- `tandon` tidak masuk `monthly_target_unit`, realisasi target, atau estimasi upah.
+- Perubahan policy tidak boleh menulis ulang `RAW_LOGS`, `MASTER_RECAP`, atau rekap historis tanpa event koreksi/versi policy yang diaudit.
+
+## 5B. Rencana Schema `WAGE_TARGET_POLICY`
+
+`WAGE_TARGET_POLICY` disiapkan jika kebijakan upah membutuhkan versioning lebih detail daripada field langsung di `BAGIAN_MASTER`.
+
+| Kolom | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `policy_id` | String UUID | ID unik policy. |
+| `bagian_id` | String | Referensi `BAGIAN_MASTER`. |
+| `work_category_id` | String atau `ALL` | Jenis pekerjaan jika rate berbeda per kategori. |
+| `unit_rate` | Integer | Upah per item rupiah, `0..999999`. |
+| `target_salary` | Integer | Target gaji/UMR bulanan rupiah. |
+| `monthly_target_unit` | Integer | Target unit bulanan. |
+| `planned_attendance_days` | Integer | Hari masuk rencana, contoh `20..26`. |
+| `daily_target_unit` | Integer | `ceil(monthly_target_unit / planned_attendance_days)`. |
+| `effective_from` | String tanggal | Tanggal mulai berlaku `YYYY-MM-DD`. |
+| `effective_until` | String tanggal atau kosong | Tanggal akhir berlaku. |
+| `policy_status` | Enum | `DRAFT`, `ACTIVE`, `INACTIVE`, `POLICY_PENDING`, atau `SUPERSEDED`. |
+| `approved_by` | String atau kosong | Email/ID Management/SuperAdmin approver. |
+| `approved_at` | String UTC atau kosong | Waktu approval. |
+| `created_by` | String | Email/ID pembuat. |
+| `updated_by` | String | Email/ID updater terakhir. |
+| `created_at` | String UTC | Waktu dibuat. |
+| `updated_at` | String UTC | Waktu diperbarui. |
+
+Seed kebijakan awal:
+
+| `bagian_id` | `work_category_id` | `unit_rate` | `target_salary` | `monthly_target_unit` | `planned_attendance_days` | `daily_target_unit` |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 26 | 1432 |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 25 | 1489 |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 24 | 1552 |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 23 | 1619 |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 22 | 1693 |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 21 | 1774 |
+| `SOLDER` | `ALL` | 94 | 3500000 | 37234 | 20 | 1862 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 26 | 1622 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 25 | 1687 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 24 | 1758 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 23 | 1834 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 22 | 1917 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 21 | 2009 |
+| `LEM` | `ALL` | 83 | 3500000 | 42169 | 20 | 2109 |
+
+## 6. Schema Legacy `SHIFT_MASTER`
+
+`SHIFT_MASTER` dipertahankan untuk kebutuhan jam kerja dan kompatibilitas runtime. Rebaseline Bagian tidak menghapus kebutuhan informasi waktu kerja, tetapi scope laporan harian utama adalah `factory_date + bagian_id`.
 
 | Kolom | Tipe | Keterangan |
 | :--- | :--- | :--- |
@@ -263,9 +501,12 @@ Hak akses master defect:
 | `recap_id` | String | ID unik recap, misalnya tanggal + operator + machine. |
 | `factory_date` | String | Tanggal operasional berdasarkan `Asia/Jakarta`. |
 | `operator_email` | String | Email operator. |
-| `line_id` | String | Referensi lini produksi. |
-| `shift_id` | String | Referensi shift. |
-| `machine_id` | String | ID mesin atau stasiun kerja. |
+| `employee_id` | String | Rencana field: ID karyawan dari `EMPLOYEE_MASTER`. |
+| `bagian_id` | String | Rencana field: referensi `BAGIAN_MASTER`. |
+| `work_category_id` | String atau kosong | Rencana field: jenis pekerjaan/work category. |
+| `line_id` | String | Legacy: referensi lini produksi. |
+| `shift_id` | String | Legacy: referensi shift. |
+| `machine_id` | String | Legacy: ID mesin atau stasiun kerja. |
 | `target_total` | Integer | Total target. |
 | `tandon_total` | Integer | Total tandon. |
 | `ok_total` | Integer | Total OK. |
@@ -278,12 +519,14 @@ Hak akses master defect:
 
 | Kolom | Tipe | Keterangan |
 | :--- | :--- | :--- |
-| `closing_id` | String | ID unik `factory_date + line_id + shift_id`. |
+| `closing_id` | String | ID unik baru `factory_date + bagian_id`; legacy masih memakai `factory_date + line_id + shift_id`. |
 | `factory_date` | String | Tanggal operasional pabrik. |
-| `line_id` | String | Referensi lini produksi. |
-| `shift_id` | String | Referensi shift. |
+| `bagian_id` | String | Rencana field: referensi `BAGIAN_MASTER`. |
+| `line_id` | String | Legacy: referensi lini produksi. |
+| `shift_id` | String | Legacy: referensi shift. |
 | `status` | Enum | `OPEN`, `CLOSED`, `REOPEN_REQUESTED`, `REOPENED`. |
 | `closed_by` | String atau kosong | Email Mandor/Supervisor yang melakukan closing. |
+| `verified_by` | String atau kosong | Rencana field: email/ID Supervisor verifikator laporan harian Bagian. |
 | `closed_at` | String atau kosong | ISO 8601 UTC saat closing. |
 | `reopened_by` | String atau kosong | Email SuperAdmin/Mandor yang membuka ulang sesuai permission. |
 | `reopened_at` | String atau kosong | ISO 8601 UTC saat reopen. |
@@ -296,8 +539,9 @@ Hak akses master defect:
 | `adjustment_id` | String UUID | ID koreksi. |
 | `source_transaction_id` | String UUID | Transaksi asal yang dikoreksi. |
 | `factory_date` | String | Tanggal operasional terdampak. |
-| `line_id` | String | Lini terdampak. |
-| `shift_id` | String | Shift terdampak. |
+| `bagian_id` | String | Rencana field: Bagian terdampak. |
+| `line_id` | String | Legacy: lini terdampak. |
+| `shift_id` | String | Legacy: shift terdampak. |
 | `adjustment_type` | Enum | `CORRECTION`, `POST_CLOSING_ADJUSTMENT`, `VOID`, `REQUEST_CORRECTION`, `PRE_CLOSING_CORRECTION`. |
 | `delta_json` | String JSON | Perubahan angka/field dengan allowlist. |
 | `reason` | String | Alasan koreksi, tidak boleh berisi PII. |
@@ -530,10 +774,10 @@ Callable recap/dashboard:
 - `getSupervisorControlCenter(request)` menerima `session`, filter server-side, `page`, dan `page_size`.
 - `getManagementDashboard(request)` menerima `session`, filter server-side, `page`, dan `page_size`, lalu membaca `MASTER_RECAP` tanpa menampilkan data mentah `RAW_LOGS`.
 - `getOperatorDashboard(request)` menerima `session`, filter server-side, `page`, `page_size`, dan optional `period` dengan enum `DAILY`, `WEEKLY`, atau `MONTHLY`, lalu mengembalikan response ringkas khusus Operator. Response wajib memakai shape standar `{ok,data,meta,error}` dan `data` berisi:
-  - `summary`: `factory_date`, `line_id`, `shift_id`, `machine_id`, `operator_name_masked`, `target_today`, `tandon_today`, `ok_today`, `reject_today`, `target_yesterday`, `tandon_yesterday`, `ok_yesterday`, dan `reject_yesterday`.
+  - `summary`: `factory_date`, `bagian_id`, `bagian_name`, `work_category_id`, `line_id`, `shift_id`, `machine_id`, `operator_name_masked`, `target_today`, `tandon_today`, `ok_today`, `reject_today`, `target_yesterday`, `tandon_yesterday`, `ok_yesterday`, dan `reject_yesterday`. Field line/machine hanya legacy compatibility.
   - `trend_history`: array time-series sesuai `period`; `DAILY` default berisi 7 hari, `WEEKLY` berisi beberapa minggu terakhir, dan `MONTHLY` berisi beberapa bulan terakhir. Setiap item memuat `period`, `period_start`, `period_end`, `label`, `target`, `actual`, `ok`, `reject`, dan `tandon`. Untuk chart produksi, `actual` wajib berarti `ok + reject`; frontend wajib dapat menampilkan detail `target`, `actual`, `ok`, dan `reject`. `tandon` tidak ikut dihitung dalam realisasi chart dan hanya tampil sebagai informasi pendamping.
   - `weekly_history`: alias backward-compatible untuk `trend_history` saat `period=DAILY` sampai seluruh client lama dipensiunkan.
-  - `recent_submissions`: transaksi terbaru untuk riwayat Operator, memakai `transaction_id`, `device_timestamp`, `line_id`, `shift_id`, `machine_id`, angka produksi, `status`, dan optional `defect_category_id`.
+  - `recent_submissions`: transaksi terbaru untuk riwayat Operator, memakai `transaction_id`, `device_timestamp`, `bagian_id`, `work_category_id`, legacy `line_id/shift_id/machine_id`, angka produksi, `status`, dan optional `defect_category_id`.
   - `sync`: status ringkas `draft_status`, `queue_count`, `last_sync_at`, dan `status`.
   - `pareto`: ringkasan defect Operator berisi `defect_category_id`, `defect_name`, `reject_total`, `pareto_percent`, `qcc_factor`, dan `severity`.
 
@@ -553,5 +797,5 @@ Callable reference data:
 - `getShiftOptions({ session, include_inactive? })` membutuhkan permission `reference_data:read`.
 - Response memuat `shifts[]` dari `SHIFT_MASTER` dengan `value`, `label`, `shift_id`, `shift_name`, `start_time`, `end_time`, `timezone`, dan `status_aktif`.
 - `getOperatorReferenceData({ session, include_inactive? })` membutuhkan permission `reference_data:read`.
-- Response memuat `lines[]` dari `LINE_MASTER`, `shifts[]` dari `SHIFT_MASTER`, `machines[]` dari `TARGET_MASTER`/`RAW_LOGS`, dan `operators[]` dari `USER_ROLES` aktif dengan label aman/masked. Ini dipakai Operator di mode development/demo untuk mengganti Line, Shift, Mesin, dan Operator tanpa upload ke GAS.
+- Response wajib memuat `reference_mode=BAGIAN_WITH_LEGACY_COMPAT`, `bagian[]` dari `BAGIAN_MASTER`, `work_categories[]` dari master Bagian/jenis pekerjaan, `shifts[]` dari `SHIFT_MASTER`, `operators[]` dari `USER_ROLES` aktif dengan label aman/masked, serta `lines[]` dan `machines[]` legacy untuk kompatibilitas. Ini dipakai Operator di mode development/demo untuk mengganti Bagian, Shift, Jenis Pekerjaan, dan Operator tanpa upload ke GAS.
 - Default response hanya mengembalikan shift aktif. `include_inactive=true` hanya untuk role yang tetap memiliki permission `reference_data:read`.

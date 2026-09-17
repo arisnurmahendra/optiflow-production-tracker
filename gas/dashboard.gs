@@ -108,6 +108,9 @@ var OptiflowDashboard = (function () {
       pagination: pagination,
       summary: {
         factory_date: today,
+        bagian_id: filter.bagian_id || '',
+        bagian_name: resolveBagianName(filter.bagian_id || ''),
+        work_category_id: filter.work_category_id || '',
         line_id: filter.line_id || '',
         shift_id: filter.shift_id || '',
         machine_id: filter.machine_id || '',
@@ -324,6 +327,8 @@ var OptiflowDashboard = (function () {
     return {
       transaction_id: String(row.transaction_id || ''),
       device_timestamp: String(row.device_timestamp || ''),
+      bagian_id: String(row.bagian_id || ''),
+      work_category_id: String(row.work_category_id || ''),
       line_id: String(row.line_id || ''),
       shift_id: String(row.shift_id || ''),
       machine_id: String(row.machine_id || ''),
@@ -334,6 +339,22 @@ var OptiflowDashboard = (function () {
       defect_category_id: String(row.defect_category_id || ''),
       status: String(row.status || ''),
     };
+  }
+
+  function resolveBagianName(bagianId) {
+    var normalizedId = String(bagianId || '').trim().toUpperCase();
+    if (!normalizedId) {
+      return '';
+    }
+
+    var rows = OptiflowSheets.getRows('BAGIAN_MASTER');
+    for (var index = 0; index < rows.length; index += 1) {
+      if (String(rows[index].bagian_id || '').trim().toUpperCase() === normalizedId) {
+        return String(rows[index].bagian_name || normalizedId);
+      }
+    }
+
+    return normalizedId;
   }
 
   function shiftFactoryDate(dateString, offsetDays) {
@@ -395,6 +416,8 @@ var OptiflowDashboard = (function () {
         && (!filter.line_id || row.line_id === filter.line_id)
         && (!filter.shift_id || row.shift_id === filter.shift_id)
         && (!filter.machine_id || row.machine_id === filter.machine_id)
+        && (!filter.bagian_id || row.bagian_id === filter.bagian_id)
+        && (!filter.work_category_id || row.work_category_id === filter.work_category_id)
         && (!filter.operator_email || String(row.operator_email || '').trim().toLowerCase() === filter.operator_email)
         && (!filter.status || String(row.status || '').trim().toUpperCase() === filter.status);
     });

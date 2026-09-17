@@ -49,6 +49,7 @@
 - Semua panggilan backend wajib melewati `apiAdapter.js`.
 - Wrapper production di `apiAdapter.js` wajib membungkus `google.script.run.withSuccessHandler().withFailureHandler()` menjadi Promise atau kontrak async yang setara.
 - `apiAdapter.js` wajib memakai callable allowlist, timeout, normalisasi safe structured response, dan error object aman tanpa stack trace.
+- Preferensi UI yang disimpan di `localStorage`, termasuk role demo dan workspace aktif dari `nav-context-trigger`, bukan data otorisasi. Saat reload, frontend wajib merekonsiliasi preferensi tersebut dengan `getSessionContext`; workspace yang tidak sesuai role/session aktif wajib disembunyikan atau dialihkan sebelum data protected dimuat.
 - Local development wajib memakai `mock_gas.js` yang meniru response GAS, termasuk latency, failure injection, dan response shape `{ ok, data, meta, error }`.
 - `mock_gas.js` hanya boleh dipakai pada mode development/local; production build tetap memanggil Apps Script melalui `google.script.run`.
 - Komponen UI tidak boleh membaca atau menulis langsung ke IndexedDB.
@@ -99,8 +100,8 @@
 - Kategori defect tidak boleh menjadi hardcode-only di UI production. `DEFECT_CATEGORIES` adalah sumber utama; frontend hanya boleh memakai fallback default/mock ketika GAS belum tersedia, dan backend tetap memvalidasi kategori aktif dari spreadsheet.
 - Master defect mengikuti separation of duties:
   - Operator: `defect_category.read` saja.
-  - Mandor: `defect_category.read/create/update/soft_delete`.
-  - Supervisor resmi, jika ada dalam enum backend: `defect_category.read/create/update/soft_delete`.
+  - Mandor: `defect_category.read` dan `defect_change_request.create` saja; Mandor tidak boleh mengubah master defect final.
+  - Supervisor: `defect_category.read/create/update/soft_delete/approve/reject` untuk fungsi QC dan standar kualitas.
   - Management: `defect_category.read` saja.
   - SuperAdmin: full access termasuk `defect_category.seed`.
 - `defect_category.seed` adalah aksi administrasi/bootstrap, bukan aksi operasional harian. Jangan diberikan ke Management; berikan ke SuperAdmin dan menu administrasi terkontrol.

@@ -301,10 +301,13 @@ if (!shiftOptionsResponse.ok
 
 const operatorReferencesResponse = vm.runInNewContext("getOperatorReferenceData({ session: { simulated_role: 'Operator' } })", context);
 if (!operatorReferencesResponse.ok
+  || operatorReferencesResponse.data.reference_mode !== 'BAGIAN_WITH_LEGACY_COMPAT'
+  || !operatorReferencesResponse.data.bagian.some((bagian) => bagian.value === 'SOLDER')
+  || !operatorReferencesResponse.data.work_categories.some((category) => category.value === 'SOLDER')
   || !operatorReferencesResponse.data.lines.some((line) => line.value === 'SMT-02')
   || !operatorReferencesResponse.data.machines.some((machine) => machine.value === 'SLD-14')
   || !operatorReferencesResponse.data.operators.some((operator) => operator.value === 'operator@example.com')) {
-  throw new Error('Expected getOperatorReferenceData to return line, machine, and operator options.');
+  throw new Error('Expected getOperatorReferenceData to return Bagian/work-category options with legacy line/machine compatibility.');
 }
 
 const targetResponse = vm.runInNewContext(`getProductionTarget(${JSON.stringify({
@@ -332,6 +335,12 @@ if (!defectRows.some((row) => row.defect_category_id === 'DEF-COLD-SOLDER')) {
 const hrdDashboard = vm.runInNewContext("getHrdAccessDashboard({ session: { simulated_role: 'HRD' }, page: 1, page_size: 10 })", context);
 if (!hrdDashboard.ok || hrdDashboard.data.summary.active_users <= 0) {
   throw new Error('Expected HRD access dashboard response.');
+}
+if (!hrdDashboard.data.attendance_summary
+  || !Array.isArray(hrdDashboard.data.attendance_daily.items)
+  || !Array.isArray(hrdDashboard.data.attendance_monthly.items)
+  || !hrdDashboard.data.attendance_summary.status) {
+  throw new Error('Expected HRD GAS dashboard to expose safe attendance daily/monthly recap.');
 }
 if (JSON.stringify(hrdDashboard.data).includes('operator@example.com')
   || JSON.stringify(hrdDashboard.data).includes('phone_blind_index')

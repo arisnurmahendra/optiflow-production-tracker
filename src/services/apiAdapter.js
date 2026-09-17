@@ -36,7 +36,9 @@ const CALLABLES = Object.freeze({
   submitProductionReport: 'submitProductionReport',
   upsertBagianMaster: 'upsertBagianMaster',
   upsertDefectCategory: 'upsertDefectCategory',
+  upsertHrdEmployee: 'upsertHrdEmployee',
   upsertProductionTarget: 'upsertProductionTarget',
+  deactivateHrdEmployee: 'deactivateHrdEmployee',
 });
 
 export class ApiAdapterError extends Error {
@@ -102,7 +104,9 @@ export function createApiAdapter(options = {}) {
     submitProductionReport: (request) => call(CALLABLES.submitProductionReport, request),
     upsertBagianMaster: (request) => call(CALLABLES.upsertBagianMaster, request),
     upsertDefectCategory: (request) => call(CALLABLES.upsertDefectCategory, request),
+    upsertHrdEmployee: (request) => call(CALLABLES.upsertHrdEmployee, request),
     upsertProductionTarget: (request) => call(CALLABLES.upsertProductionTarget, request),
+    deactivateHrdEmployee: (request) => call(CALLABLES.deactivateHrdEmployee, request),
   });
 }
 

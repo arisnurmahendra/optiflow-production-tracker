@@ -18,20 +18,37 @@ const MOCK_PERMISSION_CATALOG = Object.freeze({
   defect_category: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
   bagian_master: Object.freeze(['read', 'create', 'update', 'soft_delete', 'seed']),
   production_target: Object.freeze(['read', 'create', 'update', 'bulk_update', 'soft_delete']),
+  employee_master: Object.freeze(['read', 'create', 'update', 'soft_delete']),
+  attendance_recap: Object.freeze(['read', 'export']),
   reference_data: Object.freeze(['read']),
   test_runner: Object.freeze(['run']),
   user_role: Object.freeze(['create', 'read', 'update', 'soft_delete']),
   script_property: Object.freeze(['read_status', 'update', 'delete', 'rotate_secret']),
 });
 
+const MOCK_ROLE_OPTIONS = Object.freeze(['Operator', 'Mandor', 'Supervisor', 'Management', 'HRD', 'SuperAdmin']);
+
 const DEFAULT_USER_ROLES = [
-  { user_id: '10001', employee_no: '10001', full_name: 'Rina Wulandari', address: 'Jl. Melati 12, Bogor', email: 'operator@example.com', wa_number: '628121110001', username: 'rina.solder', role: 'Operator', bagian_id: 'SOLDER', nama_lengkap_encrypted: 'enc:rina-wulandari', alamat_encrypted: 'enc:bogor-melati-12', nomor_telepon_encrypted: 'enc:628121110001', phone_blind_index: 'blind:628121110001', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: true, is_deleted: false, last_login: '2026-09-04T00:55:00.000Z', created_at: '2026-08-25T02:00:00.000Z', updated_at: '2026-09-03T03:10:00.000Z' },
-  { user_id: '10002', employee_no: '10002', full_name: 'Budi Hartono', address: 'Kp. Cikaret RT 03/02, Bogor', email: 'mandor@example.com', wa_number: '628121110002', username: 'budi.mandor', role: 'Mandor', bagian_id: 'SOLDER', nama_lengkap_encrypted: 'enc:budi-hartono', alamat_encrypted: 'enc:cikaret-rt0302', nomor_telepon_encrypted: 'enc:628121110002', phone_blind_index: 'blind:628121110002', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T01:12:00.000Z', created_at: '2026-08-25T02:10:00.000Z', updated_at: '2026-09-03T03:12:00.000Z' },
-  { user_id: '10003', employee_no: '10003', full_name: 'Maya Safitri', address: 'Perum Griya Asri Blok C7, Depok', email: 'management@example.com', wa_number: '628121110003', username: 'maya.management', role: 'Management', roles: ['Management', 'Supervisor'], bagian_id: 'ALL', nama_lengkap_encrypted: 'enc:maya-safitri', alamat_encrypted: 'enc:griya-asri-c7', nomor_telepon_encrypted: 'enc:628121110003', phone_blind_index: 'blind:628121110003', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-03T08:45:00.000Z', created_at: '2026-08-25T02:20:00.000Z', updated_at: '2026-09-03T03:14:00.000Z' },
-  { user_id: '10004', employee_no: '10004', full_name: 'Dewi Anggraeni', address: 'Jl. Kenanga 5, Cibinong', email: 'hrd@example.com', wa_number: '628121110004', username: 'dewi.hrd', role: 'HRD', bagian_id: 'HRD', nama_lengkap_encrypted: 'enc:dewi-anggraeni', alamat_encrypted: 'enc:kenanga-5', nomor_telepon_encrypted: 'enc:628121110004', phone_blind_index: 'blind:628121110004', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: true, is_deleted: false, last_login: '2026-09-04T01:30:00.000Z', created_at: '2026-08-25T02:30:00.000Z', updated_at: '2026-09-03T03:16:00.000Z' },
-  { user_id: '10005', employee_no: '10005', full_name: 'Agus Prasetyo', address: 'Jl. Raya Tajur 88, Bogor', email: 'agus.lem@example.com', wa_number: '628121110005', username: 'agus.lem', role: 'Operator', bagian_id: 'LEM', nama_lengkap_encrypted: 'enc:agus-prasetyo', alamat_encrypted: 'enc:tajur-88', nomor_telepon_encrypted: 'enc:628121110005', phone_blind_index: 'blind:628121110005', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: true, is_deleted: false, last_login: '2026-09-04T02:10:00.000Z', created_at: '2026-08-26T02:00:00.000Z', updated_at: '2026-09-03T04:10:00.000Z' },
-  { user_id: '10006', employee_no: '10006', full_name: 'Siti Nurhaliza', address: 'Jl. Pahlawan 21, Sukabumi', email: 'inactive.operator@example.com', wa_number: '628121110006', username: 'siti.resign', role: 'Operator', bagian_id: 'SOLDER', nama_lengkap_encrypted: 'enc:siti-nurhaliza', alamat_encrypted: 'enc:pahlawan-21', nomor_telepon_encrypted: 'enc:628121110006', phone_blind_index: 'blind:628121110006', profile_base64: DUMMY_PROFILE_BASE64, status_aktif: false, is_deleted: false, last_login: '', created_at: '2026-08-20T02:00:00.000Z', updated_at: '2026-09-01T04:00:00.000Z' },
+  { user_id: 'USR-10001', email: 'operator@example.com', username: 'rina.solder', role: 'Operator', nama_lengkap_encrypted: 'enc:rina-wulandari', alamat_encrypted: 'enc:bogor-melati-12', nomor_telepon_encrypted: 'enc:628121110001', phone_blind_index: 'blind:628121110001', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-04T00:55:00.000Z', created_at: '2026-08-25T02:00:00.000Z', updated_at: '2026-09-03T03:10:00.000Z' },
+  { user_id: 'USR-10002', email: 'mandor@example.com', username: 'budi.mandor', role: 'Mandor', nama_lengkap_encrypted: 'enc:budi-hartono', alamat_encrypted: 'enc:cikaret-rt0302', nomor_telepon_encrypted: 'enc:628121110002', phone_blind_index: 'blind:628121110002', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: '', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-04T01:12:00.000Z', created_at: '2026-08-25T02:10:00.000Z', updated_at: '2026-09-03T03:12:00.000Z' },
+  { user_id: 'USR-10003', email: 'management@example.com', username: 'maya.management', role: 'Management', roles: ['Management', 'Supervisor'], nama_lengkap_encrypted: 'enc:maya-safitri', alamat_encrypted: 'enc:griya-asri-c7', nomor_telepon_encrypted: 'enc:628121110003', phone_blind_index: 'blind:628121110003', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: '', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-03T08:45:00.000Z', created_at: '2026-08-25T02:20:00.000Z', updated_at: '2026-09-03T03:14:00.000Z' },
+  { user_id: 'USR-10004', email: 'hrd@example.com', username: 'dewi.hrd', role: 'HRD', nama_lengkap_encrypted: 'enc:dewi-anggraeni', alamat_encrypted: 'enc:kenanga-5', nomor_telepon_encrypted: 'enc:628121110004', phone_blind_index: 'blind:628121110004', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: '', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-04T01:30:00.000Z', created_at: '2026-08-25T02:30:00.000Z', updated_at: '2026-09-03T03:16:00.000Z' },
+  { user_id: 'USR-10005', email: 'agus.lem@example.com', username: 'agus.lem', role: 'Operator', nama_lengkap_encrypted: 'enc:agus-prasetyo', alamat_encrypted: 'enc:tajur-88', nomor_telepon_encrypted: 'enc:628121110005', phone_blind_index: 'blind:628121110005', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-04T02:10:00.000Z', created_at: '2026-08-26T02:00:00.000Z', updated_at: '2026-09-03T04:10:00.000Z' },
+  { user_id: 'USR-10006', email: 'inactive.operator@example.com', username: 'siti.resign', role: 'Operator', nama_lengkap_encrypted: 'enc:siti-nurhaliza', alamat_encrypted: 'enc:pahlawan-21', nomor_telepon_encrypted: 'enc:628121110006', phone_blind_index: 'blind:628121110006', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: 'mandor@example.com', status_aktif: false, is_deleted: false, deleted_at: '', last_login: '', created_at: '2026-08-20T02:00:00.000Z', updated_at: '2026-09-01T04:00:00.000Z' },
+  { user_id: 'USR-10007', email: 'supervisor@example.com', username: 'rio.supervisor', role: 'Supervisor', nama_lengkap_encrypted: 'enc:rio-supervisor', alamat_encrypted: 'enc:cibinong-supervisor', nomor_telepon_encrypted: 'enc:628121110007', phone_blind_index: 'blind:628121110007', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: '', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-04T02:30:00.000Z', created_at: '2026-08-26T02:30:00.000Z', updated_at: '2026-09-03T04:30:00.000Z' },
+  { user_id: 'USR-10008', email: 'superadmin@example.com', username: 'superadmin.demo', role: 'SuperAdmin', nama_lengkap_encrypted: 'enc:superadmin-demo', alamat_encrypted: 'enc:system-admin', nomor_telepon_encrypted: 'enc:628121110008', phone_blind_index: 'blind:628121110008', profile_base64: DUMMY_PROFILE_BASE64, mandor_email: '', status_aktif: true, is_deleted: false, deleted_at: '', last_login: '2026-09-04T03:00:00.000Z', created_at: '2026-08-26T03:00:00.000Z', updated_at: '2026-09-03T05:00:00.000Z' },
 ];
+
+const DEFAULT_EMPLOYEE_MASTER = Object.freeze([
+  Object.freeze({ employee_id: '10001', employee_no: '10001', user_id: 'USR-10001', nama_lengkap: 'Rina Wulandari', full_name: 'Rina Wulandari', bagian_id: 'SOLDER', mandor_employee_id: '10002', mandor_email: 'mandor@example.com', email: 'operator@example.com', no_wa: '628121110001', wa_number: '628121110001', alamat: 'Jl. Melati 12, Bogor', address: 'Jl. Melati 12, Bogor', username: 'rina.solder', role: 'Operator', roles: ['Operator'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-08-01', resign_date: '', emergency_contact: '628129990001', data_completeness_status: 'COMPLETE', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-25T02:00:00.000Z', updated_at: '2026-09-03T03:10:00.000Z' }),
+  Object.freeze({ employee_id: '10002', employee_no: '10002', user_id: 'USR-10002', nama_lengkap: 'Budi Hartono', full_name: 'Budi Hartono', bagian_id: 'SOLDER', mandor_employee_id: '', mandor_email: '', email: 'mandor@example.com', no_wa: '628121110002', wa_number: '628121110002', alamat: 'Kp. Cikaret RT 03/02, Bogor', address: 'Kp. Cikaret RT 03/02, Bogor', username: 'budi.mandor', role: 'Mandor', roles: ['Mandor'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-07-15', resign_date: '', emergency_contact: '628129990002', data_completeness_status: 'COMPLETE', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-25T02:10:00.000Z', updated_at: '2026-09-03T03:12:00.000Z' }),
+  Object.freeze({ employee_id: '10003', employee_no: '10003', user_id: 'USR-10003', nama_lengkap: 'Maya Safitri', full_name: 'Maya Safitri', bagian_id: 'MANAGEMENT', mandor_employee_id: '', mandor_email: '', email: 'management@example.com', no_wa: '628121110003', wa_number: '628121110003', alamat: 'Perum Griya Asri Blok C7, Depok', address: 'Perum Griya Asri Blok C7, Depok', username: 'maya.management', role: 'Management', roles: ['Management', 'Supervisor'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-07-01', resign_date: '', emergency_contact: '628129990003', data_completeness_status: 'COMPLETE', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-25T02:20:00.000Z', updated_at: '2026-09-03T03:14:00.000Z' }),
+  Object.freeze({ employee_id: '10004', employee_no: '10004', user_id: 'USR-10004', nama_lengkap: 'Dewi Anggraeni', full_name: 'Dewi Anggraeni', bagian_id: 'HRD', mandor_employee_id: '', mandor_email: '', email: 'hrd@example.com', no_wa: '628121110004', wa_number: '628121110004', alamat: 'Jl. Kenanga 5, Cibinong', address: 'Jl. Kenanga 5, Cibinong', username: 'dewi.hrd', role: 'HRD', roles: ['HRD'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-07-20', resign_date: '', emergency_contact: '628129990004', data_completeness_status: 'COMPLETE', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-25T02:30:00.000Z', updated_at: '2026-09-03T03:16:00.000Z' }),
+  Object.freeze({ employee_id: '10005', employee_no: '10005', user_id: 'USR-10005', nama_lengkap: 'Agus Prasetyo', full_name: 'Agus Prasetyo', bagian_id: 'LEM', mandor_employee_id: '10002', mandor_email: 'mandor@example.com', email: 'agus.lem@example.com', no_wa: '628121110005', wa_number: '628121110005', alamat: 'Jl. Raya Tajur 88, Bogor', address: 'Jl. Raya Tajur 88, Bogor', username: 'agus.lem', role: 'Operator', roles: ['Operator'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-08-05', resign_date: '', emergency_contact: '628129990005', data_completeness_status: 'COMPLETE', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-26T02:00:00.000Z', updated_at: '2026-09-03T04:10:00.000Z' }),
+  Object.freeze({ employee_id: '10006', employee_no: '10006', user_id: 'USR-10006', nama_lengkap: 'Siti Nurhaliza', full_name: 'Siti Nurhaliza', bagian_id: 'SOLDER', mandor_employee_id: '10002', mandor_email: 'mandor@example.com', email: 'inactive.operator@example.com', no_wa: '628121110006', wa_number: '628121110006', alamat: 'Jl. Pahlawan 21, Sukabumi', address: 'Jl. Pahlawan 21, Sukabumi', username: 'siti.resign', role: 'Operator', roles: ['Operator'], employment_status: 'RESIGN', status_karyawan: 'RESIGN', join_date: '2026-07-10', resign_date: '2026-09-01', emergency_contact: '628129990006', data_completeness_status: 'COMPLETE', status_aktif: false, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-20T02:00:00.000Z', updated_at: '2026-09-01T04:00:00.000Z' }),
+  Object.freeze({ employee_id: '10007', employee_no: '10007', user_id: '', nama_lengkap: 'Yanto Saputra', full_name: 'Yanto Saputra', bagian_id: 'LEM', mandor_employee_id: '10002', mandor_email: 'mandor@example.com', email: '', no_wa: '628121110007', wa_number: '628121110007', alamat: 'Jl. Cendana 9, Bogor', address: 'Jl. Cendana 9, Bogor', username: 'yanto.lem', role: 'Operator', roles: ['Operator'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-08-08', resign_date: '', emergency_contact: '628129990007', data_completeness_status: 'NEEDS_REVIEW', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-26T02:20:00.000Z', updated_at: '2026-09-03T04:20:00.000Z' }),
+  Object.freeze({ employee_id: '10008', employee_no: '10008', user_id: 'USR-10007', nama_lengkap: 'Rio Pratama', full_name: 'Rio Pratama', bagian_id: 'QC', mandor_employee_id: '', mandor_email: '', email: 'supervisor@example.com', no_wa: '628121110008', wa_number: '628121110008', alamat: 'Jl. Mawar 3, Cibinong', address: 'Jl. Mawar 3, Cibinong', username: 'rio.supervisor', role: 'Supervisor', roles: ['Supervisor'], employment_status: 'AKTIF', status_karyawan: 'AKTIF', join_date: '2026-07-12', resign_date: '', emergency_contact: '628129990008', data_completeness_status: 'COMPLETE', status_aktif: true, is_deleted: false, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-08-26T02:30:00.000Z', updated_at: '2026-09-03T04:30:00.000Z' }),
+]);
 
 const DEFAULT_ROLE_PERMISSIONS = [
   ['Operator', 'production_report', 'create'],
@@ -69,6 +86,12 @@ const DEFAULT_ROLE_PERMISSIONS = [
   ['HRD', 'user_role', 'read'],
   ['HRD', 'audit_log', 'read'],
   ['HRD', 'bagian_master', 'read'],
+  ['HRD', 'employee_master', 'read'],
+  ['HRD', 'employee_master', 'create'],
+  ['HRD', 'employee_master', 'update'],
+  ['HRD', 'employee_master', 'soft_delete'],
+  ['HRD', 'attendance_recap', 'read'],
+  ['HRD', 'attendance_recap', 'export'],
   ['HRD', 'reference_data', 'read'],
   ...Object.entries(MOCK_PERMISSION_CATALOG).flatMap(([resource, actions]) =>
     actions.map((action) => ['SuperAdmin', resource, action]),
@@ -91,6 +114,9 @@ const DEFAULT_BAGIAN_MASTER = [
   { bagian_id: 'SOLDER', bagian_name: 'Bagian Solder', description: 'Proses solder/las komponen produksi.', unit_rate: 94, monthly_target_unit: 37234, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
   { bagian_id: 'LEM', bagian_name: 'Bagian Lem', description: 'Proses lem dan perakitan lanjutan.', unit_rate: 83, monthly_target_unit: 42169, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
   { bagian_id: 'PACKING', bagian_name: 'Bagian Packing', description: 'Packing dan persiapan pengiriman.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
+  { bagian_id: 'QC', bagian_name: 'Bagian QC', description: 'Verifikasi kualitas dan output produksi.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
+  { bagian_id: 'HRD', bagian_name: 'Bagian HRD', description: 'Administrasi karyawan, absensi, dan payroll-ready.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
+  { bagian_id: 'MANAGEMENT', bagian_name: 'Management', description: 'Pemantauan KPI, kebijakan upah, dan laporan perusahaan.', unit_rate: 0, monthly_target_unit: 0, target_salary: 3500000, status_aktif: true, created_by: 'seed@optiflow.local', updated_by: 'seed@optiflow.local', created_at: '2026-09-01T00:00:00.000Z', updated_at: '2026-09-01T00:00:00.000Z' },
 ];
 
 const DEFAULT_TARGET_MASTER = [
@@ -277,9 +303,9 @@ const DEFAULT_MANAGEMENT_DEMO = Object.freeze({
     Object.freeze({
       flow_id: 'FLOW-LEM-20260903-001',
       target_bagian_id: 'LEM',
-      target_employee_no: 'LEM-014',
+      target_employee_no: '10005',
       source_bagian_id: 'SOLDER',
-      source_employee_nos: Object.freeze(['SLD-006', 'SLD-014', 'SLD-021']),
+      source_employee_nos: Object.freeze(['10001', '10009', '10010']),
       received_units: 4820,
       verified_units: 4744,
       note: 'Satu operator Lem menerima bahan dari tiga operator Solder.',
@@ -287,15 +313,100 @@ const DEFAULT_MANAGEMENT_DEMO = Object.freeze({
     Object.freeze({
       flow_id: 'FLOW-LEM-20260903-002',
       target_bagian_id: 'LEM',
-      target_employee_no: 'LEM-018',
+      target_employee_no: '10007',
       source_bagian_id: 'SOLDER',
-      source_employee_nos: Object.freeze(['SLD-011', 'SLD-019']),
+      source_employee_nos: Object.freeze(['10011', '10012']),
       received_units: 3910,
       verified_units: 3892,
       note: 'Relasi many-to-one untuk debugging traceability.',
     }),
   ]),
 });
+
+const DEFAULT_HRD_ATTENDANCE_DAILY = Object.freeze([
+  Object.freeze({
+    daily_attendance_id: 'ATT-D-20260903-10001',
+    factory_date: '2026-09-03',
+    employee_id: '10001',
+    employee_no: '10001',
+    full_name: 'Rina Wulandari',
+    bagian_id: 'SOLDER',
+    attendance_status: 'HADIR',
+    clock_in_at: '2026-09-03T00:56:00.000Z',
+    clock_out_at: '2026-09-03T09:02:00.000Z',
+    confirmed_by: 'mandor@example.com',
+    confirmed_at: '2026-09-03T01:18:00.000Z',
+    payroll_ready: true,
+    notes: '',
+  }),
+  Object.freeze({
+    daily_attendance_id: 'ATT-D-20260903-10002',
+    factory_date: '2026-09-03',
+    employee_id: '10002',
+    employee_no: '10002',
+    full_name: 'Budi Hartono',
+    bagian_id: 'SOLDER',
+    attendance_status: 'HADIR',
+    clock_in_at: '2026-09-03T00:48:00.000Z',
+    clock_out_at: '2026-09-03T09:12:00.000Z',
+    confirmed_by: 'supervisor@example.com',
+    confirmed_at: '2026-09-03T01:10:00.000Z',
+    payroll_ready: true,
+    notes: 'Mandor pencatat.',
+  }),
+  Object.freeze({
+    daily_attendance_id: 'ATT-D-20260903-10005',
+    factory_date: '2026-09-03',
+    employee_id: '10005',
+    employee_no: '10005',
+    full_name: 'Agus Prasetyo',
+    bagian_id: 'LEM',
+    attendance_status: 'BELUM_KONFIRMASI',
+    clock_in_at: '2026-09-03T01:03:00.000Z',
+    clock_out_at: '',
+    confirmed_by: '',
+    confirmed_at: '',
+    payroll_ready: false,
+    notes: 'Menunggu check Mandor.',
+  }),
+  Object.freeze({
+    daily_attendance_id: 'ATT-D-20260903-10006',
+    factory_date: '2026-09-03',
+    employee_id: '10006',
+    employee_no: '10006',
+    full_name: 'Siti Nurhaliza',
+    bagian_id: 'SOLDER',
+    attendance_status: 'RESIGN',
+    clock_in_at: '',
+    clock_out_at: '',
+    confirmed_by: 'hrd@example.com',
+    confirmed_at: '2026-09-03T01:00:00.000Z',
+    payroll_ready: true,
+    notes: 'Tidak masuk target produksi baru.',
+  }),
+  Object.freeze({
+    daily_attendance_id: 'ATT-D-20260903-10007',
+    factory_date: '2026-09-03',
+    employee_id: '10007',
+    employee_no: '10007',
+    full_name: 'Yanto Saputra',
+    bagian_id: 'LEM',
+    attendance_status: 'SAKIT',
+    clock_in_at: '',
+    clock_out_at: '',
+    confirmed_by: 'mandor@example.com',
+    confirmed_at: '2026-09-03T01:25:00.000Z',
+    payroll_ready: true,
+    notes: 'Surat sakit diterima HRD.',
+  }),
+]);
+
+const DEFAULT_HRD_ATTENDANCE_MONTHLY = Object.freeze([
+  Object.freeze({ monthly_attendance_id: 'ATT-M-202609-10001', period_month: '2026-09', employee_id: '10001', employee_no: '10001', full_name: 'Rina Wulandari', bagian_id: 'SOLDER', hadir_count: 22, izin_count: 1, sakit_count: 0, alpha_count: 0, resign_count: 0, pending_confirmation_count: 1, payroll_ready: false }),
+  Object.freeze({ monthly_attendance_id: 'ATT-M-202609-10002', period_month: '2026-09', employee_id: '10002', employee_no: '10002', full_name: 'Budi Hartono', bagian_id: 'SOLDER', hadir_count: 23, izin_count: 0, sakit_count: 0, alpha_count: 0, resign_count: 0, pending_confirmation_count: 0, payroll_ready: true }),
+  Object.freeze({ monthly_attendance_id: 'ATT-M-202609-10005', period_month: '2026-09', employee_id: '10005', employee_no: '10005', full_name: 'Agus Prasetyo', bagian_id: 'LEM', hadir_count: 21, izin_count: 0, sakit_count: 1, alpha_count: 1, resign_count: 0, pending_confirmation_count: 2, payroll_ready: false }),
+  Object.freeze({ monthly_attendance_id: 'ATT-M-202609-10006', period_month: '2026-09', employee_id: '10006', employee_no: '10006', full_name: 'Siti Nurhaliza', bagian_id: 'SOLDER', hadir_count: 0, izin_count: 0, sakit_count: 0, alpha_count: 0, resign_count: 1, pending_confirmation_count: 0, payroll_ready: true }),
+]);
 
 export function installMockGas(options = {}) {
   const mockGas = createMockGas(options);
@@ -320,6 +431,7 @@ export function createMockGas(options = {}) {
     masterRecap: structuredCloneSafe(options.masterRecap || initialState.masterRecap || []),
     defectCategories: structuredCloneSafe(options.defectCategories || initialState.defectCategories || defaultDefectCategories),
     userRoles: structuredCloneSafe(options.userRoles || initialState.userRoles || DEFAULT_USER_ROLES),
+    employeeMaster: structuredCloneSafe(options.employeeMaster || initialState.employeeMaster || DEFAULT_EMPLOYEE_MASTER),
     rolePermissions: mergeDefaultRows(
       options.rolePermissions || initialState.rolePermissions,
       DEFAULT_ROLE_PERMISSIONS,
@@ -341,7 +453,7 @@ export function createMockGas(options = {}) {
       user_id: 'DEV-SuperAdmin',
       is_simulated: true,
       requires_role_selection: false,
-      allowed_simulated_roles: ['Operator', 'Mandor', 'Supervisor', 'Management', 'HRD', 'SuperAdmin'],
+      allowed_simulated_roles: MOCK_ROLE_OPTIONS,
     }),
   };
 
@@ -507,6 +619,85 @@ export function createMockGas(options = {}) {
       version: '0.1.0',
     }),
     getHrdAccessDashboard: (request = {}) => respond(buildHrdAccessDashboard(state, request)),
+    upsertHrdEmployee: (request = {}) => {
+      const employee = normalizeMockEmployeeInput(request.employee || {});
+      const existingByNo = state.employeeMaster.find((user) =>
+        String(user.employee_no || user.employee_id) === employee.employee_no,
+      );
+      const existingByEmail = employee.email ? state.employeeMaster.find((user) =>
+        String(user.email || '').toLowerCase() === employee.email.toLowerCase(),
+      ) : null;
+      const mode = String(request.mode || (existingByNo || existingByEmail ? 'UPDATE' : 'CREATE')).toUpperCase();
+      assertMockPermission(state, request, 'employee_master', mode === 'CREATE' ? 'create' : 'update');
+      const now = new Date().toISOString();
+
+      if (mode === 'CREATE' && (existingByNo || existingByEmail)) {
+        if (existingByNo) {
+          throw new Error('Employee number already exists. Use Edit to update existing employee data.');
+        }
+
+        throw new Error('Employee email already exists. Use Edit to update existing employee data.');
+      }
+
+      if ((mode === 'EDIT' || mode === 'UPDATE') && !existingByNo) {
+        throw new Error('Employee was not found for update.');
+      }
+
+      if ((mode === 'EDIT' || mode === 'UPDATE') && existingByEmail && String(existingByEmail.employee_no || existingByEmail.employee_id) !== employee.employee_no) {
+        throw new Error('Employee email already exists. Use another email address.');
+      }
+
+      const existing = existingByNo || existingByEmail;
+      const next = {
+        ...(existing || {}),
+        employee_id: existing?.employee_id || employee.employee_no,
+        employee_no: employee.employee_no,
+        nama_lengkap: employee.full_name,
+        full_name: employee.full_name,
+        alamat: employee.address,
+        address: employee.address,
+        email: employee.email,
+        no_wa: employee.wa_number,
+        wa_number: employee.wa_number,
+        username: employee.username || employee.email.split('@')[0],
+        role: employee.role,
+        roles: employee.roles,
+        bagian_id: employee.bagian_id,
+        mandor_email: employee.mandor_email,
+        employment_status: employee.status_karyawan,
+        status_karyawan: employee.status_karyawan,
+        status_aktif: !['RESIGN', 'NONAKTIF', 'SUSPEND'].includes(employee.status_karyawan),
+        is_deleted: false,
+        updated_by: state.session.email,
+        updated_at: now,
+        created_by: existing?.created_by || state.session.email,
+        created_at: existing?.created_at || now,
+      };
+
+      if (existing) {
+        Object.assign(existing, next);
+      } else {
+        state.employeeMaster.push(next);
+      }
+
+      return respond({ employee: maskMockUser(next), mode: existing ? 'UPDATE' : 'CREATE' });
+    },
+    deactivateHrdEmployee: (request = {}) => {
+      assertMockPermission(state, request, 'employee_master', 'soft_delete');
+      const employeeNo = String(request.employee_no || '').trim();
+      const employee = state.employeeMaster.find((user) => String(user.employee_no || user.employee_id) === employeeNo);
+      if (!employee) {
+        throw new Error('Employee was not found.');
+      }
+
+      employee.status_aktif = false;
+      employee.employment_status = 'RESIGN';
+      employee.status_karyawan = 'RESIGN';
+      employee.resign_date = new Date().toISOString().slice(0, 10);
+      employee.updated_by = state.session.email;
+      employee.updated_at = new Date().toISOString();
+      return respond({ employee: maskMockUser(employee), status_karyawan: 'RESIGN' });
+    },
     getManagementDashboard: (request = {}) => respond(buildManagementDashboard(state, request)),
     getBagianMaster: (request = {}) => {
       assertMockPermission(state, request, 'bagian_master', 'read');
@@ -526,6 +717,9 @@ export function createMockGas(options = {}) {
       assertMockPermission(state, request, 'reference_data', 'read');
       const includeInactive = Boolean(request.include_inactive);
       return respond({
+        reference_mode: 'BAGIAN_WITH_LEGACY_COMPAT',
+        bagian: buildMockBagianOptions(state, includeInactive),
+        work_categories: buildMockWorkCategoryOptions(state, includeInactive),
         lines: state.lineMaster
           .filter((line) => includeInactive || isTruthy(line.status_aktif))
           .map((line) => ({
@@ -553,14 +747,22 @@ export function createMockGas(options = {}) {
           .filter((user) => user.role === 'Operator')
           .filter((user) => includeInactive || isTruthy(user.status_aktif))
           .filter((user) => !isTruthy(user.is_deleted))
-          .map((user) => ({
-            value: user.email,
-            label: user.username ? `${user.username} (${maskMockEmail(user.email)})` : maskMockEmail(user.email),
-            email: user.email,
-            username: user.username || '',
-            role: 'Operator',
-            status_aktif: isTruthy(user.status_aktif),
-          })),
+          .map((user) => {
+            const employee = state.employeeMaster.find((item) =>
+              String(item.email || '').toLowerCase() === String(user.email || '').toLowerCase(),
+            ) || {};
+            return {
+              value: user.email,
+              label: employee.nama_lengkap ? `${employee.nama_lengkap} (${maskMockEmail(user.email)})` : user.username ? `${user.username} (${maskMockEmail(user.email)})` : maskMockEmail(user.email),
+              email: user.email,
+              username: employee.username || user.username || '',
+              employee_no: employee.employee_no || employee.employee_id || '',
+              full_name: employee.nama_lengkap || employee.full_name || '',
+              bagian_id: employee.bagian_id || '',
+              role: 'Operator',
+              status_aktif: isTruthy(user.status_aktif) && isTruthy(employee.status_aktif !== undefined ? employee.status_aktif : true),
+            };
+          }),
       });
     },
     getSchemaHealthCheck: () => respond({
@@ -575,11 +777,17 @@ export function createMockGas(options = {}) {
       properties: structuredCloneSafe(state.properties),
     }),
     getSessionContext: (request = {}) => {
+      state.session.allowed_simulated_roles = mergeRoleLists(
+        state.session.allowed_simulated_roles || [],
+        MOCK_ROLE_OPTIONS,
+      );
+
       if (request.simulated_role) {
         state.session = {
           ...state.session,
           role: request.simulated_role,
           user_id: `DEV-${request.simulated_role}`,
+          allowed_simulated_roles: mergeRoleLists(state.session.allowed_simulated_roles || [], MOCK_ROLE_OPTIONS),
         };
       }
 
@@ -835,6 +1043,7 @@ function createGoogleScriptRunMock(mockGas) {
     createAdjustment(payload) { this.invoke('createAdjustment', payload); },
     deactivateBagianMaster(payload) { this.invoke('deactivateBagianMaster', payload); },
     deactivateDefectCategory(payload) { this.invoke('deactivateDefectCategory', payload); },
+    deactivateHrdEmployee(payload) { this.invoke('deactivateHrdEmployee', payload); },
     deactivateProductionTarget(payload) { this.invoke('deactivateProductionTarget', payload); },
     deleteScriptProperty(payload) { this.invoke('deleteScriptProperty', payload); },
     getDefectCategories(payload) { this.invoke('getDefectCategories', payload); },
@@ -862,6 +1071,7 @@ function createGoogleScriptRunMock(mockGas) {
     submitProductionReport(payload) { this.invoke('submitProductionReport', payload); },
     upsertBagianMaster(payload) { this.invoke('upsertBagianMaster', payload); },
     upsertDefectCategory(payload) { this.invoke('upsertDefectCategory', payload); },
+    upsertHrdEmployee(payload) { this.invoke('upsertHrdEmployee', payload); },
     upsertProductionTarget(payload) { this.invoke('upsertProductionTarget', payload); },
   };
 }
@@ -1114,6 +1324,51 @@ function buildMockMachineOptions(state, includeInactive) {
   }));
 }
 
+function buildMockBagianOptions(state, includeInactive) {
+  return state.bagianMaster
+    .filter((bagian) => includeInactive || isTruthy(bagian.status_aktif))
+    .map((bagian) => ({
+      value: bagian.bagian_id,
+      label: bagian.bagian_name || bagian.bagian_id,
+      bagian_id: bagian.bagian_id,
+      bagian_name: bagian.bagian_name || '',
+      unit_rate: Number(bagian.unit_rate || 0),
+      monthly_target_unit: Number(bagian.monthly_target_unit || 0),
+      target_salary: Number(bagian.target_salary || 0),
+      status_aktif: isTruthy(bagian.status_aktif),
+    }));
+}
+
+function resolveMockBagianName(state, bagianId) {
+  const normalizedId = String(bagianId || '').trim().toUpperCase();
+  const bagian = state.bagianMaster.find((item) => item.bagian_id === normalizedId);
+  return bagian?.bagian_name || normalizedId || '';
+}
+
+function buildMockWorkCategoryOptions(state, includeInactive) {
+  const bagianCategories = buildMockBagianOptions(state, includeInactive).map((bagian) => ({
+    value: bagian.bagian_id,
+    label: bagian.bagian_name || bagian.bagian_id,
+    work_category_id: bagian.bagian_id,
+    work_category_name: bagian.bagian_name || bagian.bagian_id,
+    bagian_id: bagian.bagian_id,
+    source: 'BAGIAN_MASTER',
+    status_aktif: bagian.status_aktif,
+  }));
+
+  const legacyMachines = buildMockMachineOptions(state, includeInactive).map((machine) => ({
+    value: machine.machine_id,
+    label: machine.label,
+    work_category_id: machine.machine_id,
+    work_category_name: machine.label,
+    legacy_machine_id: machine.machine_id,
+    source: 'LEGACY_MACHINE',
+    status_aktif: true,
+  }));
+
+  return [...bagianCategories, ...legacyMachines];
+}
+
 function maskMockEmail(email = '') {
   const [name, domain] = String(email).split('@');
   if (!name || !domain) {
@@ -1154,6 +1409,10 @@ function isMockTargetDateActive(target, factoryDate) {
 
   return target.effective_from <= factoryDate
     && (!target.effective_until || target.effective_until >= factoryDate);
+}
+
+function mergeRoleLists(...roleLists) {
+  return [...new Set(roleLists.flat().filter((role) => MOCK_ROLE_OPTIONS.includes(role)))];
 }
 
 function isTruthy(value) {
@@ -1202,7 +1461,10 @@ function maskPreview(key, value) {
 
 function buildHrdAccessDashboard(state, request) {
   const filter = request.filter || {};
-  const users = state.userRoles
+  const factoryDate = filter.factory_date || DEFAULT_HRD_ATTENDANCE_DAILY[0].factory_date;
+  const periodMonth = filter.period_month || factoryDate.slice(0, 7);
+  const employeeRows = state.employeeMaster?.length ? state.employeeMaster : state.userRoles;
+  const users = employeeRows
     .map(maskMockUser)
     .filter((user) =>
       (!filter.role || user.role === filter.role)
@@ -1211,35 +1473,176 @@ function buildHrdAccessDashboard(state, request) {
     .sort((a, b) => a.role.localeCompare(b.role) || a.email_masked.localeCompare(b.email_masked));
   const roleMatrix = buildMockRoleMatrix(state.rolePermissions);
   const auditSummary = buildMockAuditSummary(state.auditLogs);
+  const dailyAttendance = filterHrdDailyAttendance(DEFAULT_HRD_ATTENDANCE_DAILY, filter, factoryDate);
+  const monthlyAttendance = filterHrdMonthlyAttendance(DEFAULT_HRD_ATTENDANCE_MONTHLY, filter, periodMonth);
+  const attendanceSummary = summarizeHrdAttendance(dailyAttendance, monthlyAttendance, factoryDate, periodMonth);
+  const accessUsers = state.userRoles.map(maskMockUser);
+  const governance = buildMockHrdGovernance(accessUsers, state.auditLogs);
 
   return {
     summary: {
-      total_users: state.userRoles.length,
-      active_users: state.userRoles.filter((user) => isTruthy(user.status_aktif) && !isTruthy(user.is_deleted)).length,
-      inactive_users: state.userRoles.filter((user) => !isTruthy(user.status_aktif) && !isTruthy(user.is_deleted)).length,
-      deleted_users: state.userRoles.filter((user) => isTruthy(user.is_deleted)).length,
+      total_users: employeeRows.length,
+      active_users: employeeRows.filter((user) => isTruthy(user.status_aktif) && !isTruthy(user.is_deleted)).length,
+      inactive_users: employeeRows.filter((user) => !isTruthy(user.status_aktif) && !isTruthy(user.is_deleted)).length,
+      deleted_users: employeeRows.filter((user) => isTruthy(user.is_deleted)).length,
       roles_with_missing_permissions: roleMatrix.filter((role) => role.readiness !== 'READY').length,
       last_audit_at: auditSummary.last_event_at,
+      payroll_ready_status: attendanceSummary.pending_confirmation > 0 ? 'REVIEW_REQUIRED' : 'READY',
+    },
+    attendance_summary: attendanceSummary,
+    attendance_daily: paginate(dailyAttendance, normalizePagination(request)),
+    attendance_monthly: paginate(monthlyAttendance, normalizePagination(request)),
+    attendance_filters: {
+      factory_date: factoryDate,
+      period_month: periodMonth,
+      bagian_options: [...new Set(DEFAULT_HRD_ATTENDANCE_DAILY.map((item) => item.bagian_id))].sort(),
+      status_options: ['ALL', 'HADIR', 'IZIN', 'SAKIT', 'ALPHA', 'BELUM_KONFIRMASI', 'RESIGN'],
     },
     users: paginate(users, normalizePagination(request)),
     role_matrix: roleMatrix,
     audit_summary: auditSummary,
+    governance_summary: governance.summary,
+    access_anomalies: governance.access_anomalies,
+    multi_role_users: governance.multi_role_users,
+    audit_events: governance.audit_events,
+  };
+}
+
+function normalizeMockEmployeeInput(employee) {
+  const employeeNo = String(employee.employee_no || '').replace(/\D/g, '').slice(0, 5);
+  const email = String(employee.email || '').trim().toLowerCase();
+  const role = String(employee.role || 'Operator').trim();
+  const roles = Array.isArray(employee.roles) && employee.roles.length
+    ? employee.roles.map((item) => String(item).trim()).filter(Boolean)
+    : [role];
+
+  if (!/^\d{5}$/.test(employeeNo)) {
+    throw new Error('Employee number must be 5 digits.');
+  }
+
+  if (!email.includes('@')) {
+    throw new Error('Employee email is invalid.');
+  }
+
+  return {
+    employee_no: employeeNo,
+    full_name: String(employee.full_name || '').trim(),
+    address: String(employee.address || '').trim(),
+    email,
+    wa_number: String(employee.wa_number || '').replace(/\D/g, ''),
+    username: String(employee.username || '').trim(),
+    role,
+    roles,
+    bagian_id: String(employee.bagian_id || 'SOLDER').trim().toUpperCase(),
+    mandor_email: String(employee.mandor_email || '').trim().toLowerCase(),
+    status_karyawan: String(employee.status_karyawan || 'AKTIF').trim().toUpperCase(),
+  };
+}
+
+function filterHrdDailyAttendance(items, filter, factoryDate) {
+  return items.filter((item) =>
+    item.factory_date === factoryDate
+    && (!filter.bagian_id || filter.bagian_id === 'ALL' || item.bagian_id === filter.bagian_id)
+    && (!filter.attendance_status || filter.attendance_status === 'ALL' || item.attendance_status === filter.attendance_status),
+  );
+}
+
+function filterHrdMonthlyAttendance(items, filter) {
+  return items.filter((item) =>
+    (!filter.bagian_id || filter.bagian_id === 'ALL' || item.bagian_id === filter.bagian_id)
+    && (!filter.attendance_status || filter.attendance_status === 'ALL' || item.attendance_status === filter.attendance_status),
+  );
+}
+
+function summarizeHrdAttendance(dailyRows, monthlyRows, factoryDate, periodMonth) {
+  const countDaily = (status) => dailyRows.filter((item) => item.attendance_status === status).length;
+  const monthlyTotal = (key) => monthlyRows.reduce((total, item) => total + Number(item[key] || 0), 0);
+  const pendingConfirmation = countDaily('BELUM_KONFIRMASI');
+  const payrollReadyCount = dailyRows.filter((item) => item.payroll_ready).length;
+
+  return {
+    factory_date: factoryDate,
+    period_month: periodMonth,
+    present_today: countDaily('HADIR'),
+    absent_today: countDaily('IZIN') + countDaily('SAKIT') + countDaily('ALPHA'),
+    izin_today: countDaily('IZIN'),
+    sakit_today: countDaily('SAKIT'),
+    alpha_today: countDaily('ALPHA'),
+    resign_today: countDaily('RESIGN'),
+    pending_confirmation: pendingConfirmation,
+    payroll_ready_count: payrollReadyCount,
+    payroll_blocked_count: Math.max(0, dailyRows.length - payrollReadyCount),
+    monthly_hadir_count: monthlyTotal('hadir_count'),
+    monthly_izin_count: monthlyTotal('izin_count'),
+    monthly_sakit_count: monthlyTotal('sakit_count'),
+    monthly_alpha_count: monthlyTotal('alpha_count'),
+    monthly_resign_count: monthlyTotal('resign_count'),
+    monthly_pending_confirmation_count: monthlyTotal('pending_confirmation_count'),
+    status: pendingConfirmation > 0 ? 'REVIEW_REQUIRED' : 'READY',
+  };
+}
+
+function buildMockHrdGovernance(users, auditLogs) {
+  const multiRoleUsers = users
+    .filter((user) => Array.isArray(user.roles) && user.roles.length > 1)
+    .map((user) => ({
+      employee_no: user.employee_no,
+      email_masked: user.email_masked,
+      roles: user.roles,
+      status: user.status_aktif ? 'ACTIVE' : 'INACTIVE',
+    }));
+  const accessAnomalies = users
+    .filter((user) => !user.status_aktif || user.is_deleted || !user.last_login)
+    .map((user) => ({
+      employee_no: user.employee_no,
+      email_masked: user.email_masked,
+      anomaly_type: user.is_deleted ? 'DELETED_USER' : !user.status_aktif ? 'INACTIVE_USER' : 'NO_LOGIN_HISTORY',
+      severity: user.is_deleted || !user.status_aktif ? 'WARNING' : 'INFO',
+    }));
+  const auditEvents = auditLogs.slice(0, 6).map((row) => ({
+    action: row.action,
+    actor_role: row.actor_role,
+    actor_email_masked: maskEmail(row.actor_email),
+    entity_type: row.entity_type,
+    entity_id: row.entity_id,
+    created_at: row.created_at,
+  }));
+
+  return {
+    summary: {
+      multi_role_user_count: multiRoleUsers.length,
+      access_anomaly_count: accessAnomalies.length,
+      denied_access_count: auditLogs.filter((row) => String(row.action || '').startsWith('RBAC_')).length,
+      last_login_missing_count: users.filter((user) => !user.last_login).length,
+    },
+    multi_role_users: multiRoleUsers,
+    access_anomalies: accessAnomalies,
+    audit_events: auditEvents,
   };
 }
 
 function maskMockUser(user) {
+  const fullName = user.full_name || user.nama_lengkap || user.username || '';
+  const address = user.address || user.alamat || '';
+  const waNumber = user.wa_number || user.no_wa || '';
+  const statusKaryawan = user.status_karyawan || user.employment_status || (isTruthy(user.status_aktif) ? 'AKTIF' : 'RESIGN');
+
   return {
-    user_id: user.user_id,
-    employee_no: user.employee_no || user.user_id,
-    full_name: user.full_name || user.username || '',
-    address: user.address || '',
+    user_id: user.user_id || user.employee_id || '',
+    employee_id: user.employee_id || user.employee_no || '',
+    employee_no: user.employee_no || user.employee_id || user.user_id,
+    full_name: fullName,
+    address,
     email: user.email,
     email_masked: maskEmail(user.email),
-    wa_number: user.wa_number || '',
-    wa_url: buildWaUrl(user.wa_number),
+    wa_number: waNumber,
+    wa_url: buildWaUrl(waNumber),
+    username: user.username || '',
     bagian_id: user.bagian_id || '',
     role: user.role,
-    roles: user.roles || [user.role],
+    roles: Array.isArray(user.roles) ? user.roles : String(user.roles || user.role || '').split(',').map((role) => role.trim()).filter(Boolean),
+    mandor_email: user.mandor_email || '',
+    status_karyawan: statusKaryawan,
     status_aktif: isTruthy(user.status_aktif),
     is_deleted: isTruthy(user.is_deleted),
     last_login: user.last_login || '',
@@ -1556,6 +1959,8 @@ function buildOperatorDashboard(state, request) {
       line_id: row.line_id,
       shift_id: row.shift_id,
       machine_id: row.machine_id,
+      bagian_id: row.bagian_id || '',
+      work_category_id: row.work_category_id || '',
       target_harian: Number(row.target_harian || 0),
       tandon: Number(row.tandon || 0),
       perolehan_ok: Number(row.perolehan_ok || 0),
@@ -1592,6 +1997,9 @@ function buildOperatorDashboard(state, request) {
     pagination: normalizePagination(request),
     summary: {
       factory_date: today,
+      bagian_id: filter.bagian_id || 'SOLDER',
+      bagian_name: resolveMockBagianName(state, filter.bagian_id || 'SOLDER'),
+      work_category_id: filter.work_category_id || 'SOLDER',
       line_id: filter.line_id || 'SMT-02',
       shift_id: filter.shift_id || 'SHIFT-1',
       machine_id: filter.machine_id || 'SLD-14',
@@ -1620,6 +2028,8 @@ function buildOperatorDashboard(state, request) {
 
 function createOperatorDashboardSeed(filter) {
   const today = filter.factory_date || '2026-09-03';
+  const bagianId = filter.bagian_id || 'SOLDER';
+  const workCategoryId = filter.work_category_id || 'SOLDER';
   const lineId = filter.line_id || 'SMT-02';
   const shiftId = filter.shift_id || 'SHIFT-1';
   const machineId = filter.machine_id || 'SLD-14';
@@ -1650,6 +2060,8 @@ function createOperatorDashboardSeed(filter) {
         line_id: lineId,
         shift_id: shiftId,
         machine_id: machineId,
+        bagian_id: bagianId,
+        work_category_id: workCategoryId,
         target_harian: target,
         tandon,
         perolehan_ok: Math.round(ok * 0.58),
@@ -1664,6 +2076,8 @@ function createOperatorDashboardSeed(filter) {
         line_id: lineId,
         shift_id: shiftId,
         machine_id: machineId,
+        bagian_id: bagianId,
+        work_category_id: workCategoryId,
         target_harian: 0,
         tandon: 0,
         perolehan_ok: ok - Math.round(ok * 0.58),
@@ -1889,6 +2303,8 @@ function filterRows(rows, filter) {
     && (!filter.line_id || row.line_id === filter.line_id)
     && (!filter.shift_id || row.shift_id === filter.shift_id)
     && (!filter.machine_id || row.machine_id === filter.machine_id)
+    && (!filter.bagian_id || row.bagian_id === filter.bagian_id)
+    && (!filter.work_category_id || row.work_category_id === filter.work_category_id)
     && (!filter.status || row.status === filter.status),
   );
 }

@@ -40,14 +40,14 @@ MVP difokuskan pada alur produksi inti:
 6. Manajemen membaca dashboard tanpa akses edit.
 
 Upgrade proses setelah MVP:
-- Pelaporan berbasis line dan shift.
+- Rebaseline pelaporan berbasis `Bagian`, karyawan, absensi, Mandor sebagai pencatat, dan Supervisor sebagai verifikator/QC.
 - Draft autosave dan status sync per transaksi.
 - Kategori defect untuk Pareto reject.
 - Correction workflow sebelum approval final.
-- Daily closing per line/shift.
+- Daily closing per `factory_date + Bagian`.
 - Adjustment log untuk koreksi setelah closing.
 - Dashboard operasional dan dashboard improvement yang dipisahkan.
-- Pilot rollout 1 line dan 1 shift sebelum skala penuh.
+- Pilot rollout 1 Bagian, 1 Mandor, 1 Supervisor/verifikator, dan subset karyawan aktif sebelum skala penuh.
 
 ## Prinsip Arsitektur
 
@@ -105,7 +105,8 @@ Yang sudah terimplementasi:
 - Production hardening checklist, deployment checklist, pilot rollout plan, dan QCC report package.
 
 Yang belum menjadi implementasi penuh:
-- Eksekusi pilot aktual di line/shift production.
+- Migrasi runtime dari istilah legacy `line/shift/machine` ke proses baru `Bagian`, karyawan, jenis pekerjaan, absensi, Mandor pencatat, dan Supervisor verifikator.
+- Eksekusi pilot aktual di Bagian production.
 - Pengisian hasil QCC aktual setelah data pilot tersedia.
 
 Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), mulai dari eksekusi smoke test di GAS target dan pilot rollout.
@@ -119,11 +120,12 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Setiap role memiliki menu Help/Cara Penggunaan yang menjelaskan langkah kerja, proses bisnis, dan troubleshooting sesuai workspace aktif agar user awam bisa langsung memahami tindakan berikutnya.
 - Workflow role sekarang memakai pola production workspace: Overview, Work Queue, dan Detail/Action agar setiap role melihat tugas relevan, bukan satu halaman berisi semua fitur.
 - Nav utama menampilkan menu fitur untuk workspace aktif di desktop dan mobile; pemilihan workspace pindah ke dropdown nav. Semua workspace default ke Dashboard, dan Operator memakai Dashboard, Input, Riwayat, Defect, Status, dan Help.
-- Penyebutan `shift` seragam di UI/payload/dokumen; opsi line/shift/mesin/operator runtime diambil dari `getOperatorReferenceData`, dengan fallback lokal hanya untuk development/offline.
+- Kontrak proses aktif mulai `OPT-037` memakai `Bagian` sebagai identitas bisnis utama. `OPT-042` menambahkan selector/payload `bagian_id` dan `work_category_id`; `line/shift/machine` masih ada sebagai field/runtime legacy sampai rekap `OPT-044` selesai.
+- Opsi Bagian, jenis pekerjaan, shift, dan operator/karyawan runtime harus berasal dari reference data backend/mock (`BAGIAN_WITH_LEGACY_COMPAT`); fallback lokal hanya untuk development/offline.
 - Dashboard Operator menampilkan metric Target, OK, Reject, Queue dari response dashboard, ChartJS doughnut OK vs Reject untuk Hari ini/Kemarin, serta ChartJS trend Target, Realisasi, OK, dan Reject dengan pilihan Daily, Weekly, dan Monthly. Angka tengah doughnut berarti capaian `Realisasi / Target`, sedangkan realisasi berarti OK + Reject. Tandon tetap informasi terpisah; mode development memakai dummy `getOperatorDashboard` dari `src/services/mock_gas.js` agar UI bisa diperiksa tanpa upload ke GAS.
 - Kategori defect production berasal dari sheet `DEFECT_CATEGORIES`, bukan hardcode-only UI. Jalankan menu Spreadsheet `Seed Defect Categories` untuk mengisi default seed, lalu tambah defect baru sebagai row spreadsheet atau melalui callable terotorisasi `upsertDefectCategory`; frontend mengambilnya lewat `getDefectCategories` dengan fallback mock/default saat development lokal.
-- Hak akses master defect mengikuti separation of duties: Operator dan Management `read` saja; Mandor boleh `create/update/soft_delete`; Supervisor baru mendapat hak kelola jika sudah menjadi role resmi backend; SuperAdmin memegang full access termasuk `seed`.
-- HRD workspace mulai diisi sebagai dashboard read-only untuk user access, role readiness, permission matrix, dan audit summary. Seed dummy `USER_ROLES` menyediakan email, username, placeholder nama/alamat/telepon terenkripsi, blind index, role, status, dan profile base64 untuk development, tetapi UI HRD read-only hanya menerima email masked/status-only dan tidak menerima PII mentah, PII terenkripsi, blind index, Script Properties, profile base64, atau metadata audit mentah.
+- Hak akses master defect mengikuti separation of duties: Operator dan Management `read` saja; Mandor hanya boleh membuat request/draft defect; Supervisor mengelola master defect final untuk fungsi QC; SuperAdmin memegang full access eksplisit termasuk `seed`.
+- HRD workspace direbaseline menjadi 4 menu production-ready: `Dashboard`, `Karyawan`, `Absensi`, dan `Akses & Audit`. Menu `Karyawan` menampilkan direktori privacy-safe dengan mode masked default dan detail dummy/allowlisted eksplisit; UI normal tetap tidak menerima PII terenkripsi, blind index, Script Properties, profile base64, atau metadata audit mentah.
 - Desktop memakai nav-top, sedangkan mobile memakai bottom nav button agar ergonomis untuk penggunaan satu tangan.
 - Mobile bottom nav menampilkan icon besar untuk semua menu; teks penuh hanya muncul pada menu aktif.
 - View Pengaturan dibuka dari top floating button dan menyediakan Try Role instan/multi-select untuk demo/trial saat `AUTH_MODE=OFF`, sehingga tester tidak perlu berganti email dan bisa menentukan menu workflow yang tampil.
@@ -132,7 +134,7 @@ Langkah berikutnya mengikuti [Implementation Plan](docs/IMPLEMENTATION_PLAN.md),
 - Frontend tidak boleh memanggil `google.script.run` langsung; semua call melewati `apiAdapter.js`.
 - Setiap payload submit membawa `transaction_id` UUID, `device_timestamp` UTC dari device, `client_version`, dan data produksi sesuai schema.
 - Target hanya dibandingkan dengan `perolehan_ok + perolehan_reject`. Barang Reject tetap masuk perhitungan realisasi target, sedangkan `tandon` tidak masuk perhitungan target dan boleh ada atau kosong walaupun target sudah tercapai.
-- Target harian berasal dari `TARGET_MASTER`, bukan angka bebas operator. Penggantian target dilakukan oleh Mandor atau role di atasnya dengan scope eksplisit: semua operator, satu operator, line/shift, atau machine scope. `RAW_LOGS.target_harian` tetap menjadi snapshot saat submit dan tidak boleh ditimpa oleh perubahan target berikutnya.
+- Target harian berasal dari `TARGET_MASTER`, bukan angka bebas operator. Penggantian target dilakukan oleh Mandor atau role di atasnya dengan scope eksplisit: satu operator, semua operator dalam scope Mandor, Bagian, atau jenis pekerjaan. Scope line/shift/machine hanya legacy. `RAW_LOGS.target_harian` tetap menjadi snapshot saat submit dan tidak boleh ditimpa oleh perubahan target berikutnya.
 - Jika `perolehan_reject > 0`, `defect_category_id` wajib ada dan harus aktif di `DEFECT_CATEGORIES`.
 - Submit ke GAS bersifat append-only ke `RAW_LOGS`; retry dengan `transaction_id` sama tidak boleh menggandakan data.
 - Queue IndexedDB hanya dihapus setelah response GAS success yang tervalidasi.
@@ -251,7 +253,7 @@ Di production `AUTH_MODE=ON`, jalankan dengan akun SuperAdmin yang terdaftar dan
 
 ## Frontend API Adapter
 
-Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. State mock disimpan di IndexedDB melalui `mockGasPersistence.js`; seed default hanya dibuat ketika snapshot kosong. Untuk Operator, mock menyediakan `getOperatorReferenceData`, `getProductionTarget`, submit/sync IndexedDB, dan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori user masked, role matrix, dan audit summary aman sehingga workspace dapat diuji cukup dengan `npm run dev`.
+Frontend tidak memanggil `google.script.run` langsung. Semua interaksi GAS lewat `src/services/apiAdapter.js`, sedangkan development lokal memakai `src/services/mock_gas.js` untuk meniru response Apps Script dengan latency dan failure simulation. State mock disimpan di IndexedDB melalui `mockGasPersistence.js`; seed default hanya dibuat ketika snapshot kosong. Untuk Operator, mock menyediakan `getOperatorReferenceData`, `getProductionTarget`, submit/sync IndexedDB, dan response lengkap `getOperatorDashboard`: summary hari ini/kemarin, trend Daily/Weekly/Monthly, recent submissions, status sync, dan Pareto defect. Untuk HRD, mock menyediakan `getHrdAccessDashboard` dengan direktori Karyawan dummy, role matrix, audit summary aman, dan attendance readiness sehingga workspace dapat diuji cukup dengan `npm run dev`.
 
 ## Verifikasi Lokal
 
@@ -279,3 +281,8 @@ Expected:
 
 Aris Nur Mahendra  
 Digital Transformation Specialist & Workflow Hacker
+
+## Update/Patch/Debug
+- [x] jangan gunakan grid pada "hrd-workflow", terapkan seperti "hrd-workflow hrd-workflow-full"
+- [x] semua tabel harus bisa di sort
+- [x] tambahkan search pada table-heading

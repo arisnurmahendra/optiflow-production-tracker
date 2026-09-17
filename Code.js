@@ -465,8 +465,33 @@ function getHrdAccessDashboard(request) {
   });
 
   OptiflowAuth.requirePermission(session, 'audit_log', 'read');
+  OptiflowAuth.requirePermission(session, 'attendance_recap', 'read');
 
   return OptiflowHrd.getAccessDashboard(payload, session);
+}
+
+function upsertHrdEmployee(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateHrdEmployeeUpsertRequest(arguments, request);
+  var mode = String(payload.mode || 'UPSERT').toUpperCase();
+  var action = mode === 'CREATE' ? 'create' : 'update';
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'employee_master',
+    action: action,
+  });
+
+  return OptiflowHrd.upsertEmployee(payload, session);
+}
+
+function deactivateHrdEmployee(request) {
+  // Input Validation & Sanitization
+  var payload = OptiflowValidation.validateHrdEmployeeDeactivateRequest(arguments, request);
+  var session = OptiflowAuth.requireSession(payload.session || {}, {
+    resource: 'employee_master',
+    action: 'soft_delete',
+  });
+
+  return OptiflowHrd.deactivateEmployee(payload, session);
 }
 
 function runGasTestRunner(request) {

@@ -26,9 +26,16 @@ Status implementasi 2026-09-09:
 - Daily closing, adjustment, batch recap, supervisor control center, management dashboard read-only, ChartJS Operator dashboard, Help/Cara penggunaan per role, spreadsheet-backed defect CRUD/seed, dan HRD read-only access dashboard sudah tersedia untuk scope runtime lokal.
 - Native GAS test runner, checklist deployment, checklist hardening, pilot plan, dan template paket QCC sudah tersedia sebagai artefak M6/M7.
 
-## 1A. Informasi Proses Bisnis Baru - Pending Rebaseline
+## 1A. Rebaseline Proses Bisnis Aktif - Pelaporan Harian Berbasis Bagian
 
-Informasi lapangan terbaru menunjukkan kontrak lama berbasis `line`, `machine`, dan input mandiri Operator belum sepenuhnya sesuai dengan proses berjalan. Sampai rebaseline selesai, perubahan kode baru harus ditahan atau dibatasi ke dokumentasi/issue planning.
+Informasi lapangan terbaru menunjukkan kontrak lama berbasis `line`, `machine`, dan input mandiri Operator belum sepenuhnya sesuai dengan proses berjalan. Mulai `OPT-037`, target proses bisnis yang disahkan adalah pelaporan harian berbasis `Bagian`, karyawan, absensi, output, Mandor sebagai pencatat, dan Supervisor sebagai verifikator/QC.
+
+Asumsi lama yang obsolete untuk desain baru:
+- `Line`, `shift`, dan `machine` tidak boleh lagi menjadi identitas utama proses bisnis harian. Field tersebut hanya legacy/kompatibilitas runtime sampai migrasi `OPT-042` dan recap `OPT-044`.
+- Daily closing tidak lagi dipikirkan sebagai `line + shift` semata, tetapi sebagai scope `factory_date + bagian_id` dengan petugas pencatat dan verifikator.
+- Operator tidak boleh menjadi satu-satunya sumber nilai produksi final. Nilai sah produksi adalah hasil yang diterima/dicatat Mandor dan diverifikasi Supervisor/QC.
+- `Solder` dan `Lem` bukan daftar final seluruh proses produksi; keduanya adalah contoh `Bagian` atau work category yang bisa diperluas melalui `BAGIAN_MASTER`.
+- Relasi proses `Lem` terhadap `Solder` tidak selalu satu-ke-satu, sehingga desain input berikutnya harus mendukung sumber bahan dari lebih dari satu karyawan/proses.
 
 Fakta baru:
 - Struktur laporan harian sementara lebih tepat disebut `Bagian`; `Solder` dan `Lem` hanya sebagian contoh dari proses produksi yang lebih luas, bukan daftar proses final.
@@ -58,10 +65,48 @@ Kontrak awal Management:
 - Jika proyeksi gaji bulanan memenuhi atau melebihi UMR/target gaji, UI Management menampilkan status aman/success.
 - Jika bagian belum memiliki harga satuan atau target gaji resmi, UI wajib menampilkan status `POLICY_PENDING`, bukan menghitung asumsi diam-diam.
 
+Kontrak kebijakan upah dan target bulanan `OPT-041`:
+- Owner final kebijakan upah per item, target gaji/UMR, dan target unit bulanan adalah `Management` dan `SuperAdmin`.
+- `HRD` membaca kebijakan untuk rekap payroll-ready dan boleh membuat draft/usulan perubahan hanya jika workflow approval HRD disahkan kemudian; default HRD tidak mengubah kebijakan final.
+- `Mandor` membaca target operasional turunan untuk menetapkan target harian tim, tetapi tidak boleh mengubah `unit_rate` atau `target_salary`.
+- `Supervisor` membaca kebijakan untuk menilai apakah output tervalidasi dan target Bagian realistis, tetapi tidak menjadi owner upah.
+- `Operator/Karyawan` tidak melihat kalkulasi gaji personal penuh di MVP; Operator hanya melihat target produksi dan performa dirinya sesuai role.
+- Formula target unit bulanan default adalah `ceil(target_salary / unit_rate)` jika `monthly_target_unit` kosong atau perlu dihitung ulang. Jika `unit_rate=0` atau `target_salary=0`, status kebijakan wajib `POLICY_PENDING`.
+- Formula target harian per karyawan adalah `ceil(monthly_target_unit / planned_attendance_days)`. `planned_attendance_days` harus berupa integer positif dalam range kebijakan yang disahkan.
+- Output yang dihitung untuk estimasi upah hanya `OK + Reject` yang sudah diverifikasi Supervisor. `Tandon` tidak masuk realisasi target, upah, atau payroll.
+- Perubahan `unit_rate`, `target_salary`, `monthly_target_unit`, dan range hari masuk wajib diaudit serta tidak boleh mengubah transaksi historis secara diam-diam.
+
+Kebijakan seed awal:
+
+| Bagian / Work Category | Upah per item | Target gaji bulanan | Target unit bulanan | Catatan |
+| :--- | ---: | ---: | ---: | :--- |
+| `SOLDER` / Las | Rp94 | Rp3.500.000 | 37.234 | `ceil(3500000 / 94)` |
+| `LEM` | Rp83 | Rp3.500.000 | 42.169 | `ceil(3500000 / 83)` |
+
+Tabel target harian awal:
+
+| Hari masuk | Target Las/Solder per hari | Target Lem per hari |
+| ---: | ---: | ---: |
+| 26 | 1.432 | 1.622 |
+| 25 | 1.489 | 1.687 |
+| 24 | 1.552 | 1.758 |
+| 23 | 1.619 | 1.834 |
+| 22 | 1.693 | 1.917 |
+| 21 | 1.774 | 2.009 |
+| 20 | 1.862 | 2.109 |
+
+Escalation path kebijakan upah:
+1. Mandor/Supervisor menemukan target harian tidak realistis atau output tervalidasi tidak cocok dengan kebijakan.
+2. HRD menandai dampak payroll-ready jika absensi/status karyawan mempengaruhi target harian.
+3. Management mengevaluasi dan mengubah kebijakan melalui workflow `Bagian & Upah`.
+4. SuperAdmin hanya melakukan koreksi darurat/configuration fix dengan audit eksplisit.
+
 Open decision:
-- Apakah HRD hanya membaca kebijakan upah untuk payroll-ready recap atau juga boleh mengusulkan perubahan draft yang tetap disahkan Management.
+- Apakah HRD hanya membaca kebijakan upah untuk payroll-ready recap atau juga boleh mengusulkan perubahan draft yang tetap disahkan Management. Default saat ini: HRD read-only untuk kebijakan final.
 - Fungsi QC berada pada role `Supervisor`; tidak dibuat role `Quality` atau `QC` terpisah sampai ada keputusan bisnis baru.
-- Apakah absensi dicatat oleh Mandor, HRD, atau hasil integrasi dari sistem absensi eksternal.
+- Apakah absensi hanya berasal dari tombol `Masuk/Keluar` karyawan, atau boleh diimpor dari mesin absensi eksternal pada fase berikutnya.
+- Apakah satu laporan harian Bagian selalu butuh satu verifikator Supervisor, atau bisa lebih dari satu verifikator untuk Bagian besar.
+- Apakah `Tandon` akan tetap menjadi angka konteks, menjadi stok/buffer resmi, atau masuk ke alur material pada fase traceability berikutnya.
 
 Kontrak awal absensi:
 - Karyawan menekan tombol `Masuk` dan `Keluar` sebagai event absensi harian.
@@ -70,39 +115,77 @@ Kontrak awal absensi:
 - Rekap harian Bagian menampilkan jumlah hadir, absen, izin, sakit, alpha, hasil kerja, dan statistik produktivitas.
 - Rekap bulanan kehadiran harus bisa dibaca HRD/Management sesuai permission dan masking data.
 
+Kontrak awal master karyawan:
+- `EMPLOYEE_MASTER` menjadi sumber nomor karyawan 5 digit, nama, status aktif/resign, Bagian default, dan data HRD tambahan.
+- HRD dan SuperAdmin menjadi owner utama CRUD data karyawan.
+- Mandor membaca daftar karyawan dalam scope timnya untuk absensi, target harian, dan penerimaan hasil.
+- Supervisor membaca daftar karyawan dalam scope verifikasi untuk QC, closing, dan performa tim.
+- Management membaca agregat karyawan/absensi tanpa PII detail kecuali ada izin eksplisit yang disahkan.
+- Karyawan/operator resign atau nonaktif tidak boleh masuk target, absensi baru, atau submit produksi baru.
+
 ## 2. Role Dan Hak Akses
 
 | Role | Hak akses utama |
 | :--- | :--- |
 | `Operator` | Submit laporan produksi miliknya sendiri, membaca target aktif, dan melihat status sync. |
-| `Mandor` | Review submit normal sebelum closing, menangani konflik, menjalankan `VOID`/`REQUEST_CORRECTION`/`PRE_CLOSING_CORRECTION`, closing harian, membaca rekap lini, mengatur target harian sesuai scope, dan membuat request/draft defect baru. |
+| `Mandor` | Menerima/mencatat hasil operator, mengonfirmasi absensi tim, menetapkan target harian sesuai scope, review submit normal sebelum closing, menangani konflik, menjalankan `VOID`/`REQUEST_CORRECTION`/`PRE_CLOSING_CORRECTION`, closing harian Bagian, dan membuat request/draft defect baru. |
 | `Supervisor` | Menjalankan fungsi QC/verifikator: memvalidasi nilai sah produksi `OK + Reject`, mengesahkan laporan harian Bagian, mengelola standar defect final, menangani closing/koreksi level area, serta membaca performa tim sesuai scope. |
 | `Management` | Membaca KPI eksekutif, produksi, absensi, risiko, Pareto, dan mengelola master kebijakan Bagian/upah sesuai permission. |
 | `HRD` | Mengelola registrasi user dan role bersama SuperAdmin, serta membaca kesiapan akses user dan audit secara privacy-first. |
 | `SuperAdmin` | Mengelola konfigurasi, role, master operasional, target lintas scope, dan troubleshooting tingkat lanjut. |
 
-## 2A. Proses Pelaporan Perolehan Harian
+Ownership karyawan dan absensi:
+- `HRD`: membuat/mengubah/nonaktifkan data karyawan, membaca rekap absensi detail, dan menyiapkan data payroll-ready.
+- `Operator/Karyawan`: membuat event `Masuk` dan `Keluar` miliknya sendiri.
+- `Mandor`: mengonfirmasi absensi tim, menjalankan `check all`, dan menetapkan `Izin`, `Sakit`, atau `Alpha` dengan catatan dalam scope tanggung jawabnya.
+- `Supervisor`: membaca dan memverifikasi dampak absensi terhadap laporan produksi Bagian; koreksi absensi hanya lewat workflow yang diaudit bila diberi permission.
+- `Management`: membaca agregat absensi dan sinyal payroll-ready tanpa detail PII.
+- `SuperAdmin`: memiliki akses administratif eksplisit untuk bootstrap, troubleshooting, dan koreksi darurat.
+
+Responsibility map `OPT-043`:
+
+| Area | Operator/Karyawan | Mandor | Supervisor | HRD | Management | SuperAdmin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Data karyawan | Membaca profil sendiri minimum | Membaca tim dalam scope | Membaca scope verifikasi | Owner CRUD detail | Agregat saja | Admin eksplisit |
+| Multi-role dan akses | Memakai role yang diizinkan | Membaca scope sendiri | Membaca scope sendiri | Mengelola role/access operasional bersama SuperAdmin | Membaca anomali akses agregat | Owner konfigurasi/permission |
+| Absensi | `Masuk`/`Keluar` sendiri | Konfirmasi/check all/status pengecualian tim | Membaca dampak ke produksi | Owner rekap detail payroll-ready | Agregat payroll-ready | Admin eksplisit |
+| Target harian | Membaca target sendiri | Owner target harian tim | Review/koreksi lintas Bagian sesuai izin | Membaca dampak payroll-ready | Membaca kebijakan/aggregate | Admin eksplisit |
+| Produksi harian | Submit/melaporkan hasil sendiri | Menerima/mencatat/review hasil tim | Verifikasi nilai sah `OK + Reject` | Tidak mengubah transaksi produksi | Read-only agregat | Admin eksplisit |
+| Defect | Memilih defect aktif | Membuat request/draft defect | Owner master defect final/QC | Tidak mengelola defect | Read-only Pareto agregat | Admin eksplisit |
+| Closing/koreksi | Melihat status/koreksi sendiri | Closing harian dan pre-closing correction tim | Verifikasi/escalation/adjustment area | Membaca readiness absensi | Membaca risiko pending agregat | Admin eksplisit |
+| Upah/unit-rate | Tidak mengubah | Membaca target operasional | Membaca untuk validasi output | Membaca untuk payroll-ready | Owner kebijakan Bagian/upah | Admin eksplisit |
+
+Aturan multi-role:
+- Satu email/user boleh memiliki banyak role aktif melalui `USER_ROLE_ASSIGNMENTS`.
+- Session boleh membawa active role pilihan user, tetapi backend wajib memvalidasi active role terhadap assignment aktif dan permission exact match.
+- Jika user memiliki beberapa role, UI hanya menampilkan workspace role yang diizinkan; perpindahan role tidak boleh memberikan akses lintas scope tanpa permission.
+- `SuperAdmin` tidak boleh memakai implicit bypass. Semua aksi SuperAdmin tetap harus tercatat sebagai permission eksplisit dan audit event.
+- Role operasional tidak boleh menerima PII/payroll-sensitive detail yang tidak diperlukan untuk tugasnya.
+
+## 2A. Proses Pelaporan Perolehan Harian Berbasis Bagian
 
 1. HRD dan SuperAdmin mendaftarkan seluruh user dari Operator sampai Supervisor sesuai kebutuhan akses.
-2. Supervisor dan SuperAdmin mengatur master operasional: jenis pekerjaan dan Bagian.
+2. Management/SuperAdmin mengatur master `Bagian` dan kebijakan upah/target gaji; Supervisor/SuperAdmin mengatur jenis pekerjaan dan standar kualitas.
 3. Jenis pekerjaan mempengaruhi target, kategori defect yang tersedia, dan field/form Operator bila proses kerja membutuhkan input berbeda.
-4. Mandor mengatur target harian operator dalam scope timnya; Supervisor boleh meninjau dan mengoreksi target lintas Bagian sesuai permission resmi.
+4. Mandor mengatur target harian per karyawan/operator dalam scope Bagian/timnya; Supervisor boleh meninjau dan mengoreksi target lintas Bagian sesuai permission resmi.
 5. Supervisor dan SuperAdmin menjadi owner utama `DEFECT_CATEGORIES`. Mandor boleh membuat request/draft defect baru dari temuan lapangan, tetapi tidak langsung mengubah master final tanpa approval owner.
-6. Operator menginput hasil kerja harian.
-7. Submit normal otomatis `ACCEPTED` dan langsung menjadi kandidat rekap harian.
-8. Sebelum daily closing, Mandor boleh melakukan review terhadap submit normal dan menjalankan `VOID`, `REQUEST_CORRECTION`, atau `PRE_CLOSING_CORRECTION`. Mandor tidak boleh mengedit angka transaksi asal secara langsung.
-9. Setelah daily closing, data terkunci; perubahan setelah closing wajib lewat `ADJUSTMENT_LOGS` append-only.
-10. Supervisor memverifikasi hasil harian, mingguan, dan bulanan sebagai fungsi QC/verifikator sebelum data menjadi referensi final.
-11. Statistik performa operator mencakup Target vs Realisasi, OK rate, Reject rate, konsistensi harian, jumlah correction/request dari Mandor, dan ranking antar operator.
-12. Pareto defect tersedia sesuai filter dan batas akses role.
-13. Relasi Mandor-Operator wajib eksplisit: satu Mandor boleh membawahi banyak Operator, tetapi satu line tidak otomatis berarti semua Operator di line tersebut berada di bawah Mandor yang sama.
+6. Karyawan/Operator melakukan absensi `Masuk` dan `Keluar`; Mandor melakukan konfirmasi `check` atau `check all` dan menetapkan `Izin`, `Sakit`, atau `Alpha` bila diperlukan.
+7. Operator/Mandor mencatat hasil kerja harian per karyawan, Bagian, tanggal, jenis pekerjaan, `OK`, `Reject`, dan optional `Tandon`.
+8. Submit normal otomatis menjadi kandidat rekap sementara, tetapi belum final sampai melewati review/closing dan verifikasi Supervisor.
+9. Sebelum daily closing, Mandor boleh melakukan review terhadap submit normal dan menjalankan `VOID`, `REQUEST_CORRECTION`, atau `PRE_CLOSING_CORRECTION`. Mandor tidak boleh mengedit angka transaksi asal secara langsung.
+10. Mandor menjalankan closing harian per `factory_date + bagian_id` setelah absensi, target, hasil operator, dan koreksi actionable selesai.
+11. Supervisor memverifikasi nilai sah produksi `OK + Reject`, mengesahkan laporan harian Bagian, dan menyelesaikan isu QC sebelum data menjadi referensi final.
+12. Setelah daily closing/verifikasi, data terkunci; perubahan setelah closing wajib lewat `ADJUSTMENT_LOGS` append-only.
+13. Statistik performa operator mencakup Target vs Realisasi, OK rate, Reject rate, konsistensi harian, jumlah correction/request dari Mandor, dan ranking antar operator sesuai scope role.
+14. Pareto defect tersedia sesuai filter dan batas akses role.
+15. Relasi Mandor-Operator wajib eksplisit: satu Mandor boleh membawahi banyak Operator, tetapi satu Bagian tidak otomatis berarti semua Operator di Bagian tersebut berada di bawah Mandor yang sama.
 
 ## 3. Alur Submit Produksi
 
 1. Operator membuka aplikasi.
 2. Backend mengirim session context sesuai `AUTH_MODE`.
-3. Operator memilih line, shift, machine ID, operator demo, tandon, OK, dan reject. Target harian dibaca otomatis dari `TARGET_MASTER`; field target manual hanya menjadi fallback warning jika target aktif belum ditemukan.
-   Dalam mode development/demo, pilihan line, shift, mesin, dan operator wajib berasal dari dataset referensi backend/mock yang meniru struktur spreadsheet.
+3. Operator memilih Bagian, jenis pekerjaan, operator/karyawan demo bila mode development, tandon, OK, dan reject. Target harian dibaca otomatis dari `TARGET_MASTER`; field target manual hanya menjadi fallback warning jika target aktif belum ditemukan.
+   Dalam mode development/demo, pilihan Bagian, jenis pekerjaan, dan operator wajib berasal dari dataset referensi backend/mock yang meniru struktur spreadsheet. `line`, `shift`, dan `machine` hanya fallback legacy sampai migrasi UI/runtime selesai.
 4. Frontend menjalankan validasi Zod.
 5. Jika reject lebih dari 0, operator wajib memilih kategori defect.
 6. Kategori defect berasal dari sheet `DEFECT_CATEGORIES` melalui backend GAS, dengan fallback cache/default hanya untuk development/offline.
@@ -121,7 +204,7 @@ Tahap `OPT-010` hanya menstandardisasi form operator, validasi Zod, pembuatan pa
 ## 4. Alur Offline
 
 1. Operator membuka aplikasi saat masih memiliki koneksi internet untuk memuat `Index.html` dari GAS HTML Service.
-2. Setelah aplikasi terbuka, data referensi seperti pekerja, line, shift, mesin, dan target dapat dibaca dari cache IndexedDB atau response GAS/mock GAS.
+2. Setelah aplikasi terbuka, data referensi seperti karyawan, Bagian, jenis pekerjaan, target, dan kategori defect dapat dibaca dari cache IndexedDB atau response GAS/mock GAS. Data `line/shift/machine` hanya kompatibilitas legacy sampai migrasi selesai.
 3. Jika koneksi gagal saat input atau submit, payload disimpan di IndexedDB.
 4. UI menampilkan status pending.
 5. Sync worker mencoba ulang saat koneksi membaik.
@@ -174,9 +257,9 @@ Data masuk quarantine jika memenuhi indikasi:
 - Field wajib kosong.
 - Total produksi tidak masuk akal.
 - Duplikasi mencurigakan.
-- Mesin solder sama, operator berbeda, dan selisih `device_timestamp` berdekatan dalam conflict time window.
+- Bagian/jenis pekerjaan sama, operator berbeda, dan selisih `device_timestamp` berdekatan dalam conflict time window. Untuk data legacy, rule `machine_id` sama masih boleh dipakai selama masa migrasi.
 - Timestamp perangkat terlalu jauh dari waktu server.
-- Submit masuk ke line/shift/tanggal yang sudah closing.
+- Submit masuk ke Bagian/tanggal yang sudah closing. Untuk data legacy, scope line/shift/tanggal tetap boleh dibaca sampai migrasi selesai.
 - Reject lebih dari 0 tanpa kategori defect.
 - Reject memakai kategori defect tidak aktif atau tidak dikenal.
 - Rule validasi bisnis baru yang disetujui dalam dokumen kontrak.
@@ -207,7 +290,7 @@ Prinsip Human-in-the-Loop:
 Kontrak approval inbox Mandor:
 1. Inbox memprioritaskan `CONFLICT_PENDING` di urutan paling atas.
 2. Mandor dapat memfilter kasus berdasarkan status dan line tanpa kehilangan konteks detail aktif.
-3. Detail konflik wajib menampilkan perbandingan data current vs conflict-with: operator termasking, machine, OK, reject, defect, dan waktu perangkat.
+3. Detail konflik wajib menampilkan perbandingan data current vs conflict-with: operator termasking, Bagian, jenis pekerjaan, OK, reject, defect, dan waktu perangkat. Metadata `machine_id` hanya ditampilkan sebagai legacy context jika ada.
 4. Tombol keputusan UI minimal mencakup `Approve current`, `Reject both`, dan `Request correction`.
 5. Jika endpoint approval backend gagal atau belum tersedia pada environment lokal, aksi UI hanya boleh distage di state frontend dan tidak boleh mengubah `MASTER_RECAP`.
 6. Setelah Mandor menekan `Approve`, `Reject`, atau `Request correction`, kasus wajib keluar dari `Work Queue` aktif. Status `APPROVED` menjadi kandidat rekap bersih, `REJECTED` dikecualikan dari rekap, dan `CORRECTION_REQUESTED` berpindah ke follow-up koreksi sampai operator melakukan resubmit.
@@ -225,10 +308,10 @@ Backend quarantine routing:
 
 ## 7. Daily Closing Dan Adjustment
 
-1. Mandor memeriksa submit harian, sync pending, dan quarantine.
-2. Jika data line/shift sudah lengkap, Mandor menjalankan closing.
+1. Mandor memeriksa absensi tim, target harian, submit harian, sync pending, dan quarantine.
+2. Jika data `factory_date + bagian_id` sudah lengkap, Mandor menjalankan closing.
 3. Status closing disimpan di `DAILY_CLOSING`.
-4. Setelah closing, transaksi baru untuk tanggal/line/shift tersebut ditolak atau diarahkan ke adjustment sesuai permission.
+4. Setelah closing, transaksi baru untuk tanggal/Bagian tersebut ditolak atau diarahkan ke adjustment sesuai permission.
 5. Koreksi setelah closing dicatat di `ADJUSTMENT_LOGS`.
 6. Adjustment hanya mempengaruhi rekap setelah disetujui dan diaudit.
 7. Reopen closing hanya boleh dilakukan role berizin dan harus menambah event baru, bukan menghapus closing lama.
@@ -248,7 +331,7 @@ Backend quarantine routing:
 1. Time-driven trigger GAS berjalan berkala.
 2. Backend membaca transaksi valid dari `RAW_LOGS`, keputusan final dari `QUARANTINE`, pre-closing review latest, dan adjustment approved dari `ADJUSTMENT_LOGS`.
 3. Rekap dihitung berdasarkan tanggal pabrik `Asia/Jakarta`.
-4. Rekap dipisahkan per line, shift, operator, machine, dan kategori defect.
+4. Rekap baru dipisahkan per Bagian, jenis pekerjaan, karyawan/operator, kategori defect, status absensi, pencatat Mandor, dan verifikator Supervisor. Field line/shift/machine tetap boleh dibaca sebagai legacy sampai migrasi data selesai.
 5. Metadata `qcc_factor` dan `severity` dari `DEFECT_CATEGORIES` dipakai sebagai dasar Pareto defect dan prioritas improvement.
 6. Hasil ditulis ke `MASTER_RECAP`.
 7. Dashboard membaca `MASTER_RECAP`, bukan seluruh data mentah.
@@ -274,7 +357,7 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Dashboard Operator menampilkan statistik performa pekerjaan hari ini vs kemarin untuk `Target`, `Tandon`, `OK`, dan `Reject`, komposisi ChartJS doughnut `OK vs Reject` untuk `Hari ini` dan `Kemarin`, serta ChartJS trend detail `Target`, `Realisasi`, `OK`, dan `Reject` dengan pilihan `Daily`, `Weekly`, dan `Monthly`. Angka tengah doughnut berarti capaian `Realisasi / Target`; `Realisasi` pada chart berarti `OK + Reject`; `Tandon` tidak dihitung dalam chart, tetapi tetap ditampilkan sebagai informasi cadangan. Default periode adalah `Daily` dengan 7 hari terakhir. Di development lokal, data ini boleh berasal dari `mock_gas.js` selama response meniru kontrak callable `getOperatorDashboard`.
 - Riwayat Operator menampilkan `recent_submissions` dari response `getOperatorDashboard` ditambah antrean lokal IndexedDB bila ada, sehingga user dapat melihat contoh data lengkap tanpa upload ke GAS.
 - Status Operator menampilkan status draft, queue, sync lokal, dan ringkasan mock/backend tanpa membuka approval atau data manajemen.
-- Header shift aktif Operator berisi line, shift, mesin, dan operator; header ini wajib tampil di semua menu fitur Operator.
+- Header konteks aktif Operator berisi Bagian, shift, jenis pekerjaan, dan operator; header ini wajib tampil di semua menu fitur Operator. Field line/mesin hanya disimpan sebagai kompatibilitas runtime sampai migrasi selesai.
 - Penyebutan `shift` harus seragam di UI, dokumen, payload, dan sheet. Opsi shift wajib diambil dari `SHIFT_MASTER` melalui backend ketika tersedia; opsi lokal hanya boleh menjadi fallback development/offline.
 - Menu `Defect` menjadi permukaan khusus untuk kategori reject, QCC factor, severity, dan Pareto mini agar informasi cacat tidak bercampur dengan form input.
 - `Mandor`: fokus pada kerja lapangan harian melalui `Dashboard`, `Absensi Tim`, `Target Harian`, `Hasil Operator`, `Approval & Koreksi`, `Closing Harian`, `Defect Request`, dan `Help`.
@@ -304,7 +387,7 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 
 ## 10. Pilot Rollout
 
-- Rollout dimulai dari 1 line, 1 shift, dan 1 Mandor.
+- Rollout dimulai dari 1 Bagian, 1 Mandor, 1 Supervisor/verifikator, dan subset karyawan aktif.
 - Periode pilot disarankan 1-2 minggu.
 - Metrik pilot: waktu submit, waktu review quarantine, waktu recap, duplicate rate, sync failure rate, dan jumlah correction request.
 - Hasil pilot menjadi dasar update SOP sebelum rollout ke 100+ operator.
@@ -323,7 +406,7 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Sebelum closing, koreksi Mandor terhadap submit Operator wajib memakai event terkontrol `VOID`, `REQUEST_CORRECTION`, atau `PRE_CLOSING_CORRECTION`; angka transaksi asal tidak boleh diedit langsung.
 - Submit normal `ACCEPTED` boleh masuk rekap sementara, tetapi masih berada dalam review window sampai daily closing selesai.
 - Target harian bukan angka bebas operator. Operator hanya membaca target aktif; penggantian target dilakukan oleh Mandor atau role di atasnya sesuai permission dan scope.
-- Penggantian target harus memilih scope eksplisit: semua operator dalam line/shift/mesin, satu operator tertentu, satu line/shift, atau satu machine scope.
+- Penggantian target harus memilih scope eksplisit: satu operator, semua operator dalam scope Mandor, satu Bagian, atau satu jenis pekerjaan. Scope line/shift/mesin hanya legacy sampai migrasi `OPT-042`.
 - Bulk update target semua operator tidak boleh memakai asumsi implisit; UI/backend wajib menampilkan dan memvalidasi scope sebelum perubahan disimpan.
 - Update target untuk satu operator tidak boleh mengubah target operator lain.
 - Perubahan target setelah submit tidak boleh menimpa `RAW_LOGS.target_harian` historis karena kolom tersebut adalah snapshot target saat transaksi dibuat.
@@ -341,14 +424,14 @@ UI production tidak boleh menumpuk semua fitur dalam satu halaman per role. Seti
 - Progress header tiap role wajib berbeda sumber data: Operator memakai target dan realisasi personal, Mandor memakai agregasi Operator di bawah tanggung jawabnya, Supervisor memakai agregasi lintas area, dan Management memakai agregat final tanpa PII.
 - Target tim Mandor dihitung dari target harian masing-masing Operator dalam scope Mandor, bukan dari satu angka Operator yang sedang aktif di device.
 - Pareto defect mengikuti filter user dan batas akses role: Operator hanya data sendiri, Mandor sesuai Bagian/tim, Supervisor untuk verifikasi kualitas dan standar defect lintas area, dan Management hanya agregat tanpa PII.
-- Kombinasi `operator_email + factory_date + line_id + shift_id + machine_id` dipakai sebagai sinyal duplicate detection tambahan.
-- Kombinasi `machine_id` sama, `operator_email` berbeda, dan `device_timestamp` berdekatan wajib menghasilkan `CONFLICT_PENDING`.
+- Kombinasi `operator_email/employee_id + factory_date + bagian_id + work_category_id` dipakai sebagai sinyal duplicate detection tambahan. Kombinasi legacy `line_id + shift_id + machine_id` tetap boleh dipakai selama masa kompatibilitas.
+- Konflik berbasis mesin hanya berlaku untuk data legacy yang masih memiliki `machine_id`; proses Bagian berikutnya harus mendefinisikan rule konflik berdasarkan Bagian, karyawan, sumber bahan, waktu input, dan status closing.
 - Data `CONFLICT_PENDING` tidak boleh masuk `MASTER_RECAP` atau dashboard manajemen sebelum approval.
 
 Kontrak target harian:
 1. `Operator` membaca target aktif dan memakai fallback input manual hanya jika master target belum tersedia.
-2. `Mandor` boleh membuat/mengubah target untuk scope line/shift/mesin yang menjadi tanggung jawabnya.
-3. `Supervisor` boleh mengatur target lintas line/shift sesuai permission resmi.
+2. `Mandor` boleh membuat/mengubah target untuk karyawan/operator atau Bagian yang menjadi tanggung jawabnya.
+3. `Supervisor` boleh meninjau/mengoreksi target lintas Bagian sesuai permission resmi.
 4. `Management` default read-only agar KPI tidak dipengaruhi oleh pihak pembaca laporan, kecuali perusahaan memberi permission planning eksplisit.
 5. `SuperAdmin` boleh mengatur target lintas scope untuk bootstrap, koreksi administratif, atau troubleshooting.
 6. Jika beberapa target cocok, prioritas resolusi wajib dari paling spesifik: `OPERATOR_ONLY`, `MACHINE_SCOPE`, `LINE_SHIFT`, lalu `ALL_USERS`.

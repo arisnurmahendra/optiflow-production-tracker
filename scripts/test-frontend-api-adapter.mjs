@@ -183,6 +183,10 @@ if (
 ) {
   throw new Error('Expected mock HRD directory to expose dummy employee data and wa.me link.');
 }
+if (!hrdDirectory.data.attendance_summary
+  || Number(hrdDirectory.data.attendance_summary.pending_confirmation || 0) <= 0) {
+  throw new Error('Expected mock HRD dashboard to include attendance readiness summary.');
+}
 
 const shiftOptions = await api.getShiftOptions({ session: { simulated_role: 'Operator' } });
 if (!shiftOptions.data.shifts.some((shift) => shift.value === 'SHIFT-1' && shift.label === 'Shift 1')) {
@@ -190,10 +194,13 @@ if (!shiftOptions.data.shifts.some((shift) => shift.value === 'SHIFT-1' && shift
 }
 
 const operatorReferences = await api.getOperatorReferenceData({ session: { simulated_role: 'Operator' } });
-if (!operatorReferences.data.lines.some((line) => line.value === 'SMT-02')
+if (operatorReferences.data.reference_mode !== 'BAGIAN_WITH_LEGACY_COMPAT'
+  || !operatorReferences.data.bagian.some((bagian) => bagian.value === 'SOLDER')
+  || !operatorReferences.data.work_categories.some((category) => category.value === 'SOLDER')
+  || !operatorReferences.data.lines.some((line) => line.value === 'SMT-02')
   || !operatorReferences.data.machines.some((machine) => machine.value === 'SLD-14')
   || !operatorReferences.data.operators.some((operator) => operator.value === 'operator@example.com')) {
-  throw new Error('Expected mock GAS to expose operator reference datasets.');
+  throw new Error('Expected mock GAS to expose Bagian-first operator reference datasets with legacy compatibility.');
 }
 
 const productionTarget = await api.getProductionTarget({
@@ -422,10 +429,51 @@ const hrdDashboard = await api.getHrdAccessDashboard({
 if (hrdDashboard.data.summary.active_users <= 0 || hrdDashboard.data.role_matrix.length === 0) {
   throw new Error('Expected mock HRD dashboard to include user and role summary.');
 }
+if (!hrdDashboard.data.attendance_summary || !Array.isArray(hrdDashboard.data.users.items)) {
+  throw new Error('Expected mock HRD dashboard to support four-menu HRD workspace data.');
+}
+if (!Array.isArray(hrdDashboard.data.attendance_daily?.items)
+  || !Array.isArray(hrdDashboard.data.attendance_monthly?.items)
+  || hrdDashboard.data.attendance_daily.items.length === 0
+  || hrdDashboard.data.attendance_monthly.items.length === 0) {
+  throw new Error('Expected mock HRD dashboard to expose daily and monthly attendance recap rows.');
+}
+if (!hrdDashboard.data.attendance_summary.status
+  || hrdDashboard.data.attendance_summary.pending_confirmation < 0
+  || !Array.isArray(hrdDashboard.data.access_anomalies)
+  || !Array.isArray(hrdDashboard.data.audit_events)) {
+  throw new Error('Expected mock HRD dashboard to expose payroll readiness and lightweight governance data.');
+}
 if (JSON.stringify(hrdDashboard.data).includes('phone_blind_index')
   || JSON.stringify(hrdDashboard.data).includes('profile_base64')
   || JSON.stringify(hrdDashboard.data).includes('alamat_encrypted')) {
   throw new Error('Expected mock HRD dashboard to avoid backend-only sensitive fields.');
+}
+
+const hrdCreateEmployee = await api.upsertHrdEmployee({
+  session: { simulated_role: 'HRD' },
+  employee: {
+    employee_no: '10088',
+    full_name: 'Nina Oktaviani',
+    bagian_id: 'SOLDER',
+    status_karyawan: 'AKTIF',
+    email: 'nina.oktaviani@example.com',
+    wa_number: '628121110088',
+    address: 'Jl. Mawar 88, Bogor',
+    mandor_email: 'mandor@example.com',
+    role: 'Operator',
+    roles: ['Operator'],
+  },
+});
+if (!hrdCreateEmployee.ok || hrdCreateEmployee.data.employee.employee_no !== '10088') {
+  throw new Error('Expected mock HRD employee create/update to return employee 10088.');
+}
+const hrdDeactivateEmployee = await api.deactivateHrdEmployee({
+  session: { simulated_role: 'HRD' },
+  employee_no: '10088',
+});
+if (!hrdDeactivateEmployee.ok || hrdDeactivateEmployee.data.status_karyawan !== 'RESIGN') {
+  throw new Error('Expected mock HRD employee resign action to mark employee RESIGN.');
 }
 
 const properties = await api.getScriptPropertiesStatus({ session: { simulated_role: 'SuperAdmin' } });

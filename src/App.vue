@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useOperatorReportStore } from './composables/useOperatorReportStore.js';
+import { useTableSearchAndSort } from './composables/useTableSearchAndSort.js';
 import { ApiAdapterError, api } from './services/apiAdapter.js';
 import {
   approvalLineOptions,
@@ -19,6 +20,7 @@ import {
 import {
   defectOptions as defaultDefectOptions,
   formatNumber,
+  bagianOptions as fallbackBagianOptions,
   createParetoRejectSummary,
   getDefectOptions,
   getDefectCategory,
@@ -26,6 +28,7 @@ import {
   machineOptions as fallbackMachineOptions,
   setDefectCategories,
   shiftOptions as fallbackShiftOptions,
+  workCategoryOptions as fallbackWorkCategoryOptions,
 } from './services/operatorReportForm.js';
 import {
   buildDashboardTiles,
@@ -123,6 +126,27 @@ const hrdData = ref(null);
 const hrdLoading = ref(false);
 const hrdError = ref('');
 const hrdLoaded = ref(false);
+const hrdEmployeeDetailMode = ref('MASKED');
+const hrdFilters = ref({
+  factory_date: '2026-09-03',
+  period_month: '2026-09',
+  bagian_id: 'ALL',
+  attendance_status: 'ALL',
+});
+const hrdEmployeeSearchInput = ref('');
+const hrdEmployeeSearch = ref('');
+const hrdEmployeeFilters = ref({
+  bagian_id: 'ALL',
+  status: 'ALL',
+  role: 'ALL',
+  completeness: 'ALL',
+});
+const hrdEmployeeFormMode = ref('CREATE');
+const hrdEmployeeSaving = ref(false);
+const hrdEmployeeMessage = ref('');
+const hrdEmployeeError = ref('');
+const hrdEmployeeForm = ref(createEmptyHrdEmployeeForm());
+const hrdEmployeeEditorOpen = ref(false);
 const productionTargetData = ref(null);
 const productionTargetLoading = ref(false);
 const productionTargetError = ref('');
@@ -135,8 +159,21 @@ const operatorTrendChartCanvas = ref(null);
 let operatorTrendChart = null;
 const operatorDonutChartCanvases = ref([]);
 const operatorDonutCharts = [];
+
+const hrdAttendanceDonutCanvas = ref(null);
+let hrdAttendanceDonutChart = null;
+const hrdWorkforceBarCanvas = ref(null);
+let hrdWorkforceBarChart = null;
+const hrdReadinessPieCanvas = ref(null);
+let hrdReadinessPieChart = null;
+const hrdTrendLineCanvas = ref(null);
+let hrdTrendLineChart = null;
+
+let hrdEmployeeSearchTimer = null;
+const bagianOptions = ref(fallbackBagianOptions);
 const lineOptions = ref(fallbackLineOptions);
 const machineOptions = ref(fallbackMachineOptions);
+const workCategoryOptions = ref(fallbackWorkCategoryOptions);
 const operatorOptions = ref([]);
 const selectedOperatorEmail = ref('operator@example.com');
 const defectOptions = ref(defaultDefectOptions);
@@ -155,10 +192,10 @@ const operatorTrendPeriods = Object.freeze([
   { value: 'MONTHLY', label: 'Monthly', hint: '6 bulan' },
 ]);
 const targetScopeOptions = Object.freeze([
-  { value: 'MACHINE_SCOPE', label: 'Mesin ini', hint: 'Berlaku untuk semua operator pada mesin ini.' },
+  { value: 'MACHINE_SCOPE', label: 'Jenis pekerjaan ini', hint: 'Berlaku untuk semua operator pada jenis pekerjaan ini.' },
   { value: 'OPERATOR_ONLY', label: 'Satu operator', hint: 'Berlaku hanya untuk email operator tertentu.' },
-  { value: 'LINE_SHIFT', label: 'Line/shift', hint: 'Berlaku untuk semua mesin dan operator pada line/shift.' },
-  { value: 'ALL_USERS', label: 'Semua user', hint: 'Berlaku untuk seluruh operator dalam line/shift.' },
+  { value: 'LINE_SHIFT', label: 'Bagian/shift', hint: 'Berlaku untuk semua jenis pekerjaan dan operator pada Bagian/shift.' },
+  { value: 'ALL_USERS', label: 'Semua user', hint: 'Berlaku untuk seluruh operator dalam Bagian/shift.' },
 ]);
 const targetForm = ref({
   target_id: '',
@@ -180,7 +217,7 @@ const metricHelpContent = Object.freeze({
   Target: {
     icon: 'info',
     title: 'Apa itu Target?',
-    html: '<p><strong>Target</strong> adalah jumlah perolehan yang harus dicapai pada line, shift, dan mesin aktif.</p><p>Dipakai sebagai pembanding utama terhadap realisasi produksi.</p><p><strong>Rumus kontrol:</strong> Realisasi = OK + Reject.</p>',
+    html: '<p><strong>Target</strong> adalah jumlah perolehan yang harus dicapai pada Bagian, shift, dan jenis pekerjaan aktif.</p><p>Dipakai sebagai pembanding utama terhadap realisasi produksi.</p><p><strong>Rumus kontrol:</strong> Realisasi = OK + Reject.</p>',
   },
   OK: {
     icon: 'success',
@@ -202,6 +239,7 @@ const roleOptions = Object.freeze(['Operator', 'Mandor', 'Supervisor', 'Manageme
 const roleIcons = Object.freeze({
   Operator: '📝',
   Mandor: '✅',
+  Supervisor: '📊',
   Management: '📈',
   HRD: '👤',
   SuperAdmin: '🔐',
@@ -209,7 +247,7 @@ const roleIcons = Object.freeze({
 const workflowRoleMap = Object.freeze({
   operator: Object.freeze(['Operator', 'SuperAdmin']),
   mandor: Object.freeze(['Mandor', 'SuperAdmin']),
-  supervisor: Object.freeze(['Mandor', 'SuperAdmin']),
+  supervisor: Object.freeze(['Supervisor', 'SuperAdmin']),
   management: Object.freeze(['Management', 'SuperAdmin']),
   hrd: Object.freeze(['HRD', 'SuperAdmin']),
 });
@@ -284,7 +322,7 @@ const roleFeatureViews = Object.freeze({
     { id: 'mandor-approval', type: 'role-feature', icon: '✅', label: 'Approval', title: 'Approval inbox', subtitle: 'Review submit operator yang membutuhkan keputusan.', badge: 'Inbox' },
     { id: 'mandor-conflict', type: 'role-feature', icon: '⚠️', label: 'Conflict', title: 'Conflict queue', subtitle: 'Isolasi data CONFLICT_PENDING sebelum recap.', badge: 'HITL' },
     { id: 'mandor-target', type: 'role-feature', icon: '🎯', label: 'Target', title: 'Target harian', subtitle: 'Atur target per scope semua operator atau satu operator.', badge: 'Planning' },
-    { id: 'mandor-closing', type: 'role-feature', icon: '🔒', label: 'Closing', title: 'Daily closing', subtitle: 'Tutup line/shift setelah review selesai.', badge: 'Shift' },
+    { id: 'mandor-closing', type: 'role-feature', icon: '🔒', label: 'Closing', title: 'Daily closing', subtitle: 'Tutup Bagian/tanggal setelah review selesai.', badge: 'Shift' },
   ]),
   supervisor: appendHelpFeature([
     { id: 'supervisor-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Supervisor dashboard', subtitle: 'Alert-first control center per line dan shift.', badge: 'Live' },
@@ -303,11 +341,10 @@ const roleFeatureViews = Object.freeze({
     { id: 'management-pending', type: 'role-feature', icon: '⏳', label: 'Pending', title: 'Pending status', subtitle: 'Quarantine dan closing yang dikecualikan dari KPI.', badge: 'Guard' },
   ]),
   hrd: appendHelpFeature([
-    { id: 'hrd-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'HRD dashboard', subtitle: 'Ringkasan akses user dan audit readiness.', badge: 'PII' },
-    { id: 'hrd-users', type: 'role-feature', icon: '👤', label: 'Users', title: 'User access', subtitle: 'Kesiapan USER_ROLES tanpa membuka PII mentah.', badge: 'Masked' },
-    { id: 'hrd-roles', type: 'role-feature', icon: '🔐', label: 'Roles', title: 'Role audit', subtitle: 'Role assignment dan permission boundary.', badge: 'RBAC' },
-    { id: 'hrd-audit', type: 'role-feature', icon: '🧾', label: 'Audit', title: 'Access audit', subtitle: 'Jejak akses dan perubahan role.', badge: 'Logs' },
-    { id: 'hrd-privacy', type: 'role-feature', icon: '🛡️', label: 'Privacy', title: 'PII boundary', subtitle: 'Batas informasi sensitif di UI normal.', badge: 'Safe' },
+    { id: 'hrd-dashboard', type: 'role-feature', icon: '📊', label: 'Dashboard', title: 'Dashboard HRD', subtitle: 'Tenaga kerja, absensi, dan payroll readiness.', badge: 'Workforce' },
+    { id: 'hrd-employees', type: 'role-feature', icon: '👤', label: 'Karyawan', title: 'Direktori karyawan', subtitle: 'Data karyawan dengan akses detail privacy-safe.', badge: 'Data' },
+    { id: 'hrd-attendance', type: 'role-feature', icon: '🕒', label: 'Absensi', title: 'Rekap absensi', subtitle: 'Hadir, izin, sakit, alpha, resign, dan payroll-ready.', badge: 'Payroll' },
+    { id: 'hrd-access-audit', type: 'role-feature', icon: '🔐', label: 'Akses & Audit', title: 'Role dan audit ringan', subtitle: 'Multi-role, anomali akses, dan ringkasan audit HRD.', badge: 'Govern' },
   ]),
 });
 const roleHelpGuides = Object.freeze({
@@ -348,7 +385,7 @@ const roleHelpGuides = Object.freeze({
     role: 'Supervisor',
     headline: 'Control center untuk memantau alert, raw logs, quarantine, dan adjustment.',
     steps: Object.freeze([
-      'Buka Dashboard untuk ringkasan line/shift yang perlu perhatian.',
+      'Buka Dashboard untuk ringkasan Bagian/shift yang perlu perhatian.',
       'Gunakan Alerts untuk prioritas conflict, closing terbuka, dan adjustment pending.',
       'Gunakan Raw Logs untuk inspeksi transaksi terfilter.',
       'Gunakan Quarantine untuk memantau anomali yang belum boleh masuk KPI.',
@@ -379,19 +416,20 @@ const roleHelpGuides = Object.freeze({
   }),
   hrd: Object.freeze({
     role: 'HRD',
-    headline: 'Mengelola kesiapan akses user tanpa membuka PII mentah di UI normal.',
+    headline: 'Mengelola data karyawan, absensi, akses, dan audit dengan batas privasi yang jelas.',
     steps: Object.freeze([
-      'Buka Dashboard untuk ringkasan user aktif, role, dan audit readiness.',
-      'Buka Users untuk memeriksa user masked dan status akses.',
-      'Buka Roles untuk review permission boundary.',
-      'Buka Audit untuk ringkasan event akses.',
-      'Buka Privacy untuk batas data sensitif yang tidak boleh tampil.',
+      'Buka Dashboard untuk melihat 4 metrik utama (karyawan aktif, absensi hari ini, kelengkapan data, payroll-ready) dan 4 grafik interaktif (Donut kehadiran, Bar distribusi bagian, Pie kelengkapan data, Line tren kehadiran 7 hari).',
+      'Buka Karyawan untuk mengelola direktori karyawan: tambah, edit, set resign, search global, sorting kolom, filter bagian/status/role/kelengkapan, dan toggle tampilan masked/detail.',
+      'Buka Absensi untuk melihat 3 blok terpisah: (1) Filter rekap payroll-ready, (2) Kartu harian dengan metrik dan tabel sortable, (3) Kartu bulanan dengan metrik dan tabel sortable.',
+      'Buka Akses & Audit untuk memeriksa role readiness, anomali akses, multi-role users, dan ringkasan audit event.',
     ]),
-    process: 'HRD menjaga user directory dan role assignment. Email tampil masked; data sensitif tetap dibatasi oleh backend dan kontrak PII.',
+    process: 'HRD menjadi awal kualitas data: karyawan dan akses harus rapi sebelum Management, Mandor, Operator, Supervisor/QC, dan laporan akhir memakai data tersebut. Status payroll-ready mengharuskan data karyawan lengkap dan konfirmasi Mandor selesai.',
     troubleshooting: Object.freeze([
-      'User tidak bisa masuk: cek USER_ROLES, AUTH_REQUIRE_EMAIL_LOGIN, dan status_aktif.',
-      'Role tidak sesuai: update role assignment melalui proses authorized, bukan edit bebas tanpa audit.',
-      'Data PII tidak tampil lengkap: itu perilaku yang benar untuk UI operasional.',
+      'Karyawan tidak muncul: cek status aktif/resign, filter Bagian, kelengkapan data, dan gunakan search box untuk pencarian cepat.',
+      'User tidak bisa masuk: cek USER_ROLES, REQUIRE_REGISTERED_EMAIL_LOGIN, dan status_aktif di menu Akses & Audit.',
+      'Data detail tidak tampil: pastikan role HRD/SuperAdmin memakai endpoint detail terotorisasi; tampilan default tetap masked untuk keamanan PII.',
+      'Grafik dashboard kosong: pastikan data HRD sudah dimuat (tunggu loading selesai) dan koneksi ke backend/mock aktif.',
+      'Tabel tidak bisa di-sort: klik pada header kolom yang memiliki tanda panah (🔼/🔽) untuk mengurutkan data.',
     ]),
   }),
 });
@@ -430,7 +468,7 @@ const paretoPreview = computed(() => {
     ...queueItems.value.map((item) => item.payload),
   ]);
 });
-const activeView = ref('operator');
+const activeView = ref(readPreferredWorkspace());
 const activeRoleFeatures = ref({
   operator: 'operator-dashboard',
   mandor: 'mandor-dashboard',
@@ -460,7 +498,7 @@ const appViews = computed(() => [
     icon: '📊',
     label: 'Supervisor',
     title: 'Control center',
-    subtitle: 'Pantau transaksi, quarantine, closing, dan adjustment per line/shift.',
+    subtitle: 'Pantau transaksi, quarantine, closing, dan adjustment per Bagian/shift.',
     badge: supervisorLoading.value ? 'Memuat' : 'Live view',
   },
   {
@@ -488,13 +526,54 @@ const appViews = computed(() => [
     badge: selectedRole.value,
   },
 ]);
+const sessionAllowedRoles = computed(() => {
+  if (!sessionContext.value) {
+    return roleOptions;
+  }
+
+  if (sessionContext.value.role === 'SuperAdmin') {
+    return roleOptions;
+  }
+
+  if (sessionContext.value.auth_mode === 'ON') {
+    return roleOptions.includes(sessionContext.value.role) ? [sessionContext.value.role] : [];
+  }
+
+  const allowed = Array.isArray(sessionContext.value.allowed_simulated_roles)
+    ? sessionContext.value.allowed_simulated_roles.filter((role) => roleOptions.includes(role))
+    : [];
+
+  return allowed.length ? allowed : roleOptions;
+});
+const effectiveVisibleRoles = computed(() => {
+  const allowed = sessionAllowedRoles.value;
+  const visible = visibleRoles.value.filter((role) => allowed.includes(role));
+  return visible.length ? visible : allowed.slice(0, 1);
+});
+const isSuperAdminWorkspaceManager = computed(() =>
+  selectedRole.value === 'SuperAdmin' || sessionContext.value?.role === 'SuperAdmin',
+);
+const roleSwitcherRoles = computed(() =>
+  isSuperAdminWorkspaceManager.value ? roleOptions : sessionAllowedRoles.value,
+);
+const navVisibleRoles = computed(() => {
+  if (!isSuperAdminWorkspaceManager.value) {
+    return effectiveVisibleRoles.value;
+  }
+
+  const visible = visibleRoles.value.filter((role) =>
+    role !== 'SuperAdmin' && roleOptions.includes(role),
+  );
+
+  return visible.length ? visible : ['SuperAdmin'];
+});
 const activeViewMeta = computed(() =>
   appViews.value.find((view) => view.id === activeView.value) || appViews.value[0],
 );
 const navViews = computed(() => appViews.value
   .filter((view) =>
     view.id !== 'settings'
-    && (workflowRoleMap[view.id] || []).some((role) => visibleRoles.value.includes(role)),
+    && (workflowRoleMap[view.id] || []).some((role) => navVisibleRoles.value.includes(role)),
   )
   .map((view) => ({
     ...view,
@@ -533,7 +612,7 @@ const activeWorkspaceRole = computed(() => {
   return {
     operator: 'Operator',
     mandor: 'Mandor',
-    supervisor: 'Mandor',
+    supervisor: 'Supervisor',
     management: 'Management',
     hrd: 'HRD',
   }[activeView.value] || selectedRole.value;
@@ -544,14 +623,31 @@ const selectedOperatorLabel = computed(() =>
   || selectedRole.value
   || 'Operator',
 );
+const selectedBagianLabel = computed(() =>
+  findOptionLabel(bagianOptions.value, form.value.bagian_id)
+  || findOptionLabel(lineOptions.value, form.value.line_id)
+  || form.value.bagian_id
+  || form.value.line_id
+  || '-',
+);
+const selectedWorkCategoryLabel = computed(() =>
+  findOptionLabel(workCategoryOptions.value, form.value.work_category_id)
+  || findOptionLabel(machineOptions.value, form.value.machine_id)
+  || form.value.work_category_id
+  || form.value.machine_id
+  || '-',
+);
 const operatorContextItems = computed(() => [
-  { label: 'Line', value: operatorDashboardSummary.value.line_id || form.value.line_id || '-' },
+  { label: 'Bagian', value: operatorDashboardSummary.value.bagian_name || selectedBagianLabel.value },
   { label: 'Shift', value: operatorDashboardSummary.value.shift_id || form.value.shift_id || '-' },
-  { label: 'Mesin', value: operatorDashboardSummary.value.machine_id || form.value.machine_id || '-' },
+  { label: 'Jenis pekerjaan', value: operatorDashboardSummary.value.work_category_id || selectedWorkCategoryLabel.value },
   { label: 'Operator', value: operatorDashboardSummary.value.operator_name_masked || selectedOperatorLabel.value },
 ]);
 const operatorDashboardSummary = computed(() => operatorDashboardData.value?.summary || {
   factory_date: new Date().toISOString().slice(0, 10),
+  bagian_id: form.value.bagian_id || '',
+  bagian_name: selectedBagianLabel.value,
+  work_category_id: form.value.work_category_id || '',
   line_id: form.value.line_id || '-',
   shift_id: form.value.shift_id || '-',
   machine_id: form.value.machine_id || '-',
@@ -584,12 +680,16 @@ const targetScopePreview = computed(() => {
   const parts = [
     targetForm.value.line_id,
     targetForm.value.shift_id,
-    targetForm.value.scope_type === 'LINE_SHIFT' || targetForm.value.scope_type === 'ALL_USERS' ? 'ALL mesin' : targetForm.value.machine_id,
+    targetForm.value.scope_type === 'LINE_SHIFT' || targetForm.value.scope_type === 'ALL_USERS' ? 'ALL jenis pekerjaan' : targetForm.value.machine_id,
     targetForm.value.scope_type === 'OPERATOR_ONLY' ? targetForm.value.operator_email : 'ALL operator',
   ];
   return `${scope?.label || targetForm.value.scope_type}: ${parts.join(' / ')}`;
 });
 const machineScopedOptions = computed(() => machineOptions.value.filter((option) => option.value !== 'ALL'));
+function findOptionLabel(options, value) {
+  return options.find((option) => option.value === value)?.label || '';
+}
+
 const operatorOkPercent = computed(() =>
   Math.min(100, Math.round(((Number(operatorDashboardSummary.value.ok_today || 0) + Number(operatorDashboardSummary.value.reject_today || 0)) / Math.max(1, Number(operatorDashboardSummary.value.target_today || 0))) * 100)),
 );
@@ -754,7 +854,7 @@ const mandorTaskCards = computed(() => [
   {
     label: 'Closing harian',
     value: 'Ready',
-    hint: 'Jalankan setelah review line/shift lengkap.',
+    hint: 'Jalankan setelah review Bagian/shift lengkap.',
     tone: 'warning',
   },
 ]);
@@ -768,7 +868,7 @@ const supervisorAlertCards = computed(() => [
   {
     label: 'Closing status',
     value: supervisorTiles.value.find((tile) => tile.label === 'Closing')?.value || 0,
-    hint: 'Pantau line/shift yang belum selesai.',
+    hint: 'Pantau Bagian/shift yang belum selesai.',
     tone: 'warning',
   },
   {
@@ -843,28 +943,28 @@ const managementAttendanceCards = computed(() => [
 ]);
 const hrdAccessCards = computed(() => [
   {
-    label: 'User aktif',
+    label: 'Karyawan aktif',
     value: formatNumber(hrdSummary.value.active_users),
-    hint: `${formatNumber(hrdSummary.value.total_users)} user terdaftar, ${formatNumber(hrdSummary.value.inactive_users)} nonaktif.`,
+    hint: `${formatNumber(hrdSummary.value.total_users)} karyawan/user terdaftar, ${formatNumber(hrdSummary.value.inactive_users)} nonaktif/resign.`,
     tone: 'success',
   },
   {
-    label: 'Role readiness',
-    value: hrdSummary.value.roles_with_missing_permissions > 0 ? 'Review' : 'Ready',
-    hint: `${formatNumber(hrdSummary.value.roles_with_missing_permissions)} role tanpa permission aktif.`,
-    tone: hrdSummary.value.roles_with_missing_permissions > 0 ? 'warning' : 'success',
+    label: 'Absensi hari ini',
+    value: formatNumber(hrdAttendanceSummary.value.present_today),
+    hint: `${formatNumber(hrdAttendanceSummary.value.pending_confirmation)} pending konfirmasi Mandor.`,
+    tone: hrdAttendanceSummary.value.pending_confirmation > 0 ? 'warning' : 'success',
   },
   {
-    label: 'Audit access',
-    value: formatNumber(hrdAuditSummary.value.session + hrdAuditSummary.value.rbac + hrdAuditSummary.value.user_role),
-    hint: hrdAuditSummary.value.last_event_at ? `Event terakhir ${formatDateTime(hrdAuditSummary.value.last_event_at)}.` : 'Belum ada audit event.',
-    tone: 'success',
+    label: 'Data belum lengkap',
+    value: formatNumber(hrdIncompleteEmployees.value),
+    hint: 'Cek menu Karyawan untuk melengkapi email, WA, alamat, Bagian, atau status.',
+    tone: hrdIncompleteEmployees.value > 0 ? 'warning' : 'success',
   },
   {
-    label: 'PII policy',
-    value: 'Masked',
-    hint: 'Email masked; PII/encrypted/blind index tidak dikirim.',
-    tone: 'warning',
+    label: 'Payroll-ready',
+    value: hrdPayrollReadyLabel.value,
+    hint: 'Siap jika data karyawan, status, absensi, dan konfirmasi Mandor lengkap.',
+    tone: hrdPayrollReadyLabel.value === 'Review' ? 'warning' : 'success',
   },
 ]);
 const hrdSummary = computed(() => hrdData.value?.summary || {
@@ -876,6 +976,140 @@ const hrdSummary = computed(() => hrdData.value?.summary || {
   last_audit_at: '',
 });
 const hrdUsers = computed(() => getFirstPageItems(hrdData.value?.users));
+const hrdEmployees = computed(() => hrdUsers.value.map((user) => {
+  const roles = Array.isArray(user.roles) && user.roles.length ? user.roles : [user.role].filter(Boolean);
+  const employeeNo = String(user.employee_no || user.user_id || '');
+  const isEmployeeMasterRecord = /^\d{5}$/.test(employeeNo);
+  const completenessFields = [
+    isEmployeeMasterRecord ? employeeNo : '',
+    user.full_name,
+    user.bagian_id,
+    user.email || user.email_masked,
+    user.wa_number || user.wa_url,
+    user.address,
+  ];
+  const completedFields = completenessFields.filter(Boolean).length;
+  const completenessPercent = Math.round((completedFields / completenessFields.length) * 100);
+
+  return {
+    ...user,
+    roles,
+    can_edit_employee: isEmployeeMasterRecord,
+    employee_record_status: isEmployeeMasterRecord ? 'EMPLOYEE_MASTER' : 'ACCESS_ONLY',
+    status_label: user.is_deleted ? 'Deleted' : user.status_karyawan || (user.status_aktif ? 'AKTIF' : 'RESIGN'),
+    status_tone: user.is_deleted || user.status_karyawan === 'RESIGN' ? 'danger' : user.status_aktif ? 'success' : 'warning',
+    email_display: hrdEmployeeDetailMode.value === 'DETAIL' && user.email ? user.email : user.email_masked,
+    address_display: hrdEmployeeDetailMode.value === 'DETAIL' && user.address ? user.address : 'Masked',
+    wa_display: hrdEmployeeDetailMode.value === 'DETAIL' && user.wa_number ? user.wa_number : 'Masked',
+    completeness_percent: completenessPercent,
+    completeness_status: completenessPercent >= 100 ? 'Complete' : 'Need review',
+    completeness_tone: completenessPercent >= 100 ? 'success' : 'warning',
+  };
+}));
+const hrdEmployeeFilterOptions = computed(() => ({
+  bagian: ['ALL', ...new Set(hrdEmployees.value.map((user) => user.bagian_id).filter(Boolean))].sort((a, b) =>
+    a === 'ALL' ? -1 : b === 'ALL' ? 1 : a.localeCompare(b),
+  ),
+  status: ['ALL', ...new Set(hrdEmployees.value.map((user) => user.status_label).filter(Boolean))].sort((a, b) =>
+    a === 'ALL' ? -1 : b === 'ALL' ? 1 : a.localeCompare(b),
+  ),
+  role: ['ALL', ...new Set(hrdEmployees.value.flatMap((user) => user.roles || []).filter(Boolean))].sort((a, b) =>
+    a === 'ALL' ? -1 : b === 'ALL' ? 1 : a.localeCompare(b),
+  ),
+}));
+const hrdEmployeeSearchHint = computed(() => {
+  const raw = hrdEmployeeSearchInput.value.trim();
+
+  if (raw && raw.length < 2) {
+    return 'Ketik minimal 2 karakter untuk mulai mencari.';
+  }
+
+  if (hrdEmployeeSearch.value) {
+    return `Filter aktif untuk "${hrdEmployeeSearch.value}".`;
+  }
+
+  return 'Cari ID, nama, email, WA, alamat, Bagian, atau role.';
+});
+const hrdVisibleEmployees = computed(() => {
+  const query = normalizeSearchText(hrdEmployeeSearch.value);
+
+  return hrdEmployees.value.filter((user) => {
+    const matchSearch = !query || normalizeSearchText([
+      user.employee_no,
+      user.user_id,
+      user.full_name,
+      user.username,
+      user.email,
+      user.email_masked,
+      user.wa_number,
+      user.address,
+      user.bagian_id,
+      user.status_label,
+      ...(user.roles || []),
+    ].join(' ')).includes(query);
+    const matchBagian = hrdEmployeeFilters.value.bagian_id === 'ALL' || user.bagian_id === hrdEmployeeFilters.value.bagian_id;
+    const matchStatus = hrdEmployeeFilters.value.status === 'ALL' || user.status_label === hrdEmployeeFilters.value.status;
+    const matchRole = hrdEmployeeFilters.value.role === 'ALL' || (user.roles || []).includes(hrdEmployeeFilters.value.role);
+    const matchCompleteness = hrdEmployeeFilters.value.completeness === 'ALL'
+      || (hrdEmployeeFilters.value.completeness === 'COMPLETE' && user.completeness_percent >= 100)
+      || (hrdEmployeeFilters.value.completeness === 'INCOMPLETE' && user.completeness_percent < 100);
+
+    return matchSearch && matchBagian && matchStatus && matchRole && matchCompleteness;
+  });
+});
+const hrdIncompleteEmployees = computed(() =>
+  hrdEmployees.value.filter((user) => user.completeness_percent < 100).length,
+);
+const hrdMandorOptions = computed(() => {
+  const options = hrdEmployees.value
+    .filter((user) =>
+      user.status_aktif
+      && Array.isArray(user.roles)
+      && user.roles.includes('Mandor')
+      && user.email,
+    )
+    .map((user) => ({
+      value: user.email,
+      label: `${user.employee_no || user.employee_id || '-'} - ${user.full_name || user.username || user.email_masked || user.email}`,
+    }));
+  const currentEmail = String(hrdEmployeeForm.value.mandor_email || '').trim();
+
+  if (currentEmail && !options.some((option) => option.value === currentEmail)) {
+    options.push({
+      value: currentEmail,
+      label: `Tersimpan - ${maskEmailForUi(currentEmail)}`,
+    });
+  }
+
+  return options;
+});
+const hrdAttendanceSummary = computed(() => hrdData.value?.attendance_summary || {
+  factory_date: '',
+  period_month: '',
+  present_today: 0,
+  absent_today: 0,
+  izin_today: 0,
+  sakit_today: 0,
+  alpha_today: 0,
+  resign_today: 0,
+  pending_confirmation: 0,
+  payroll_ready_count: 0,
+  payroll_blocked_count: 0,
+  monthly_hadir_count: 0,
+  monthly_izin_count: 0,
+  monthly_sakit_count: 0,
+  monthly_alpha_count: 0,
+  monthly_resign_count: 0,
+  monthly_pending_confirmation_count: 0,
+  status: 'REVIEW_REQUIRED',
+});
+const hrdPayrollReadyLabel = computed(() => {
+  if (hrdAttendanceSummary.value.pending_confirmation > 0 || hrdIncompleteEmployees.value > 0) {
+    return 'Review';
+  }
+
+  return 'Ready';
+});
 const hrdRoleMatrix = computed(() => hrdData.value?.role_matrix || []);
 const hrdAuditSummary = computed(() => hrdData.value?.audit_summary || {
   session: 0,
@@ -884,6 +1118,66 @@ const hrdAuditSummary = computed(() => hrdData.value?.audit_summary || {
   other: 0,
   last_event_at: '',
 });
+const hrdAttendanceDailyRows = computed(() => getFirstPageItems(hrdData.value?.attendance_daily));
+const hrdAttendanceMonthlyRows = computed(() => getFirstPageItems(hrdData.value?.attendance_monthly));
+const hrdAttendanceFilters = computed(() => hrdData.value?.attendance_filters || {
+  bagian_options: ['SOLDER', 'LEM'],
+  status_options: ['ALL', 'HADIR', 'IZIN', 'SAKIT', 'ALPHA', 'BELUM_KONFIRMASI', 'RESIGN'],
+});
+const hrdAttendanceCards = computed(() => [
+  { label: 'Hadir', value: formatNumber(hrdAttendanceSummary.value.present_today), tone: 'success' },
+  { label: 'Izin/Sakit/Alpha', value: formatNumber(hrdAttendanceSummary.value.absent_today), tone: hrdAttendanceSummary.value.absent_today > 0 ? 'warning' : 'success' },
+  { label: 'Belum konfirmasi', value: formatNumber(hrdAttendanceSummary.value.pending_confirmation), tone: hrdAttendanceSummary.value.pending_confirmation > 0 ? 'warning' : 'success' },
+  { label: 'Payroll-ready', value: `${formatNumber(hrdAttendanceSummary.value.payroll_ready_count)} siap`, tone: hrdAttendanceSummary.value.payroll_blocked_count > 0 ? 'warning' : 'success' },
+]);
+
+const hrdAttendanceDonutData = computed(() => [
+  Number(hrdAttendanceSummary.value.present_today || 0),
+  Number(hrdAttendanceSummary.value.izin_today || 0),
+  Number(hrdAttendanceSummary.value.sakit_today || 0),
+  Number(hrdAttendanceSummary.value.alpha_today || 0),
+  Number(hrdAttendanceSummary.value.pending_confirmation || 0),
+]);
+
+const hrdWorkforceBarData = computed(() => {
+  const parts = bagianOptions.value.map(opt => opt.value).filter(val => val !== 'ALL');
+  const counts = parts.map(bagian => {
+    return hrdEmployees.value.filter(emp => emp.bagian_id === bagian && emp.status_aktif).length;
+  });
+  return { labels: parts, data: counts };
+});
+
+const hrdReadinessPieData = computed(() => {
+  const incomplete = hrdIncompleteEmployees.value;
+  const complete = Math.max(0, hrdEmployees.value.length - incomplete);
+  return [complete, incomplete];
+});
+
+const hrdTrendLineData = computed(() => {
+  // Mock data based on today's attendance to show a realistic trend
+  const baseHadir = Number(hrdAttendanceSummary.value.present_today || 0);
+  const baseAbsen = Number(hrdAttendanceSummary.value.absent_today || 0);
+  return {
+    labels: ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'Kemarin', 'Hari ini'],
+    hadir: [baseHadir - 2, baseHadir + 1, baseHadir, baseHadir - 1, baseHadir + 2, baseHadir - 1, baseHadir].map(v => Math.max(0, v)),
+    absen: [baseAbsen + 1, baseAbsen, baseAbsen - 1, baseAbsen, baseAbsen + 1, baseAbsen, baseAbsen].map(v => Math.max(0, v)),
+  };
+});
+const hrdMonthlyAttendanceCards = computed(() => [
+  { label: 'Hadir bulan ini', value: formatNumber(hrdAttendanceSummary.value.monthly_hadir_count), tone: 'success' },
+  { label: 'Izin', value: formatNumber(hrdAttendanceSummary.value.monthly_izin_count), tone: 'neutral' },
+  { label: 'Sakit', value: formatNumber(hrdAttendanceSummary.value.monthly_sakit_count), tone: 'neutral' },
+  { label: 'Alpha', value: formatNumber(hrdAttendanceSummary.value.monthly_alpha_count), tone: hrdAttendanceSummary.value.monthly_alpha_count > 0 ? 'warning' : 'success' },
+]);
+const hrdGovernanceSummary = computed(() => hrdData.value?.governance_summary || {
+  multi_role_user_count: 0,
+  access_anomaly_count: 0,
+  denied_access_count: 0,
+  last_login_missing_count: 0,
+});
+const hrdAccessAnomalies = computed(() => hrdData.value?.access_anomalies || []);
+const hrdMultiRoleUsers = computed(() => hrdData.value?.multi_role_users || []);
+const hrdAuditEvents = computed(() => hrdData.value?.audit_events || []);
 const currentSessionLabel = computed(() => {
   if (sessionContext.value?.auth_mode === 'ON') {
     return `${sessionContext.value.role || 'Unknown'} dari Google Account`;
@@ -948,7 +1242,22 @@ const isMaintenanceLoading = ref(false);
 const isMaintenanceLoaded = ref(false);
 const maintenanceError = ref('');
 const tapCount = ref(0);
+const viewLog = ref(readViewLogPreference());
+const debugLogs = ref([]);
 let keyBuffer = '';
+
+const debugEmojiMap = Object.freeze({
+  session: '🔐',
+  workspace: '🧭',
+  role: '🎭',
+  api: '📡',
+  success: '✅',
+  warning: '⚠️',
+  error: '🧯',
+  storage: '💾',
+  info: 'ℹ️',
+});
+const DEBUG_LOG_LIMIT = 80;
 
 const maintenanceSummary = computed(() => {
   const setCount = maintenanceProperties.value.filter((property) => property.status === 'SET').length;
@@ -964,6 +1273,41 @@ function openMaintenanceConsole() {
 function closeMaintenanceConsole() {
   isMaintenanceOpen.value = false;
   maintenanceError.value = '';
+}
+
+function isRoleButtonActive(role) {
+  return visibleRoles.value.includes(role);
+}
+
+function getRoleButtonStatus(role) {
+  return isRoleButtonActive(role) ? 'Menu aktif' : 'Menu hidden';
+}
+
+function debugLog(type, message, details = {}) {
+  const safeType = debugEmojiMap[type] ? type : 'info';
+  const entry = {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    at: new Date().toISOString(),
+    emoji: debugEmojiMap[safeType],
+    type: safeType,
+    message,
+    details,
+  };
+
+  debugLogs.value = [entry, ...debugLogs.value].slice(0, DEBUG_LOG_LIMIT);
+
+  if (viewLog.value && typeof console !== 'undefined') {
+    console.debug(`${entry.emoji} Optiflow ${safeType}: ${message}`, details);
+  }
+}
+
+function toggleViewLog() {
+  viewLog.value = !viewLog.value;
+  persistViewLogPreference(viewLog.value);
+  debugLog(viewLog.value ? 'success' : 'warning', `Debug console ${viewLog.value ? 'aktif' : 'nonaktif'}`, {
+    activeView: activeView.value,
+    selectedRole: selectedRole.value,
+  });
 }
 
 async function refreshMaintenanceProperties() {
@@ -1100,7 +1444,7 @@ function syncSupervisorFiltersFromOperator() {
 }
 
 async function closeCurrentScope() {
-  if (!window.confirm('Closing line/shift ini?')) {
+  if (!window.confirm('Closing Bagian/shift ini?')) {
     return;
   }
 
@@ -1396,21 +1740,363 @@ async function seedBagianDefaults() {
 async function refreshHrdAccessDashboard() {
   hrdLoading.value = true;
   hrdError.value = '';
+  const requestPayload = {
+    session: buildSessionPayload(),
+    filter: compactFilter(hrdFilters.value),
+    page: 1,
+    page_size: 12,
+  };
+  debugLog('info', 'HRD dashboard request dikirim.', {
+    request: requestPayload,
+    activeFeatureId: activeFeatureId.value,
+  });
 
   try {
-    const response = await api.getHrdAccessDashboard({
-      session: buildSessionPayload(),
-      filter: {},
-      page: 1,
-      page_size: 10,
-    });
+    const response = await api.getHrdAccessDashboard(requestPayload);
     hrdData.value = response.data;
     hrdLoaded.value = true;
+    debugLog('success', 'HRD dashboard response diterima.', {
+      summary: response.data?.summary,
+      attendance_summary: response.data?.attendance_summary,
+      users_count: getFirstPageItems(response.data?.users).length,
+      role_matrix_count: getFirstPageItems(response.data?.role_matrix).length,
+    });
   } catch (error) {
     hrdError.value = getSafeErrorMessage(error);
+    debugLog('error', 'HRD dashboard request gagal.', {
+      error: hrdError.value,
+      request: requestPayload,
+    });
   } finally {
     hrdLoading.value = false;
   }
+}
+
+function createEmptyHrdEmployeeForm() {
+  return {
+    employee_no: '',
+    full_name: '',
+    bagian_id: 'SOLDER',
+    status_karyawan: 'AKTIF',
+    email: '',
+    wa_number: '',
+    address: '',
+    mandor_email: '',
+    role: 'Operator',
+    roles: ['Operator'],
+    username: '',
+  };
+}
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function resetHrdEmployeeFilters() {
+  hrdEmployeeSearchInput.value = '';
+  hrdEmployeeSearch.value = '';
+  hrdEmployeeFilters.value = {
+    bagian_id: 'ALL',
+    status: 'ALL',
+    role: 'ALL',
+    completeness: 'ALL',
+  };
+  debugLog('info', 'Filter direktori HRD direset.', {
+    total: hrdEmployees.value.length,
+  });
+}
+
+function resetHrdEmployeeForm(options = {}) {
+  hrdEmployeeFormMode.value = 'CREATE';
+  hrdEmployeeForm.value = createEmptyHrdEmployeeForm();
+  hrdEmployeeError.value = '';
+  if (!options.keepMessage) {
+    hrdEmployeeMessage.value = '';
+  }
+}
+
+function openHrdEmployeeCreateModal() {
+  resetHrdEmployeeForm();
+  hrdEmployeeEditorOpen.value = true;
+  debugLog('info', 'HRD employee create modal dibuka.', {
+    mode: hrdEmployeeFormMode.value,
+    form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+  });
+}
+
+function closeHrdEmployeeEditor() {
+  if (hrdEmployeeSaving.value) {
+    debugLog('warning', 'HRD employee modal tidak ditutup karena proses simpan masih berjalan.', {
+      mode: hrdEmployeeFormMode.value,
+      form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+    });
+    return;
+  }
+  hrdEmployeeEditorOpen.value = false;
+  debugLog('info', 'HRD employee modal ditutup.', {
+    mode: hrdEmployeeFormMode.value,
+    form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+  });
+}
+
+function normalizeHrdEmployeeNo(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits.length >= 5 ? digits.slice(0, 5) : digits;
+}
+
+function normalizeHrdEmployeeRoles(roles, fallbackRole = 'Operator') {
+  const normalizedRoles = Array.isArray(roles)
+    ? roles.filter((role) => roleOptions.includes(role))
+    : [];
+  const fallback = roleOptions.includes(fallbackRole) ? fallbackRole : 'Operator';
+  return normalizedRoles.length ? [...new Set(normalizedRoles)] : [fallback];
+}
+
+function toggleHrdEmployeeRole(role) {
+  if (!roleOptions.includes(role)) {
+    return;
+  }
+
+  const currentRoles = normalizeHrdEmployeeRoles(hrdEmployeeForm.value.roles, hrdEmployeeForm.value.role);
+  const nextRoles = currentRoles.includes(role)
+    ? currentRoles.filter((item) => item !== role)
+    : [...currentRoles, role];
+
+  hrdEmployeeForm.value.roles = nextRoles.length ? nextRoles : [role];
+  hrdEmployeeForm.value.role = hrdEmployeeForm.value.roles[0];
+}
+
+function editHrdEmployee(user) {
+  const employeeNo = normalizeHrdEmployeeNo(user.employee_no || user.user_id);
+  const roles = normalizeHrdEmployeeRoles(user.roles, user.role || 'Operator');
+  debugLog('info', 'HRD employee edit dipilih dari tabel.', {
+    source_row: buildHrdEmployeeDebugSnapshot(user),
+    normalized_employee_no: employeeNo,
+  });
+
+  if (!/^\d{5}$/.test(employeeNo)) {
+    hrdEmployeeError.value = `Data ${user.employee_no || user.user_id || '-'} adalah record akses/demo, bukan data karyawan 5 digit. Edit melalui record EMPLOYEE_MASTER yang valid.`;
+    hrdEmployeeMessage.value = '';
+    debugLog('warning', 'HRD employee edit ditolak karena bukan record EMPLOYEE_MASTER valid.', {
+      source_row: buildHrdEmployeeDebugSnapshot(user),
+      reason: 'employee_no bukan 5 digit',
+    });
+    return;
+  }
+
+  hrdEmployeeFormMode.value = 'EDIT';
+  hrdEmployeeForm.value = {
+    employee_no: employeeNo,
+    full_name: user.full_name || '',
+    bagian_id: user.bagian_id || 'SOLDER',
+    status_karyawan: user.status_karyawan || (user.status_aktif ? 'AKTIF' : 'RESIGN'),
+    email: user.email || '',
+    wa_number: user.wa_number || '',
+    address: user.address || '',
+    mandor_email: user.mandor_email || '',
+    role: roles[0],
+    roles,
+    username: user.username || '',
+  };
+  hrdEmployeeError.value = '';
+  hrdEmployeeMessage.value = `Edit data ${hrdEmployeeForm.value.employee_no}.`;
+  hrdEmployeeEditorOpen.value = true;
+  debugLog('info', 'HRD employee edit modal dibuka.', {
+    mode: hrdEmployeeFormMode.value,
+    form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+  });
+}
+
+async function saveHrdEmployee() {
+  hrdEmployeeSaving.value = true;
+  hrdEmployeeError.value = '';
+  hrdEmployeeMessage.value = '';
+
+  try {
+    const employeeNo = normalizeHrdEmployeeNo(hrdEmployeeForm.value.employee_no);
+
+    if (!/^\d{5}$/.test(employeeNo)) {
+      hrdEmployeeError.value = 'ID karyawan harus 5 digit. Untuk data lama, lengkapi ID karyawan dulu sebelum menyimpan perubahan.';
+      debugLog('warning', 'HRD employee submit ditolak oleh validasi frontend.', {
+        mode: hrdEmployeeFormMode.value,
+        error: hrdEmployeeError.value,
+        form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+      });
+      return;
+    }
+
+    const roles = normalizeHrdEmployeeRoles(hrdEmployeeForm.value.roles, hrdEmployeeForm.value.role);
+    if (roles.length === 0) {
+      hrdEmployeeError.value = 'Pilih minimal satu role untuk karyawan.';
+      debugLog('warning', 'HRD employee submit ditolak karena role kosong.', {
+        mode: hrdEmployeeFormMode.value,
+        form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+      });
+      return;
+    }
+
+    if (hrdEmployeeFormMode.value === 'CREATE') {
+      const duplicate = findHrdEmployeeDuplicate(employeeNo, hrdEmployeeForm.value.email);
+      if (duplicate) {
+        hrdEmployeeError.value = `Data karyawan sudah ada (${duplicate.reason}: ${duplicate.value}). Gunakan Edit untuk memperbarui data existing.`;
+        debugLog('warning', 'HRD employee create ditolak karena duplikat frontend.', {
+          duplicate,
+          form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+        });
+        return;
+      }
+    }
+
+    const payload = {
+      ...hrdEmployeeForm.value,
+      employee_no: employeeNo,
+      role: roles[0],
+      roles,
+    };
+    const requestPayload = {
+      session: buildSessionPayload(),
+      mode: hrdEmployeeFormMode.value,
+      employee: payload,
+    };
+    debugLog('info', 'HRD employee submit request dikirim.', {
+      mode: hrdEmployeeFormMode.value,
+      request: {
+        ...requestPayload,
+        employee: buildHrdEmployeeDebugSnapshot(payload),
+      },
+    });
+    const response = await api.upsertHrdEmployee({
+      session: requestPayload.session,
+      mode: requestPayload.mode,
+      employee: requestPayload.employee,
+    });
+    const successMessage = `${response.data.mode === 'CREATE' ? 'Karyawan ditambahkan' : 'Data karyawan diperbarui'}: ${response.data.employee.employee_no}.`;
+    debugLog('success', 'HRD employee submit response diterima.', {
+      mode: response.data.mode,
+      employee: buildHrdEmployeeDebugSnapshot(response.data.employee),
+      message: successMessage,
+    });
+    hrdEmployeeEditorOpen.value = false;
+    resetHrdEmployeeForm({ keepMessage: true });
+    hrdEmployeeMessage.value = successMessage;
+    await refreshHrdAccessDashboard();
+  } catch (error) {
+    hrdEmployeeError.value = getSafeErrorMessage(error);
+    debugLog('error', 'HRD employee submit gagal.', {
+      mode: hrdEmployeeFormMode.value,
+      error: hrdEmployeeError.value,
+      form: buildHrdEmployeeDebugSnapshot(hrdEmployeeForm.value),
+    });
+  } finally {
+    hrdEmployeeSaving.value = false;
+  }
+}
+
+function findHrdEmployeeDuplicate(employeeNo, email) {
+  const normalizedEmployeeNo = String(employeeNo || '').trim();
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const existingById = hrdEmployees.value.find((user) =>
+    String(user.employee_no || user.employee_id || '').trim() === normalizedEmployeeNo,
+  );
+
+  if (existingById) {
+    return {
+      reason: 'ID',
+      value: normalizedEmployeeNo,
+      employee: buildHrdEmployeeDebugSnapshot(existingById),
+    };
+  }
+
+  if (normalizedEmail) {
+    const existingByEmail = hrdEmployees.value.find((user) =>
+      String(user.email || '').trim().toLowerCase() === normalizedEmail,
+    );
+
+    if (existingByEmail) {
+      return {
+        reason: 'Email',
+        value: maskEmailForUi(normalizedEmail),
+        employee: buildHrdEmployeeDebugSnapshot(existingByEmail),
+      };
+    }
+  }
+
+  return null;
+}
+
+async function resignHrdEmployee(user) {
+  const employeeNo = user.employee_no || user.user_id;
+  debugLog('warning', 'HRD employee resign confirmation dibuka.', {
+    employee: buildHrdEmployeeDebugSnapshot(user),
+  });
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Set karyawan resign?',
+    html: `<p>${employeeNo} - ${user.full_name || user.email_masked || ''} akan dinonaktifkan untuk transaksi baru.</p>`,
+    showCancelButton: true,
+    confirmButtonText: 'Set Resign',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#dc2626',
+  });
+
+  if (!result.isConfirmed) {
+    debugLog('info', 'HRD employee resign dibatalkan user.', {
+      employee_no: employeeNo,
+    });
+    return;
+  }
+
+  hrdEmployeeSaving.value = true;
+  hrdEmployeeError.value = '';
+  const requestPayload = {
+    session: buildSessionPayload(),
+    employee_no: employeeNo,
+  };
+  debugLog('warning', 'HRD employee resign request dikirim.', requestPayload);
+
+  try {
+    const response = await api.deactivateHrdEmployee(requestPayload);
+    hrdEmployeeMessage.value = `Karyawan ${employeeNo} diset Resign.`;
+    debugLog('success', 'HRD employee resign response diterima.', {
+      employee: buildHrdEmployeeDebugSnapshot(response.data?.employee),
+      status_karyawan: response.data?.status_karyawan,
+      message: hrdEmployeeMessage.value,
+    });
+    await refreshHrdAccessDashboard();
+  } catch (error) {
+    hrdEmployeeError.value = getSafeErrorMessage(error);
+    debugLog('error', 'HRD employee resign gagal.', {
+      error: hrdEmployeeError.value,
+      request: requestPayload,
+    });
+  } finally {
+    hrdEmployeeSaving.value = false;
+  }
+}
+
+function buildHrdEmployeeDebugSnapshot(employee = {}) {
+  const roles = Array.isArray(employee.roles) && employee.roles.length
+    ? employee.roles
+    : [employee.role].filter(Boolean);
+  const waDigits = String(employee.wa_number || '').replace(/\D/g, '');
+
+  return {
+    employee_no: employee.employee_no || employee.user_id || '',
+    full_name: employee.full_name || '',
+    bagian_id: employee.bagian_id || '',
+    status_karyawan: employee.status_karyawan || (employee.status_aktif === false ? 'RESIGN' : ''),
+    email_masked: employee.email_masked || maskEmailForUi(employee.email),
+    wa_last4: waDigits ? waDigits.slice(-4) : '',
+    address_length: String(employee.address || '').length,
+    role: employee.role || '',
+    roles,
+    mandor_email_masked: maskEmailForUi(employee.mandor_email),
+    username: employee.username || '',
+  };
 }
 
 async function refreshOperatorDashboard() {
@@ -1422,6 +2108,8 @@ async function refreshOperatorDashboard() {
       session: buildSessionPayload(),
       filter: compactFilter({
         factory_date: operatorDashboardSummary.value.factory_date,
+        bagian_id: form.value.bagian_id,
+        work_category_id: form.value.work_category_id,
         line_id: form.value.line_id,
         shift_id: form.value.shift_id,
         machine_id: form.value.machine_id,
@@ -1469,14 +2157,22 @@ async function refreshOperatorReferenceData() {
     const response = await api.getOperatorReferenceData({
       session: buildSessionPayload(),
     });
+    const bagian = response.data.bagian || response.data.bagians || [];
     const lines = response.data.lines || [];
     const shifts = response.data.shifts || [];
     const machines = response.data.machines || [];
+    const workCategories = response.data.work_categories || response.data.workCategories || [];
     const operators = response.data.operators || [];
+    bagianOptions.value = normalizeSelectOptions(bagian, fallbackBagianOptions, 'bagian_id');
     lineOptions.value = normalizeSelectOptions(lines, fallbackLineOptions, 'line_id');
     shiftOptions.value = normalizeSelectOptions(shifts, fallbackShiftOptions, 'shift_id');
     machineOptions.value = normalizeSelectOptions(machines, fallbackMachineOptions, 'machine_id');
+    workCategoryOptions.value = normalizeSelectOptions(workCategories, fallbackWorkCategoryOptions, 'work_category_id');
     operatorOptions.value = normalizeSelectOptions(operators, [{ value: selectedOperatorEmail.value, label: selectedOperatorEmail.value }], 'email');
+
+    if (!bagianOptions.value.some((option) => option.value === form.value.bagian_id)) {
+      form.value.bagian_id = bagianOptions.value[0]?.value || form.value.bagian_id;
+    }
 
     if (!lineOptions.value.some((option) => option.value === form.value.line_id)) {
       form.value.line_id = lineOptions.value[0]?.value || form.value.line_id;
@@ -1490,13 +2186,19 @@ async function refreshOperatorReferenceData() {
       form.value.machine_id = machineOptions.value[0]?.value || form.value.machine_id;
     }
 
+    if (!workCategoryOptions.value.some((option) => option.value === form.value.work_category_id)) {
+      form.value.work_category_id = workCategoryOptions.value[0]?.value || form.value.work_category_id;
+    }
+
     if (!operatorOptions.value.some((option) => option.value === selectedOperatorEmail.value)) {
       selectedOperatorEmail.value = operatorOptions.value[0]?.value || selectedOperatorEmail.value;
     }
   } catch (error) {
+    bagianOptions.value = fallbackBagianOptions;
     lineOptions.value = fallbackLineOptions;
     shiftOptions.value = fallbackShiftOptions;
     machineOptions.value = fallbackMachineOptions;
+    workCategoryOptions.value = fallbackWorkCategoryOptions;
     operatorOptions.value = [{ value: selectedOperatorEmail.value, label: selectedOperatorEmail.value }];
     shiftCatalogError.value = `${getSafeErrorMessage(error)} Memakai data referensi default lokal.`;
   } finally {
@@ -1572,7 +2274,7 @@ function validateTargetFormBeforeSave() {
   const scopeType = targetForm.value.scope_type;
 
   if (scopeType === 'MACHINE_SCOPE' && (!targetForm.value.machine_id || targetForm.value.machine_id === 'ALL')) {
-    return 'Pilih mesin spesifik untuk scope "Mesin ini". Gunakan scope "Line/shift" atau "Semua user" jika ingin berlaku untuk ALL mesin.';
+    return 'Pilih jenis pekerjaan spesifik untuk scope ini. Gunakan scope "Bagian/shift" atau "Semua user" jika ingin berlaku untuk semua jenis pekerjaan.';
   }
 
   if (scopeType === 'OPERATOR_ONLY' && (!targetForm.value.operator_email || targetForm.value.operator_email === 'ALL')) {
@@ -1752,15 +2454,24 @@ async function syncQueueWithSession() {
 async function refreshSessionContext() {
   sessionLoading.value = true;
   sessionError.value = '';
+  debugLog('session', 'Memuat session context.', buildSessionPayload());
 
   try {
     const response = await api.getSessionContext(buildSessionPayload());
     sessionContext.value = response.data;
+    reconcileSessionRoleAccess();
     sessionMessage.value = sessionContext.value?.requires_role_selection
       ? 'Pilih role untuk demo/trial.'
       : `Session aktif sebagai ${sessionContext.value?.role || selectedRole.value}.`;
+    debugLog('success', 'Session context berhasil dimuat.', {
+      auth_mode: sessionContext.value?.auth_mode,
+      role: sessionContext.value?.role,
+      selectedRole: selectedRole.value,
+      visibleRoles: visibleRoles.value,
+    });
   } catch (error) {
     sessionError.value = getSafeErrorMessage(error);
+    debugLog('error', 'Gagal memuat session context.', { error: sessionError.value });
   } finally {
     sessionLoading.value = false;
   }
@@ -1768,6 +2479,55 @@ async function refreshSessionContext() {
 
 async function setTryRole(role) {
   if (!roleOptions.includes(role)) {
+    return;
+  }
+
+  if (!roleSwitcherRoles.value.includes(role)) {
+    sessionError.value = 'Role ini tidak tersedia untuk session aktif.';
+    debugLog('warning', 'Role switch ditolak oleh session.', {
+      role,
+      allowed: roleSwitcherRoles.value,
+      selectedRole: selectedRole.value,
+    });
+    return;
+  }
+
+  if (isSuperAdminWorkspaceManager.value && role === 'SuperAdmin' && visibleRoles.value.includes('SuperAdmin')) {
+    sessionError.value = '';
+    sessionMessage.value = 'SuperAdmin tetap aktif sebagai pemilik akses penuh.';
+    await switchView('settings');
+    debugLog('role', sessionMessage.value, {
+      clickedRole: role,
+      selectedRole: selectedRole.value,
+      visibleRoles: visibleRoles.value,
+    });
+    return;
+  }
+
+  if (isSuperAdminWorkspaceManager.value && role !== 'SuperAdmin') {
+    const wasVisible = visibleRoles.value.includes(role);
+    const nextVisibleRoles = wasVisible
+      ? visibleRoles.value.filter((item) => item !== role)
+      : [...visibleRoles.value, role];
+
+    if (!nextVisibleRoles.includes('SuperAdmin')) {
+      nextVisibleRoles.push('SuperAdmin');
+    }
+
+    visibleRoles.value = nextVisibleRoles;
+    selectedRole.value = 'SuperAdmin';
+    persistPreferredRole(selectedRole.value);
+    persistVisibleRoles(nextVisibleRoles);
+    persistSuperAdminVisibleRoles(nextVisibleRoles);
+    sessionError.value = '';
+    sessionMessage.value = `Menu ${role} ${wasVisible ? 'disembunyikan' : 'diaktifkan'} untuk SuperAdmin.`;
+    ensureVisibleActiveView();
+    debugLog('role', sessionMessage.value, {
+      clickedRole: role,
+      selectedRole: selectedRole.value,
+      visibleRoles: visibleRoles.value,
+      activeView: activeView.value,
+    });
     return;
   }
 
@@ -1781,19 +2541,35 @@ async function setTryRole(role) {
   }
 
   visibleRoles.value = nextVisibleRoles;
-  selectedRole.value = wasVisible && selectedRole.value === role
-    ? nextVisibleRoles[0]
-    : role;
+
+  if (!isSuperAdminWorkspaceManager.value || role === 'SuperAdmin') {
+    selectedRole.value = wasVisible && selectedRole.value === role
+      ? nextVisibleRoles[0]
+      : role;
+  }
+
   persistPreferredRole(selectedRole.value);
   persistVisibleRoles(nextVisibleRoles);
   ensureVisibleActiveView();
   sessionError.value = '';
-  sessionMessage.value = `Role demo langsung aktif sebagai ${selectedRole.value}.`;
+  sessionMessage.value = isSuperAdminWorkspaceManager.value && role !== 'SuperAdmin'
+    ? `Workspace ${role} ${wasVisible ? 'disembunyikan' : 'diaktifkan'} untuk SuperAdmin.`
+    : `Role demo langsung aktif sebagai ${selectedRole.value}.`;
+  debugLog('role', sessionMessage.value, {
+    clickedRole: role,
+    selectedRole: selectedRole.value,
+    visibleRoles: visibleRoles.value,
+  });
   void refreshSessionContext();
 }
 
 async function selectWorkspaceFromNav(viewId) {
   if (!navViews.value.some((view) => view.id === viewId)) {
+    debugLog('warning', 'Workspace nav ditolak karena tidak tersedia.', {
+      viewId,
+      navViews: navViews.value.map((view) => view.id),
+      selectedRole: selectedRole.value,
+    });
     return;
   }
 
@@ -1805,6 +2581,7 @@ async function selectWorkspaceFromNav(viewId) {
   await switchView(viewId);
   sessionError.value = '';
   sessionMessage.value = `Workspace aktif: ${viewId}.`;
+  debugLog('workspace', sessionMessage.value, { viewId, activeFeatureId: activeFeatureId.value });
 }
 
 function toggleNavRoleMenu() {
@@ -1813,10 +2590,21 @@ function toggleNavRoleMenu() {
 
 async function switchView(viewId) {
   if (viewId !== 'settings' && !navViews.value.some((view) => view.id === viewId)) {
+    sessionError.value = 'Workspace tidak tersedia untuk role/session aktif.';
+    debugLog('warning', sessionError.value, {
+      requestedView: viewId,
+      visibleRoles: visibleRoles.value,
+      allowedRoles: sessionAllowedRoles.value,
+    });
     return;
   }
 
   activeView.value = viewId;
+  persistPreferredWorkspace(viewId);
+  debugLog('workspace', `Switch view ke ${viewId}.`, {
+    selectedRole: selectedRole.value,
+    activeWorkspaceRole: activeWorkspaceRole.value,
+  });
 
   if (viewId === 'operator' && !operatorDashboardLoaded.value) {
     await refreshOperatorDashboard();
@@ -1880,7 +2668,79 @@ function ensureVisibleActiveView() {
     return;
   }
 
-  activeView.value = navViews.value[0]?.id || 'settings';
+  const fallbackView = navViews.value[0]?.id || 'settings';
+  activeView.value = fallbackView;
+  persistPreferredWorkspace(fallbackView);
+}
+
+function reconcileSessionRoleAccess() {
+  const allowed = sessionAllowedRoles.value;
+  if (allowed.length === 0) {
+    visibleRoles.value = [];
+    selectedRole.value = 'Operator';
+    ensureVisibleActiveView();
+    return;
+  }
+
+  if (sessionContext.value?.auth_mode === 'ON') {
+    if (sessionContext.value.role === 'SuperAdmin') {
+      const storedSuperAdminRoles = readSuperAdminVisibleRoles();
+      const sourceRoles = storedSuperAdminRoles.length
+        ? mergeRoleLists(storedSuperAdminRoles, visibleRoles.value)
+        : visibleRoles.value;
+      const nextVisibleRoles = sourceRoles.filter((role) => allowed.includes(role));
+      visibleRoles.value = nextVisibleRoles.length ? withRequiredRole(nextVisibleRoles, 'SuperAdmin') : [...allowed];
+      selectedRole.value = 'SuperAdmin';
+      debugLog('role', 'SuperAdmin production roles direkonsiliasi.', {
+        allowed,
+        storedSuperAdminRoles,
+        sourceRoles,
+        resolvedVisibleRoles: visibleRoles.value,
+      });
+    } else {
+      visibleRoles.value = [...allowed];
+      selectedRole.value = allowed[0];
+    }
+
+    persistPreferredRole(selectedRole.value);
+    persistVisibleRoles(visibleRoles.value);
+    if (selectedRole.value === 'SuperAdmin') {
+      persistSuperAdminVisibleRoles(visibleRoles.value);
+    }
+    ensureVisibleActiveView();
+    return;
+  }
+
+  const nextVisibleRoles = visibleRoles.value.filter((role) => allowed.includes(role));
+
+  if (selectedRole.value === 'SuperAdmin' && allowed.includes('SuperAdmin')) {
+    const storedSuperAdminRoles = readSuperAdminVisibleRoles();
+    const sourceRoles = storedSuperAdminRoles.length
+      ? mergeRoleLists(storedSuperAdminRoles, nextVisibleRoles)
+      : nextVisibleRoles;
+    visibleRoles.value = withRequiredRole(sourceRoles.filter((role) => allowed.includes(role)), 'SuperAdmin');
+    persistPreferredRole(selectedRole.value);
+    persistVisibleRoles(visibleRoles.value);
+    persistSuperAdminVisibleRoles(visibleRoles.value);
+    debugLog('role', 'SuperAdmin visible roles direkonsiliasi.', {
+      allowed,
+      storedSuperAdminRoles,
+      nextVisibleRoles,
+      resolvedVisibleRoles: visibleRoles.value,
+    });
+    ensureVisibleActiveView();
+    return;
+  }
+
+  visibleRoles.value = nextVisibleRoles.length ? nextVisibleRoles : [allowed[0]];
+
+  if (!visibleRoles.value.includes(selectedRole.value)) {
+    selectedRole.value = visibleRoles.value[0];
+    persistPreferredRole(selectedRole.value);
+  }
+
+  persistVisibleRoles(visibleRoles.value);
+  ensureVisibleActiveView();
 }
 
 function buildSessionPayload() {
@@ -2213,6 +3073,142 @@ function renderOperatorDonutCharts() {
   operatorDonutCharts.length = items.length;
 }
 
+function destroyHrdDashboardCharts() {
+  if (hrdAttendanceDonutChart) { hrdAttendanceDonutChart.destroy(); hrdAttendanceDonutChart = null; }
+  if (hrdWorkforceBarChart) { hrdWorkforceBarChart.destroy(); hrdWorkforceBarChart = null; }
+  if (hrdReadinessPieChart) { hrdReadinessPieChart.destroy(); hrdReadinessPieChart = null; }
+  if (hrdTrendLineChart) { hrdTrendLineChart.destroy(); hrdTrendLineChart = null; }
+}
+
+function renderHrdDashboardCharts() {
+  if (activeView.value !== 'hrd' || activeFeatureId.value !== 'hrd-dashboard' || hrdPending.value) {
+    return;
+  }
+
+  const rootStyles = window.getComputedStyle(document.documentElement);
+  const successColor = rootStyles.getPropertyValue('--success').trim() || '#16a34a';
+  const warningColor = rootStyles.getPropertyValue('--warning').trim() || '#d97706';
+  const dangerColor = rootStyles.getPropertyValue('--danger').trim() || '#dc2626';
+  const primaryColor = rootStyles.getPropertyValue('--primary').trim() || '#2563eb';
+  const neutralColor = '#94a3b8';
+  const textPrimary = rootStyles.getPropertyValue('--text-primary').trim() || '#111827';
+
+  // 1. Donut Chart (Kehadiran Hari Ini)
+  if (hrdAttendanceDonutCanvas.value) {
+    const data = hrdAttendanceDonutData.value;
+    if (hrdAttendanceDonutChart) {
+      hrdAttendanceDonutChart.data.datasets[0].data = data;
+      hrdAttendanceDonutChart.options.color = textPrimary;
+      hrdAttendanceDonutChart.update('none');
+    } else {
+      hrdAttendanceDonutChart = new Chart(hrdAttendanceDonutCanvas.value, {
+        type: 'doughnut',
+        data: {
+          labels: ['Hadir', 'Izin', 'Sakit', 'Alpha', 'Pending'],
+          datasets: [{
+            data,
+            backgroundColor: [successColor, primaryColor, warningColor, dangerColor, neutralColor],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          color: textPrimary,
+          plugins: { legend: { position: 'right' } }
+        }
+      });
+    }
+  }
+
+  // 2. Bar Chart (Distribusi Pekerja)
+  if (hrdWorkforceBarCanvas.value) {
+    const data = hrdWorkforceBarData.value;
+    if (hrdWorkforceBarChart) {
+      hrdWorkforceBarChart.data.labels = data.labels;
+      hrdWorkforceBarChart.data.datasets[0].data = data.data;
+      hrdWorkforceBarChart.options.color = textPrimary;
+      hrdWorkforceBarChart.update('none');
+    } else {
+      hrdWorkforceBarChart = new Chart(hrdWorkforceBarCanvas.value, {
+        type: 'bar',
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: 'Karyawan Aktif',
+            data: data.data,
+            backgroundColor: primaryColor,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          color: textPrimary,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+  }
+
+  // 3. Pie Chart (Readiness Kelengkapan)
+  if (hrdReadinessPieCanvas.value) {
+    const data = hrdReadinessPieData.value;
+    if (hrdReadinessPieChart) {
+      hrdReadinessPieChart.data.datasets[0].data = data;
+      hrdReadinessPieChart.options.color = textPrimary;
+      hrdReadinessPieChart.update('none');
+    } else {
+      hrdReadinessPieChart = new Chart(hrdReadinessPieCanvas.value, {
+        type: 'pie',
+        data: {
+          labels: ['Payroll-ready', 'Review required'],
+          datasets: [{
+            data,
+            backgroundColor: [successColor, warningColor],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          color: textPrimary,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+  }
+
+  // 4. Line Chart (Tren Kehadiran Mingguan)
+  if (hrdTrendLineCanvas.value) {
+    const data = hrdTrendLineData.value;
+    if (hrdTrendLineChart) {
+      hrdTrendLineChart.data.labels = data.labels;
+      hrdTrendLineChart.data.datasets[0].data = data.hadir;
+      hrdTrendLineChart.data.datasets[1].data = data.absen;
+      hrdTrendLineChart.options.color = textPrimary;
+      hrdTrendLineChart.update('none');
+    } else {
+      hrdTrendLineChart = new Chart(hrdTrendLineCanvas.value, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            { label: 'Hadir', data: data.hadir, borderColor: successColor, backgroundColor: successColor, tension: 0.3 },
+            { label: 'Absen/Izin', data: data.absen, borderColor: warningColor, backgroundColor: warningColor, tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          color: textPrimary,
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+  }
+}
+
 function showMetricHelp(metric) {
   const content = metricHelpContent[metric.label];
 
@@ -2277,14 +3273,19 @@ function handleKeydown(event) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  debugLog('info', 'Aplikasi dimount.', {
+    activeView: activeView.value,
+    selectedRole: selectedRole.value,
+    viewLog: viewLog.value,
+  });
   hydrate();
   ensureVisibleActiveView();
-  refreshSessionContext();
+  await refreshSessionContext();
   refreshOperatorReferenceData();
   refreshDefectCategories();
   refreshProductionTarget();
-  refreshOperatorDashboard();
+  await switchView(activeView.value);
   renderOperatorDashboardCharts();
   window.addEventListener('keydown', handleKeydown);
 });
@@ -2306,16 +3307,70 @@ watch(operatorTrendHistory, async () => {
 });
 
 watch(operatorTrendPeriod, () => {
+  debugLog('info', `Chart period berubah ke ${operatorTrendPeriod.value}.`);
   refreshOperatorDashboard();
 });
 
-watch(() => [activeView.value, activeFeatureId.value, operatorDashboardPending.value], () => {
+watch(() => [activeView.value, activeFeatureId.value, operatorDashboardPending.value, hrdPending.value], () => {
   renderOperatorDashboardCharts();
+  renderHrdDashboardCharts();
 }, {
   flush: 'post',
 });
 
-watch(() => [form.value.line_id, form.value.shift_id, form.value.machine_id, selectedOperatorEmail.value], () => {
+watch(() => [activeView.value, activeFeatureId.value], ([viewId, featureId]) => {
+  debugLog('workspace', 'Navigasi aktif berubah.', {
+    viewId,
+    featureId,
+    selectedRole: selectedRole.value,
+  });
+});
+
+watch(() => [selectedRole.value, visibleRoles.value.join('|')], ([role, visible]) => {
+  if (role === 'SuperAdmin') {
+    persistSuperAdminVisibleRoles(visibleRoles.value);
+  }
+  debugLog('role', 'State role berubah.', {
+    selectedRole: role,
+    visibleRoles: visible.split('|').filter(Boolean),
+  });
+});
+
+watch(sessionError, (message) => {
+  if (message) {
+    debugLog('error', 'Session error muncul.', { message });
+  }
+});
+
+watch(() => [
+  hrdFilters.value.factory_date,
+  hrdFilters.value.period_month,
+  hrdFilters.value.bagian_id,
+  hrdFilters.value.attendance_status,
+], () => {
+  if (activeView.value === 'hrd') {
+    void refreshHrdAccessDashboard();
+  }
+});
+
+watch(hrdEmployeeSearchInput, (value) => {
+  if (hrdEmployeeSearchTimer) {
+    window.clearTimeout(hrdEmployeeSearchTimer);
+  }
+
+  hrdEmployeeSearchTimer = window.setTimeout(() => {
+    const normalized = String(value || '').trim();
+    hrdEmployeeSearch.value = normalized.length >= 2 ? normalized : '';
+    debugLog('info', 'Search direktori HRD diperbarui.', {
+      raw_length: normalized.length,
+      active_query: hrdEmployeeSearch.value,
+      threshold: 2,
+      result_count: hrdVisibleEmployees.value.length,
+    });
+  }, 280);
+});
+
+watch(() => [form.value.bagian_id, form.value.work_category_id, form.value.line_id, form.value.shift_id, form.value.machine_id, selectedOperatorEmail.value], () => {
   void refreshProductionTarget();
   if (activeView.value === 'operator') {
     void refreshOperatorDashboard();
@@ -2342,8 +3397,12 @@ watch([machineOptions, operatorOptions], () => {
 });
 
 onBeforeUnmount(() => {
+  if (hrdEmployeeSearchTimer) {
+    window.clearTimeout(hrdEmployeeSearchTimer);
+  }
   operatorTrendChart?.destroy();
   destroyOperatorDonutCharts();
+  destroyHrdDashboardCharts();
   operatorStore.dispose();
   window.removeEventListener('keydown', handleKeydown);
 });
@@ -2532,6 +3591,15 @@ function readPreferredRole() {
   }
 }
 
+function readPreferredWorkspace() {
+  try {
+    const storedView = window.localStorage.getItem('optiflow.active_workspace');
+    return appWorkspaceIds().includes(storedView) ? storedView : 'operator';
+  } catch {
+    return 'operator';
+  }
+}
+
 function readVisibleRoles() {
   try {
     const storedRoles = JSON.parse(window.localStorage.getItem('optiflow.visible_roles') || '[]');
@@ -2541,6 +3609,56 @@ function readVisibleRoles() {
     return validRoles.length ? [...new Set(validRoles)] : ['Operator', 'Mandor', 'Supervisor', 'Management'];
   } catch {
     return ['Operator', 'Mandor', 'Supervisor', 'Management'];
+  }
+}
+
+function readSuperAdminVisibleRoles() {
+  try {
+    const storedRoles = JSON.parse(window.localStorage.getItem('optiflow.superadmin_visible_roles') || '[]');
+    const validRoles = Array.isArray(storedRoles)
+      ? storedRoles.filter((role) => roleOptions.includes(role))
+      : [];
+    return validRoles.length ? [...new Set(validRoles)] : [];
+  } catch {
+    return [];
+  }
+}
+
+function withRequiredRole(roles, requiredRole) {
+  const nextRoles = [...new Set((roles || []).filter((role) => roleOptions.includes(role)))];
+  if (roleOptions.includes(requiredRole) && !nextRoles.includes(requiredRole)) {
+    nextRoles.push(requiredRole);
+  }
+  return nextRoles;
+}
+
+function mergeRoleLists(...roleLists) {
+  return [...new Set(roleLists.flat().filter((role) => roleOptions.includes(role)))];
+}
+
+function readViewLogPreference() {
+  try {
+    return window.localStorage.getItem('optiflow.view_log') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function persistViewLogPreference(enabled) {
+  try {
+    window.localStorage.setItem('optiflow.view_log', enabled ? 'true' : 'false');
+  } catch {
+    // localStorage is optional; debug console remains controlled in memory.
+  }
+}
+
+function persistPreferredWorkspace(viewId) {
+  try {
+    if (appWorkspaceIds().includes(viewId)) {
+      window.localStorage.setItem('optiflow.active_workspace', viewId);
+    }
+  } catch {
+    // localStorage is optional; active workspace still works for this session.
   }
 }
 
@@ -2560,14 +3678,40 @@ function persistVisibleRoles(roles) {
   }
 }
 
+function persistSuperAdminVisibleRoles(roles) {
+  try {
+    window.localStorage.setItem('optiflow.superadmin_visible_roles', JSON.stringify(withRequiredRole(roles, 'SuperAdmin')));
+  } catch {
+    // localStorage is optional; SuperAdmin menu visibility still works for this session.
+  }
+}
+
 function clearLocalRolePreferences() {
   try {
     window.localStorage.removeItem('optiflow.try_role');
     window.localStorage.removeItem('optiflow.visible_roles');
+    window.localStorage.removeItem('optiflow.superadmin_visible_roles');
+    window.localStorage.removeItem('optiflow.active_workspace');
   } catch {
     // localStorage is optional; IndexedDB reset remains available for local data cleanup.
   }
 }
+
+function appWorkspaceIds() {
+  return ['operator', 'mandor', 'supervisor', 'management', 'hrd', 'settings'];
+}
+
+// --- Table Search & Sort Managers ---
+const tblDefectOptions = useTableSearchAndSort(defectOptions);
+const tblSupervisorRawRows = useTableSearchAndSort(supervisorRawRows);
+const tblProductionTargetRows = useTableSearchAndSort(productionTargetRows);
+const tblSupervisorQuarantineRows = useTableSearchAndSort(supervisorQuarantineRows);
+const tblBagianMasterRows = useTableSearchAndSort(bagianMasterRows);
+const tblDashboardPareto = useTableSearchAndSort(computed(() => dashboardData.value?.pareto || []));
+const tblHrdVisibleEmployees = useTableSearchAndSort(hrdVisibleEmployees); // Already filtered, applying sort on top
+const tblHrdAttendanceDailyRows = useTableSearchAndSort(hrdAttendanceDailyRows);
+const tblHrdAttendanceMonthlyRows = useTableSearchAndSort(hrdAttendanceMonthlyRows);
+const tblMaintenanceProperties = useTableSearchAndSort(maintenanceProperties);
 </script>
 
 <template>
@@ -2724,13 +3868,13 @@ function clearLocalRolePreferences() {
 
         <div class="field-grid">
           <label class="field">
-            <span>Line</span>
-            <select v-model="form.line_id" aria-label="Line" @change="clearFieldError('line_id')">
-              <option v-for="option in lineOptions" :key="option.value" :value="option.value">
+            <span>Bagian</span>
+            <select v-model="form.bagian_id" aria-label="Bagian" @change="clearFieldError('bagian_id')">
+              <option v-for="option in bagianOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
-            <small v-if="formErrors.line_id" class="field-error">{{ formErrors.line_id }}</small>
+            <small v-if="formErrors.bagian_id" class="field-error">{{ formErrors.bagian_id }}</small>
           </label>
           <label class="field">
             <span>Shift</span>
@@ -2744,13 +3888,13 @@ function clearLocalRolePreferences() {
             <small v-if="formErrors.shift_id" class="field-error">{{ formErrors.shift_id }}</small>
           </label>
           <label class="field">
-            <span>Machine</span>
-            <select v-model="form.machine_id" aria-label="Machine" @change="clearFieldError('machine_id')">
-              <option v-for="option in machineOptions" :key="option.value" :value="option.value">
+            <span>Jenis pekerjaan</span>
+            <select v-model="form.work_category_id" aria-label="Jenis pekerjaan" @change="clearFieldError('work_category_id')">
+              <option v-for="option in workCategoryOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
-            <small v-if="formErrors.machine_id" class="field-error">{{ formErrors.machine_id }}</small>
+            <small v-if="formErrors.work_category_id" class="field-error">{{ formErrors.work_category_id }}</small>
           </label>
           <label class="field">
             <span>Operator</span>
@@ -2879,7 +4023,7 @@ function clearLocalRolePreferences() {
           <li v-for="item in operatorRecentSubmissions" :key="item.transaction_id">
             <div>
               <strong>{{ item.transaction_id }}</strong>
-              <span>{{ item.line_id }} / {{ item.shift_id }} / {{ item.machine_id }} - OK {{ formatNumber(item.perolehan_ok) }}, Reject {{ formatNumber(item.perolehan_reject) }}</span>
+              <span>{{ item.bagian_id || item.line_id }} / {{ item.shift_id }} / {{ item.work_category_id || item.machine_id }} - OK {{ formatNumber(item.perolehan_ok) }}, Reject {{ formatNumber(item.perolehan_reject) }}</span>
             </div>
             <span :class="['status', item.status === 'CONFLICT_PENDING' ? 'conflict' : 'warning']">
               {{ item.status }}
@@ -3012,9 +4156,14 @@ function clearLocalRolePreferences() {
               <span>Reference</span>
               <strong>Kategori defect aktif</strong>
             </div>
-            <button class="button secondary compact-button" type="button" @click="refreshDefectCategories">
-              Refresh
-            </button>
+            <div class="control-filters">
+              <label class="field" style="margin: 0; min-width: 150px;">
+                <input type="search" v-model="tblDefectOptions.searchQuery" placeholder="Cari kategori..." aria-label="Cari kategori defect" />
+              </label>
+              <button class="button secondary compact-button" type="button" @click="refreshDefectCategories">
+                Refresh
+              </button>
+            </div>
           </div>
           <div v-if="defectCatalogError" class="inline-error" role="alert">
             {{ defectCatalogError }}
@@ -3022,13 +4171,13 @@ function clearLocalRolePreferences() {
           <table>
             <thead>
               <tr>
-                <th>Kategori</th>
-                <th>QCC</th>
-                <th>Severity</th>
+                <th @click="tblDefectOptions.toggleSort('label')" style="cursor: pointer;">Kategori <span v-if="tblDefectOptions.sortKey === 'label'">{{ tblDefectOptions.sortAsc ? '🔼' : '🔽' }}</span></th>
+                <th @click="tblDefectOptions.toggleSort('qcc_factor')" style="cursor: pointer;">QCC <span v-if="tblDefectOptions.sortKey === 'qcc_factor'">{{ tblDefectOptions.sortAsc ? '🔼' : '🔽' }}</span></th>
+                <th @click="tblDefectOptions.toggleSort('severity')" style="cursor: pointer;">Severity <span v-if="tblDefectOptions.sortKey === 'severity'">{{ tblDefectOptions.sortAsc ? '🔼' : '🔽' }}</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="option in defectOptions.filter((item) => item.value)" :key="option.value">
+              <tr v-for="option in tblDefectOptions.processedData.filter((item) => item.value)" :key="option.value">
                 <td>{{ option.label }}</td>
                 <td>{{ getDefectCategory(option.value)?.qcc_factor || '-' }}</td>
                 <td>{{ getDefectCategory(option.value)?.severity || '-' }}</td>
@@ -3110,7 +4259,12 @@ function clearLocalRolePreferences() {
               <span>Monitoring</span>
               <strong>Submit operator terbaru</strong>
             </div>
-            <button class="button secondary compact-button" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
+            <div class="control-filters">
+              <label class="field" style="margin: 0; min-width: 150px;">
+                <input type="search" v-model="tblSupervisorRawRows.searchQuery" placeholder="Cari transaksi..." aria-label="Cari transaksi" />
+              </label>
+              <button class="button secondary compact-button" type="button" @click="refreshSupervisorControlCenter">Refresh</button>
+            </div>
           </div>
           <div v-if="supervisorPending" class="table-skeleton" aria-hidden="true">
             <span v-for="item in skeletonRows.slice(0, 4)" :key="`mandor-raw-skeleton-${item}`" class="skeleton-line wide"></span>
@@ -3118,23 +4272,23 @@ function clearLocalRolePreferences() {
           <table v-else>
             <thead>
               <tr>
-                <th>Transaction</th>
-                <th>Machine</th>
-                <th>OK</th>
-                <th>Reject</th>
-                <th>Status</th>
+                <th @click="tblSupervisorRawRows.toggleSort('transaction_id')" style="cursor: pointer;">Transaction <span v-if="tblSupervisorRawRows.sortKey === 'transaction_id'">{{ tblSupervisorRawRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                <th @click="tblSupervisorRawRows.toggleSort('work_category_id')" style="cursor: pointer;">Jenis pekerjaan <span v-if="tblSupervisorRawRows.sortKey === 'work_category_id'">{{ tblSupervisorRawRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                <th @click="tblSupervisorRawRows.toggleSort('perolehan_ok')" style="cursor: pointer;">OK <span v-if="tblSupervisorRawRows.sortKey === 'perolehan_ok'">{{ tblSupervisorRawRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                <th @click="tblSupervisorRawRows.toggleSort('perolehan_reject')" style="cursor: pointer;">Reject <span v-if="tblSupervisorRawRows.sortKey === 'perolehan_reject'">{{ tblSupervisorRawRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                <th @click="tblSupervisorRawRows.toggleSort('status')" style="cursor: pointer;">Status <span v-if="tblSupervisorRawRows.sortKey === 'status'">{{ tblSupervisorRawRows.sortAsc ? '🔼' : '🔽' }}</span></th>
                 <th>Review</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in supervisorRawRows" :key="row.transaction_id">
+              <tr v-for="row in tblSupervisorRawRows.processedData" :key="row.transaction_id">
                 <td>
                   <strong class="transaction-id">{{ row.transaction_id }}</strong>
                   <small class="transaction-meta">
                     {{ row.operator_email_masked || maskEmailForUi(row.operator_email) }} - {{ row.line_id }} / {{ row.shift_id }} - {{ formatDateTime(row.device_timestamp) }}
                   </small>
                 </td>
-                <td>{{ row.machine_id }}</td>
+                <td>{{ row.work_category_id || row.machine_id }}</td>
                 <td>{{ formatNumber(row.perolehan_ok) }}</td>
                 <td>{{ formatNumber(row.perolehan_reject) }}</td>
                 <td><span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : 'success']">{{ row.status }}</span></td>
@@ -3164,8 +4318,8 @@ function clearLocalRolePreferences() {
             </select>
           </label>
           <label class="field">
-            <span>Line</span>
-            <select v-model="approvalLineFilter" aria-label="Filter line approval">
+            <span>Bagian</span>
+            <select v-model="approvalLineFilter" aria-label="Filter Bagian approval">
               <option v-for="option in approvalLineOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
@@ -3185,7 +4339,7 @@ function clearLocalRolePreferences() {
               <thead>
                 <tr>
                   <th>Case</th>
-                  <th>Machine</th>
+                  <th>Jenis pekerjaan</th>
                   <th>Reason</th>
                   <th>Status</th>
                 </tr>
@@ -3202,7 +4356,7 @@ function clearLocalRolePreferences() {
                       {{ row.id }}
                     </button>
                   </td>
-                  <td>{{ row.machine_id }}</td>
+                  <td>{{ row.work_category_id || row.machine_id }}</td>
                   <td>{{ row.reason_code }}</td>
                   <td>
                     <span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : row.status === 'APPROVED' ? 'success' : 'warning']">
@@ -3220,8 +4374,8 @@ function clearLocalRolePreferences() {
           <aside v-if="activeApprovalCase" class="approval-detail" aria-label="Detail comparison approval">
             <div class="detail-head">
               <div>
-                <p class="eyebrow">{{ activeApprovalCase.line_id }} / {{ activeApprovalCase.shift_id }}</p>
-                <h3>{{ activeApprovalCase.machine_id }}</h3>
+                <p class="eyebrow">{{ activeApprovalCase.bagian_id || activeApprovalCase.line_id }} / {{ activeApprovalCase.shift_id }}</p>
+                <h3>{{ activeApprovalCase.work_category_id || activeApprovalCase.machine_id }}</h3>
               </div>
               <span :class="['status', activeApprovalCase.status === 'CONFLICT_PENDING' ? 'conflict' : activeApprovalCase.status === 'APPROVED' ? 'success' : 'warning']">
                 {{ activeApprovalCase.status }}
@@ -3298,8 +4452,8 @@ function clearLocalRolePreferences() {
                 <input v-model="targetForm.effective_until" aria-label="Akhir berlaku target" placeholder="Opsional" />
               </label>
               <label class="field">
-                <span>Line</span>
-                <select v-model="targetForm.line_id" aria-label="Line target">
+                <span>Bagian</span>
+                <select v-model="targetForm.line_id" aria-label="Bagian target">
                   <option v-for="option in lineOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
                   </option>
@@ -3314,8 +4468,8 @@ function clearLocalRolePreferences() {
                 </select>
               </label>
               <label class="field">
-                <span>Machine</span>
-                <select v-model="targetForm.machine_id" :disabled="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" aria-label="Machine target">
+                <span>Jenis pekerjaan</span>
+                <select v-model="targetForm.machine_id" :disabled="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" aria-label="Jenis pekerjaan target">
                   <option v-if="targetForm.scope_type === 'LINE_SHIFT' || targetForm.scope_type === 'ALL_USERS'" value="ALL">ALL</option>
                   <option v-for="option in machineScopedOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
@@ -3364,25 +4518,30 @@ function clearLocalRolePreferences() {
                 <span>Target aktif</span>
                 <strong>Scope yang cocok</strong>
               </div>
+              <div class="control-filters">
+                <label class="field" style="margin: 0; min-width: 150px;">
+                  <input type="search" v-model="tblProductionTargetRows.searchQuery" placeholder="Cari target..." aria-label="Cari target" />
+                </label>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Scope</th>
-                    <th>Line/Shift</th>
-                    <th>Machine</th>
-                    <th>Operator</th>
-                    <th>Target</th>
-                    <th>Status</th>
+                    <th @click="tblProductionTargetRows.toggleSort('scope_type')" style="cursor: pointer;">Scope <span v-if="tblProductionTargetRows.sortKey === 'scope_type'">{{ tblProductionTargetRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblProductionTargetRows.toggleSort('line_id')" style="cursor: pointer;">Bagian/Shift <span v-if="tblProductionTargetRows.sortKey === 'line_id'">{{ tblProductionTargetRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblProductionTargetRows.toggleSort('work_category_id')" style="cursor: pointer;">Jenis pekerjaan <span v-if="tblProductionTargetRows.sortKey === 'work_category_id'">{{ tblProductionTargetRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblProductionTargetRows.toggleSort('operator_email')" style="cursor: pointer;">Operator <span v-if="tblProductionTargetRows.sortKey === 'operator_email'">{{ tblProductionTargetRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblProductionTargetRows.toggleSort('target_harian')" style="cursor: pointer;">Target <span v-if="tblProductionTargetRows.sortKey === 'target_harian'">{{ tblProductionTargetRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblProductionTargetRows.toggleSort('status_aktif')" style="cursor: pointer;">Status <span v-if="tblProductionTargetRows.sortKey === 'status_aktif'">{{ tblProductionTargetRows.sortAsc ? '🔼' : '🔽' }}</span></th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="target in productionTargetRows" :key="target.target_id">
+                  <tr v-for="target in tblProductionTargetRows.processedData" :key="target.target_id">
                     <td>{{ target.scope_type }}</td>
                     <td>{{ target.line_id }} / {{ target.shift_id }}</td>
-                    <td>{{ target.machine_id }}</td>
+                    <td>{{ target.work_category_id || target.machine_id }}</td>
                     <td>{{ target.operator_email }}</td>
                     <td>{{ formatNumber(target.target_harian) }}</td>
                     <td><span :class="['status', target.status_aktif ? 'success' : 'warning']">{{ target.status_aktif ? 'Active' : 'Inactive' }}</span></td>
@@ -3454,7 +4613,7 @@ function clearLocalRolePreferences() {
             <input v-model="supervisorFilters.factory_date" aria-label="Tanggal supervisor" />
           </label>
           <label class="field">
-            <span>Line</span>
+            <span>Bagian</span>
             <select v-model="supervisorFilters.line_id" aria-label="Line supervisor">
               <option v-for="option in lineOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -3494,7 +4653,7 @@ function clearLocalRolePreferences() {
         </div>
 
         <div v-if="activeFeatureId === 'supervisor-dashboard' || activeFeatureId === 'supervisor-adjustment'" class="control-actions">
-          <button class="button primary" type="button" @click="closeCurrentScope">Close line/shift</button>
+          <button class="button primary" type="button" @click="closeCurrentScope">Close Bagian/shift</button>
           <button class="button secondary" type="button" @click="createAdjustmentFromFirstRow">Create adjustment</button>
         </div>
 
@@ -3513,7 +4672,7 @@ function clearLocalRolePreferences() {
               <thead>
                 <tr>
                   <th>Transaction</th>
-                  <th>Machine</th>
+                  <th>Jenis pekerjaan</th>
                   <th>OK</th>
                   <th>Reject</th>
                   <th>Status</th>
@@ -3522,7 +4681,7 @@ function clearLocalRolePreferences() {
               <tbody>
                 <tr v-for="row in supervisorRawRows" :key="row.transaction_id">
                   <td>{{ row.transaction_id }}</td>
-                  <td>{{ row.machine_id }}</td>
+                  <td>{{ row.work_category_id || row.machine_id }}</td>
                   <td>{{ row.perolehan_ok }}</td>
                   <td>{{ row.perolehan_reject }}</td>
                   <td><span :class="['status', row.status === 'CONFLICT_PENDING' ? 'conflict' : 'success']">{{ row.status }}</span></td>
@@ -3549,7 +4708,7 @@ function clearLocalRolePreferences() {
                 <tr>
                   <th>Case</th>
                   <th>Reason</th>
-                  <th>Machine</th>
+                  <th>Jenis pekerjaan</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -3557,7 +4716,7 @@ function clearLocalRolePreferences() {
                 <tr v-for="row in supervisorQuarantineRows" :key="row.quarantine_id">
                   <td>{{ row.quarantine_id }}</td>
                   <td>{{ row.reason_code }}</td>
-                  <td>{{ row.machine_id }}</td>
+                  <td>{{ row.work_category_id || row.machine_id }}</td>
                   <td><span :class="['status', row.status === 'APPROVED' ? 'success' : row.status === 'REJECTED' ? 'danger' : 'conflict']">{{ row.status }}</span></td>
                 </tr>
                 <tr v-if="supervisorQuarantineRows.length === 0">
@@ -3857,7 +5016,7 @@ function clearLocalRolePreferences() {
         <div class="section-title">
           <div>
             <p class="eyebrow">HRD</p>
-            <h2 id="hrd-title">User access audit</h2>
+            <h2 id="hrd-title">{{ currentRoleFeatureMeta.title }}</h2>
           </div>
           <button class="button secondary compact-button" type="button" @click="refreshHrdAccessDashboard">
             {{ hrdLoading ? 'Memuat' : 'Refresh' }}
@@ -3876,7 +5035,7 @@ function clearLocalRolePreferences() {
           </article>
         </div>
 
-        <div v-else-if="activeFeatureId === 'hrd-dashboard'" class="task-strip" aria-label="Prioritas HRD">
+        <div v-else-if="activeFeatureId === 'hrd-dashboard'" class="task-strip g4" aria-label="Prioritas HRD">
           <article v-for="card in hrdAccessCards" :key="card.label" :class="['task-card', card.tone]">
             <span>{{ card.label }}</span>
             <strong>{{ card.value }}</strong>
@@ -3884,60 +5043,302 @@ function clearLocalRolePreferences() {
           </article>
         </div>
 
-        <div v-if="activeFeatureId !== 'hrd-dashboard'" class="hrd-workflow">
-          <article v-if="activeFeatureId === 'hrd-users'" class="task-panel">
-            <div class="table-heading">
-              <div>
-                <span>Directory</span>
-                <strong>Dummy employee directory</strong>
+        <div v-if="activeFeatureId === 'hrd-dashboard'" class="hrd-workflow hrd-workflow-full">
+          <div class="hrd-chart-grid">
+            <div class="hrd-chart-card">
+              <h3>Komposisi Kehadiran Hari Ini</h3>
+              <div class="hrd-chart-canvas-frame">
+                <canvas ref="hrdAttendanceDonutCanvas" role="img" aria-label="Donut Chart Kehadiran"></canvas>
               </div>
             </div>
+
+            <div class="hrd-chart-card">
+              <h3>Distribusi Karyawan per Bagian</h3>
+              <div class="hrd-chart-canvas-frame">
+                <canvas ref="hrdWorkforceBarCanvas" role="img" aria-label="Bar Chart Pekerja"></canvas>
+              </div>
+            </div>
+
+            <div class="hrd-chart-card">
+              <h3>Kelengkapan Data Karyawan</h3>
+              <div class="hrd-chart-canvas-frame">
+                <canvas ref="hrdReadinessPieCanvas" role="img" aria-label="Pie Chart Kelengkapan Data"></canvas>
+              </div>
+            </div>
+
+            <div class="hrd-chart-card">
+              <h3>Tren Kehadiran (7 Hari Terakhir)</h3>
+              <div class="hrd-chart-canvas-frame">
+                <canvas ref="hrdTrendLineCanvas" role="img" aria-label="Line Chart Tren Kehadiran"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-if="activeFeatureId !== 'hrd-dashboard'"
+          :class="['hrd-workflow', { 'hrd-workflow-full': activeFeatureId === 'hrd-employees' || activeFeatureId === 'hrd-attendance' }]"
+        >
+          <article v-if="activeFeatureId === 'hrd-employees'" class="task-panel hrd-employee-panel">
+            <div class="hrd-directory-head">
+              <div class="hrd-directory-title">
+                <span>Direktori karyawan</span>
+                <strong>Manajemen data karyawan</strong>
+                <p>Kelola identitas karyawan, Bagian, status kerja, kontak HRD, dan akses role secara privacy-safe.</p>
+              </div>
+              <div class="hrd-directory-actions">
+                <button class="button primary compact-button" type="button" @click="openHrdEmployeeCreateModal">➕ Tambah karyawan</button>
+                <button class="button secondary compact-button" type="button" @click="hrdEmployeeDetailMode = hrdEmployeeDetailMode === 'DETAIL' ? 'MASKED' : 'DETAIL'">
+                  {{ hrdEmployeeDetailMode === 'DETAIL' ? '🛡️ Masking aktif' : '👁️ Lihat detail demo' }}
+                </button>
+              </div>
+            </div>
+            <div v-if="hrdEmployeeMessage" class="inline-success">{{ hrdEmployeeMessage }}</div>
+            <div v-if="hrdEmployeeError" class="inline-error" role="alert">{{ hrdEmployeeError }}</div>
             <div v-if="hrdPending" class="table-skeleton" aria-hidden="true">
               <span v-for="item in skeletonRows" :key="`hrd-user-skeleton-${item}`" class="skeleton-line wide"></span>
             </div>
-            <table v-else>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nama</th>
-                  <th>Alamat</th>
-                  <th>Email</th>
-                  <th>No WA</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="user in hrdUsers" :key="user.user_id">
-                  <td><strong>{{ user.employee_no || user.user_id }}</strong></td>
-                  <td>{{ user.full_name || '-' }}</td>
-                  <td>{{ user.address || '-' }}</td>
-                  <td>{{ user.email || user.email_masked }}</td>
-                  <td>
-                    <a v-if="user.wa_url" class="wa-link" :href="user.wa_url" target="_blank" rel="noopener noreferrer">
-                      {{ user.wa_number }}
-                    </a>
-                    <span v-else>-</span>
-                  </td>
-                  <td>{{ (user.roles || [user.role]).join(', ') }}</td>
-                  <td>
-                    <span :class="['status', user.is_deleted ? 'danger' : user.status_aktif ? 'success' : 'warning']">
-                      {{ user.is_deleted ? 'Deleted' : user.status_aktif ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div v-else class="table-wrap">
+              <div class="hrd-table-toolbar">
+                <div class="hrd-table-summary">
+                  <span>👥 Daftar karyawan</span>
+                  <strong>{{ formatNumber(hrdVisibleEmployees.length) }} dari {{ formatNumber(hrdEmployees.length) }} data tampil</strong>
+                  <small>{{ hrdEmployeeSearchHint }}</small>
+                </div>
+                <div class="hrd-table-controls" aria-label="Filter direktori karyawan">
+                  <label class="hrd-search-field">
+                    <span>🔎 Search</span>
+                    <input
+                      v-model="hrdEmployeeSearchInput"
+                      type="search"
+                      placeholder="Cari ID, nama, email, WA..."
+                      aria-label="Cari karyawan HRD"
+                    />
+                  </label>
+                  <button class="button secondary compact-button" type="button" @click="resetHrdEmployeeFilters">↺ Reset</button>
+                  <span :class="['status', hrdEmployeeDetailMode === 'DETAIL' ? 'warning' : 'success']">
+                    {{ hrdEmployeeDetailMode === 'DETAIL' ? 'Detail demo' : 'Masked' }}
+                  </span>
+                </div>
+              </div>
+              <table class="compact-table">
+                <thead>
+                  <tr>
+                    <th @click="tblHrdVisibleEmployees.toggleSort('employee_no')" style="cursor: pointer;">ID <span v-if="tblHrdVisibleEmployees.sortKey === 'employee_no'">{{ tblHrdVisibleEmployees.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdVisibleEmployees.toggleSort('full_name')" style="cursor: pointer;">Karyawan <span v-if="tblHrdVisibleEmployees.sortKey === 'full_name'">{{ tblHrdVisibleEmployees.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdVisibleEmployees.toggleSort('bagian_id')" style="cursor: pointer;">Bagian <span v-if="tblHrdVisibleEmployees.sortKey === 'bagian_id'">{{ tblHrdVisibleEmployees.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdVisibleEmployees.toggleSort('status_label')" style="cursor: pointer;">Status <span v-if="tblHrdVisibleEmployees.sortKey === 'status_label'">{{ tblHrdVisibleEmployees.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th>Kontak</th>
+                    <th>Role</th>
+                    <th @click="tblHrdVisibleEmployees.toggleSort('completeness_percent')" style="cursor: pointer;">Kelengkapan <span v-if="tblHrdVisibleEmployees.sortKey === 'completeness_percent'">{{ tblHrdVisibleEmployees.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="tblHrdVisibleEmployees.processedData.length === 0">
+                    <td colspan="8">
+                      <div class="empty-table-state">
+                        <strong>🔍 Tidak ada data cocok</strong>
+                        <span>Ubah kata kunci atau reset filter untuk melihat seluruh karyawan.</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-for="user in tblHrdVisibleEmployees.processedData" :key="user.user_id || user.employee_no">
+                    <td><strong>{{ user.employee_no || user.user_id }}</strong></td>
+                    <td>
+                      <strong>{{ user.full_name || '-' }}</strong>
+                      <small>{{ user.address_display }}</small>
+                      <small :class="['status', user.can_edit_employee ? 'success' : 'warning']">
+                        {{ user.can_edit_employee ? 'EMPLOYEE_MASTER' : 'ACCESS_ONLY' }}
+                      </small>
+                    </td>
+                    <td>{{ user.bagian_id || '-' }}</td>
+                    <td><span :class="['status', user.status_tone]">{{ user.status_label }}</span></td>
+                    <td>
+                      <span>{{ user.email_display }}</span>
+                      <small>
+                        <a v-if="hrdEmployeeDetailMode === 'DETAIL' && user.wa_url" class="wa-link" :href="user.wa_url" target="_blank" rel="noopener noreferrer">
+                          {{ user.wa_display }}
+                        </a>
+                        <span v-else>{{ user.wa_display }}</span>
+                      </small>
+                    </td>
+                    <td>{{ user.roles.join(', ') }}</td>
+                    <td><span :class="['status', user.completeness_tone]">{{ user.completeness_status }} {{ user.completeness_percent }}%</span></td>
+                    <td>
+                      <div class="row-actions">
+                        <button
+                          class="button secondary compact-button"
+                          type="button"
+                          :disabled="!user.can_edit_employee"
+                          :title="user.can_edit_employee ? 'Edit data karyawan' : 'Record akses/demo tidak bisa diedit sebagai karyawan'"
+                          @click="editHrdEmployee(user)"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          class="button danger-button compact-button"
+                          type="button"
+                          :disabled="!user.can_edit_employee || !user.status_aktif || hrdEmployeeSaving"
+                          :title="user.can_edit_employee ? 'Set karyawan resign' : 'Record akses/demo tidak bisa diset resign'"
+                          @click="resignHrdEmployee(user)"
+                        >
+                          🚪 Set Resign
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <div class="hint-box">
-              Data ini dummy untuk verifikasi UI HRD. Production PII tetap harus melewati workflow detail HRD terotorisasi.
+              Tambah/Edit/Set Resign melewati permission `employee_master` dan audit backend. Mode detail hanya untuk response yang memang diberi izin backend atau data dummy/mock.
             </div>
           </article>
 
-          <article v-if="activeFeatureId === 'hrd-roles'" class="task-panel">
+          <article v-if="activeFeatureId === 'hrd-attendance'" class="task-panel">
+            <div class="hrd-attendance-card">
+              <div class="table-heading">
+              <div>
+                <span>Absensi</span>
+                <strong>Rekap payroll-ready</strong>
+              </div>
+              <div class="control-filters">
+                <label class="field">
+                  <span>Tanggal</span>
+                  <input v-model="hrdFilters.factory_date" type="date" aria-label="Tanggal absensi HRD" />
+                </label>
+                <label class="field">
+                  <span>Bulan</span>
+                  <input v-model="hrdFilters.period_month" type="month" aria-label="Periode bulanan absensi HRD" />
+                </label>
+                <label class="field">
+                  <span>Bagian</span>
+                  <select v-model="hrdFilters.bagian_id" aria-label="Filter bagian absensi HRD">
+                    <option value="ALL">Semua Bagian</option>
+                    <option v-for="bagian in hrdAttendanceFilters.bagian_options" :key="bagian" :value="bagian">
+                      {{ bagian }}
+                    </option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Status</span>
+                  <select v-model="hrdFilters.attendance_status" aria-label="Filter status absensi HRD">
+                    <option v-for="status in hrdAttendanceFilters.status_options" :key="status" :value="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+              </div>
+            </div>
+
+            <div class="hrd-attendance-card">
+
             <div class="table-heading">
               <div>
-                <span>RBAC</span>
-                <strong>Permission readiness</strong>
+                <span>Harian</span>
+                <strong>{{ hrdAttendanceSummary.factory_date || hrdFilters.factory_date }}</strong>
+              </div>
+              <div class="control-filters">
+                <label class="field" style="margin: 0; min-width: 150px;">
+                  <input type="search" v-model="tblHrdAttendanceDailyRows.searchQuery" placeholder="Cari data harian..." aria-label="Cari data harian" />
+                </label>
+              </div>
+            </div>
+              <div class="mini-metrics">
+              <article v-for="card in hrdAttendanceCards" :key="card.label" :class="['mini-metric', card.tone]">
+                <span>{{ card.label }}</span>
+                <strong>{{ card.value }}</strong>
+              </article>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th @click="tblHrdAttendanceDailyRows.toggleSort('employee_no')" style="cursor: pointer;">ID <span v-if="tblHrdAttendanceDailyRows.sortKey === 'employee_no'">{{ tblHrdAttendanceDailyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceDailyRows.toggleSort('full_name')" style="cursor: pointer;">Nama <span v-if="tblHrdAttendanceDailyRows.sortKey === 'full_name'">{{ tblHrdAttendanceDailyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceDailyRows.toggleSort('bagian_id')" style="cursor: pointer;">Bagian <span v-if="tblHrdAttendanceDailyRows.sortKey === 'bagian_id'">{{ tblHrdAttendanceDailyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceDailyRows.toggleSort('attendance_status')" style="cursor: pointer;">Status <span v-if="tblHrdAttendanceDailyRows.sortKey === 'attendance_status'">{{ tblHrdAttendanceDailyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceDailyRows.toggleSort('clock_in_at')" style="cursor: pointer;">Masuk/Keluar <span v-if="tblHrdAttendanceDailyRows.sortKey === 'clock_in_at'">{{ tblHrdAttendanceDailyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceDailyRows.toggleSort('confirmed_by')" style="cursor: pointer;">Konfirmasi <span v-if="tblHrdAttendanceDailyRows.sortKey === 'confirmed_by'">{{ tblHrdAttendanceDailyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in tblHrdAttendanceDailyRows.processedData" :key="row.daily_attendance_id">
+                    <td><strong>{{ row.employee_no }}</strong></td>
+                    <td>{{ row.full_name }}</td>
+                    <td>{{ row.bagian_id }}</td>
+                    <td><span :class="['status', row.payroll_ready ? 'success' : 'warning']">{{ row.attendance_status }}</span></td>
+                    <td>{{ row.clock_in_at ? formatDateTime(row.clock_in_at) : '-' }} / {{ row.clock_out_at ? formatDateTime(row.clock_out_at) : '-' }}</td>
+                    <td>{{ row.confirmed_by || 'Belum dikonfirmasi' }}</td>
+                  </tr>
+                  <tr v-if="hrdAttendanceDailyRows.length === 0">
+                    <td colspan="6">Belum ada data absensi harian untuk filter ini.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            </div>
+
+            <div class="hrd-attendance-card">
+              <div class="table-heading">
+              <div>
+                <span>Bulanan</span>
+                <strong>{{ hrdAttendanceSummary.period_month || hrdFilters.period_month }}</strong>
+              </div>
+              <div class="control-filters">
+                <label class="field" style="margin: 0; min-width: 150px;">
+                  <input type="search" v-model="tblHrdAttendanceMonthlyRows.searchQuery" placeholder="Cari data bulanan..." aria-label="Cari data bulanan" />
+                </label>
+              </div>
+            </div>
+            <div class="mini-metrics">
+              <article v-for="card in hrdMonthlyAttendanceCards" :key="card.label" :class="['mini-metric', card.tone]">
+                <span>{{ card.label }}</span>
+                <strong>{{ card.value }}</strong>
+              </article>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th @click="tblHrdAttendanceMonthlyRows.toggleSort('employee_no')" style="cursor: pointer;">ID <span v-if="tblHrdAttendanceMonthlyRows.sortKey === 'employee_no'">{{ tblHrdAttendanceMonthlyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceMonthlyRows.toggleSort('full_name')" style="cursor: pointer;">Nama <span v-if="tblHrdAttendanceMonthlyRows.sortKey === 'full_name'">{{ tblHrdAttendanceMonthlyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceMonthlyRows.toggleSort('bagian_id')" style="cursor: pointer;">Bagian <span v-if="tblHrdAttendanceMonthlyRows.sortKey === 'bagian_id'">{{ tblHrdAttendanceMonthlyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceMonthlyRows.toggleSort('hadir_count')" style="cursor: pointer;">Hadir <span v-if="tblHrdAttendanceMonthlyRows.sortKey === 'hadir_count'">{{ tblHrdAttendanceMonthlyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th>I/S/A</th>
+                    <th @click="tblHrdAttendanceMonthlyRows.toggleSort('pending_confirmation_count')" style="cursor: pointer;">Pending <span v-if="tblHrdAttendanceMonthlyRows.sortKey === 'pending_confirmation_count'">{{ tblHrdAttendanceMonthlyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                    <th @click="tblHrdAttendanceMonthlyRows.toggleSort('payroll_ready_count')" style="cursor: pointer;">Payroll <span v-if="tblHrdAttendanceMonthlyRows.sortKey === 'payroll_ready_count'">{{ tblHrdAttendanceMonthlyRows.sortAsc ? '🔼' : '🔽' }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in tblHrdAttendanceMonthlyRows.processedData" :key="`${row.employee_no}-${row.bagian_id}`">
+                    <td><strong>{{ row.employee_no }}</strong></td>
+                    <td>{{ row.full_name }}</td>
+                    <td>{{ row.bagian_id }}</td>
+                    <td>{{ formatNumber(row.hadir_count) }}</td>
+                    <td>{{ formatNumber(row.izin_count) }} / {{ formatNumber(row.sakit_count) }} / {{ formatNumber(row.alpha_count) }}</td>
+                    <td>{{ formatNumber(row.pending_confirmation_count) }}</td>
+                    <td><span :class="['status', row.payroll_ready ? 'success' : 'warning']">{{ row.payroll_ready ? 'Ready' : 'Review' }}</span></td>
+                  </tr>
+                  <tr v-if="hrdAttendanceMonthlyRows.length === 0">
+                    <td colspan="7">Belum ada rekap bulanan untuk filter ini.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            </div>
+            <div class="hint-box">
+              Pending konfirmasi tidak boleh dianggap final untuk payroll. HRD membaca status payroll-ready; keputusan hadir lapangan tetap dikonfirmasi Mandor.
+            </div>
+          </article>
+
+          <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Akses & Audit</span>
+                <strong>Role readiness</strong>
               </div>
             </div>
             <ul class="readiness-list">
@@ -3948,10 +5349,48 @@ function clearLocalRolePreferences() {
             </ul>
           </article>
 
-          <article v-if="activeFeatureId === 'hrd-audit'" class="task-panel">
+          <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
             <div class="table-heading">
               <div>
-                <span>Audit</span>
+                <span>Anomali akses</span>
+                <strong>Perlu review HRD</strong>
+              </div>
+            </div>
+            <ul class="readiness-list">
+              <li v-for="item in hrdAccessAnomalies" :key="`${item.employee_no}-${item.anomaly_type}`">
+                <span :class="['status', item.severity === 'WARNING' ? 'warning' : 'neutral']">{{ item.anomaly_type }}</span>
+                <strong>{{ item.employee_no }} - {{ item.email_masked }}</strong>
+              </li>
+              <li v-if="hrdAccessAnomalies.length === 0">
+                <span class="status success">CLEAR</span>
+                <strong>Tidak ada anomali akses pada data yang sedang dimuat.</strong>
+              </li>
+            </ul>
+          </article>
+
+          <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Multi-role</span>
+                <strong>Akun dengan lebih dari satu role</strong>
+              </div>
+            </div>
+            <ul class="readiness-list">
+              <li v-for="item in hrdMultiRoleUsers" :key="item.employee_no">
+                <span class="status neutral">{{ item.status }}</span>
+                <strong>{{ item.employee_no }} - {{ item.email_masked }} - {{ item.roles.join(', ') }}</strong>
+              </li>
+              <li v-if="hrdMultiRoleUsers.length === 0">
+                <span class="status success">Single role</span>
+                <strong>Tidak ada user multi-role pada data yang sedang dimuat.</strong>
+              </li>
+            </ul>
+          </article>
+
+          <article v-if="activeFeatureId === 'hrd-access-audit'" class="task-panel">
+            <div class="table-heading">
+              <div>
+                <span>Audit ringan</span>
                 <strong>Safe event summary</strong>
               </div>
             </div>
@@ -3964,24 +5403,137 @@ function clearLocalRolePreferences() {
             <div class="hint-box">
               Metadata audit mentah tidak ditampilkan. Event terakhir: {{ hrdAuditSummary.last_event_at ? formatDateTime(hrdAuditSummary.last_event_at) : '-' }}.
             </div>
-          </article>
-
-          <article v-if="activeFeatureId === 'hrd-privacy'" class="task-panel">
-            <div class="table-heading">
-              <div>
-                <span>Privacy</span>
-                <strong>PII boundary</strong>
-              </div>
-            </div>
             <ul class="readiness-list">
-              <li><span class="status success">Masked</span><strong>Email tampil sebagai `xx***@domain`.</strong></li>
-              <li><span class="status warning">Demo only</span><strong>Nama, alamat, email, dan WA boleh tampil hanya dari dataset dummy/mock.</strong></li>
-              <li><span class="status danger">Blocked</span><strong>Encrypted PII, blind index, profile base64, dan Script Properties tidak dikirim ke UI normal.</strong></li>
-              <li><span class="status warning">Audit</span><strong>HRD melihat ringkasan event, bukan `metadata_json` mentah.</strong></li>
+              <li v-for="event in hrdAuditEvents" :key="`${event.action}-${event.created_at}-${event.entity_id}`">
+                <span class="status neutral">{{ event.actor_role || 'System' }}</span>
+                <strong>{{ event.action }} - {{ event.actor_email_masked }} - {{ event.entity_type }} {{ event.entity_id }}</strong>
+              </li>
             </ul>
           </article>
         </div>
       </section>
+
+      <Teleport to="body">
+        <section
+          v-if="hrdEmployeeEditorOpen"
+          class="hrd-employee-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="hrd-employee-editor-title"
+        >
+          <div class="maintenance-scrim" @click="closeHrdEmployeeEditor"></div>
+          <form class="hrd-employee-modal-panel" @submit.prevent="saveHrdEmployee">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">HRD</p>
+                <h2 id="hrd-employee-editor-title">
+                  {{ hrdEmployeeFormMode === 'EDIT' ? '✏️ Edit data karyawan' : '➕ Tambah karyawan baru' }}
+                </h2>
+              </div>
+              <button class="icon-button" type="button" aria-label="Tutup editor karyawan" @click="closeHrdEmployeeEditor">X</button>
+            </div>
+
+            <div class="hrd-employee-editor modal-employee-editor">
+              <div class="hrd-editor-status">
+                <span :class="['status', hrdEmployeeFormMode === 'EDIT' ? 'warning' : 'success']">
+                  {{ hrdEmployeeFormMode === 'EDIT' ? '✏️ Mode edit' : '✨ Data baru' }}
+                </span>
+                <strong>{{ hrdEmployeeFormMode === 'EDIT' ? hrdEmployeeForm.employee_no : 'Tambah karyawan baru' }}</strong>
+                <small>Mutasi data karyawan melewati permission `employee_master` dan audit backend/mock.</small>
+              </div>
+
+              <div class="hrd-form-group">
+                <div class="hrd-form-group-title">
+                  <span>Identitas</span>
+                  <strong>Data dasar</strong>
+                </div>
+                <div class="hrd-form-grid">
+                  <label class="field">
+                    <span>🆔 ID 5 angka</span>
+                    <input v-model="hrdEmployeeForm.employee_no" :readonly="hrdEmployeeFormMode === 'EDIT'" inputmode="numeric" maxlength="5" aria-label="ID karyawan" />
+                  </label>
+                  <label class="field hrd-span-2">
+                    <span>👤 Nama lengkap</span>
+                    <input v-model="hrdEmployeeForm.full_name" aria-label="Nama lengkap karyawan" />
+                  </label>
+                  <label class="field">
+                    <span>🏭 Bagian</span>
+                    <select v-model="hrdEmployeeForm.bagian_id" aria-label="Bagian karyawan">
+                      <option v-for="option in bagianOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>✅ Status</span>
+                    <select v-model="hrdEmployeeForm.status_karyawan" aria-label="Status karyawan">
+                      <option value="AKTIF">AKTIF</option>
+                      <option value="NONAKTIF">NONAKTIF</option>
+                      <option value="RESIGN">RESIGN</option>
+                      <option value="SUSPEND">SUSPEND</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div class="hrd-form-group">
+                <div class="hrd-form-group-title">
+                  <span>Kontak & akses</span>
+                  <strong>Komunikasi dan role</strong>
+                </div>
+                <div class="hrd-form-grid">
+                  <label class="field">
+                    <span>📧 Email</span>
+                    <input v-model="hrdEmployeeForm.email" type="email" aria-label="Email karyawan" />
+                  </label>
+                  <label class="field">
+                    <span>💬 No WA</span>
+                    <input v-model="hrdEmployeeForm.wa_number" inputmode="tel" aria-label="Nomor WhatsApp karyawan" />
+                  </label>
+                  <div class="field hrd-span-2">
+                    <span>🔐 Role akses</span>
+                    <div class="hrd-role-checks" role="group" aria-label="Role akses karyawan">
+                      <label
+                        v-for="role in roleOptions"
+                        :key="role"
+                        :class="['hrd-role-check', { active: hrdEmployeeForm.roles.includes(role), primary: hrdEmployeeForm.role === role }]"
+                      >
+                        <input
+                          type="checkbox"
+                          :checked="hrdEmployeeForm.roles.includes(role)"
+                          @change="toggleHrdEmployeeRole(role)"
+                        />
+                        <span>{{ role }}</span>
+                        <small v-if="hrdEmployeeForm.role === role">Utama</small>
+                      </label>
+                    </div>
+                  </div>
+                  <label class="field">
+                    <span>🧭 Mandor</span>
+                    <select v-model="hrdEmployeeForm.mandor_email" aria-label="Pilih mandor">
+                      <option value="">Tidak ada mandor</option>
+                      <option v-for="option in hrdMandorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                    </select>
+                  </label>
+                  <label class="field hrd-span-2">
+                    <span>📍 Alamat</span>
+                    <input v-model="hrdEmployeeForm.address" aria-label="Alamat karyawan" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="hrdEmployeeError" class="inline-error" role="alert">{{ hrdEmployeeError }}</div>
+            <div class="hrd-editor-actions modal-editor-actions">
+              <span>{{ hrdEmployeeFormMode === 'EDIT' ? 'Perubahan akan memperbarui direktori karyawan.' : 'Data baru akan masuk ke direktori HRD.' }}</span>
+              <div class="form-actions">
+                <button class="button secondary compact-button" type="button" :disabled="hrdEmployeeSaving" @click="closeHrdEmployeeEditor">↩️ Batal</button>
+                <button class="button primary compact-button" type="submit" :disabled="hrdEmployeeSaving">
+                  {{ hrdEmployeeSaving ? '⏳ Menyimpan' : hrdEmployeeFormMode === 'EDIT' ? '💾 Update data' : '💾 Simpan karyawan' }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </Teleport>
 
       <section v-if="activeFeatureId === 'workspace-help' && activeView !== 'settings'" class="panel help-panel role-workspace" aria-labelledby="workspace-help-title">
         <div class="section-title">
@@ -4060,16 +5612,16 @@ function clearLocalRolePreferences() {
 
         <div class="role-switcher" aria-label="Try role">
           <button
-            v-for="role in roleOptions"
+            v-for="role in roleSwitcherRoles"
             :key="role"
             type="button"
-            :class="['role-button', { active: visibleRoles.includes(role), selected: selectedRole === role }]"
-            :aria-pressed="visibleRoles.includes(role)"
+            :class="['role-button', { active: isRoleButtonActive(role), selected: selectedRole === role }]"
+            :aria-pressed="isRoleButtonActive(role)"
             @click="setTryRole(role)"
           >
             <span>{{ roleIcons[role] }}</span>
             <strong>{{ role }}</strong>
-            <small>{{ visibleRoles.includes(role) ? 'Menu aktif' : 'Menu hidden' }}</small>
+            <small>{{ getRoleButtonStatus(role) }}</small>
           </button>
         </div>
 
@@ -4135,6 +5687,21 @@ function clearLocalRolePreferences() {
               <span class="status warning">Spreadsheet toolbar</span>
               <span class="status success">Audit required</span>
             </div>
+          </article>
+
+          <article class="superadmin-maintenance-card">
+            <div>
+              <span>Debug</span>
+              <strong>DevTools console log</strong>
+              <p>Aktifkan viewLog untuk mengirim jejak session, role, workspace, dan error ke console bawaan browser.</p>
+            </div>
+            <div class="superadmin-maintenance-meta">
+              <span :class="['status', viewLog ? 'success' : 'warning']">{{ viewLog ? 'viewLog=true' : 'viewLog=false' }}</span>
+              <span class="status warning">{{ debugLogs.length }} log</span>
+            </div>
+            <button class="button primary" type="button" @click="toggleViewLog">
+              {{ viewLog ? 'Matikan log' : 'Aktifkan log' }}
+            </button>
           </article>
         </div>
 
@@ -4235,5 +5802,6 @@ function clearLocalRolePreferences() {
         </p>
       </div>
     </section>
+
   </main>
 </template>

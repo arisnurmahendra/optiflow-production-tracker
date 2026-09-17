@@ -19,6 +19,10 @@ if (valid.data.metadata.transaction_id !== '550e8400-e29b-41d4-a716-446655440000
   throw new Error('Expected payload to include transaction_id.');
 }
 
+if (valid.data.payload.bagian_id !== 'SOLDER' || valid.data.payload.work_category_id !== 'SOLDER') {
+  throw new Error('Expected payload to include Bagian and work category migration fields.');
+}
+
 if (valid.data.payload.perolehan_reject !== 36 || valid.data.payload.defect_category_id === '') {
   throw new Error('Expected reject payload to keep defect category.');
 }

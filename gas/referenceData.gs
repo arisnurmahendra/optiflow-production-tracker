@@ -34,6 +34,7 @@ var OptiflowReferenceData = (function () {
   }
 
   function getOperatorReferenceData(payload, session) {
+    var bagian = buildBagianOptions(payload.include_inactive);
     var lines = OptiflowSheets.getRows('LINE_MASTER')
       .filter(function (row) {
         return payload.include_inactive || isTruthy(row.status_aktif);
@@ -57,17 +58,23 @@ var OptiflowReferenceData = (function () {
       .sort(compareByValue);
     var shifts = buildShiftOptions(payload.include_inactive);
     var machines = buildMachineOptions(payload.include_inactive);
+    var workCategories = buildWorkCategoryOptions(bagian, machines);
     var operators = buildOperatorOptions(payload.include_inactive);
 
     OptiflowAudit.write('REFERENCE_OPERATOR_DATA_READ', session, {
+      bagian_count: bagian.length,
       line_count: lines.length,
       shift_count: shifts.length,
       machine_count: machines.length,
+      work_category_count: workCategories.length,
       operator_count: operators.length,
       include_inactive: payload.include_inactive,
     });
 
     return OptiflowResponse.success({
+      reference_mode: 'BAGIAN_WITH_LEGACY_COMPAT',
+      bagian: bagian,
+      work_categories: workCategories,
       lines: lines,
       shifts: shifts,
       machines: machines,
@@ -92,6 +99,32 @@ var OptiflowReferenceData = (function () {
           start_time: String(row.start_time || ''),
           end_time: String(row.end_time || ''),
           timezone: String(row.timezone || OPTIFLOW_APP.timezone),
+          status_aktif: isTruthy(row.status_aktif),
+        };
+      })
+      .filter(function (row) {
+        return row.value;
+      })
+      .sort(compareByValue);
+  }
+
+  function buildBagianOptions(includeInactive) {
+    return OptiflowSheets.getRows('BAGIAN_MASTER')
+      .filter(function (row) {
+        return includeInactive || isTruthy(row.status_aktif);
+      })
+      .map(function (row) {
+        var bagianId = String(row.bagian_id || '').trim().toUpperCase();
+        var bagianName = String(row.bagian_name || '').trim();
+
+        return {
+          value: bagianId,
+          label: bagianName || bagianId,
+          bagian_id: bagianId,
+          bagian_name: bagianName,
+          unit_rate: Number(row.unit_rate || 0),
+          monthly_target_unit: Number(row.monthly_target_unit || 0),
+          target_salary: Number(row.target_salary || 0),
           status_aktif: isTruthy(row.status_aktif),
         };
       })
@@ -134,6 +167,30 @@ var OptiflowReferenceData = (function () {
     });
   }
 
+  function buildWorkCategoryOptions(bagian, machines) {
+    return bagian.map(function (row) {
+      return {
+        value: row.bagian_id,
+        label: row.bagian_name || row.bagian_id,
+        work_category_id: row.bagian_id,
+        work_category_name: row.bagian_name || row.bagian_id,
+        bagian_id: row.bagian_id,
+        source: 'BAGIAN_MASTER',
+        status_aktif: row.status_aktif,
+      };
+    }).concat(machines.map(function (row) {
+      return {
+        value: row.machine_id,
+        label: row.label,
+        work_category_id: row.machine_id,
+        work_category_name: row.label,
+        legacy_machine_id: row.machine_id,
+        source: 'LEGACY_MACHINE',
+        status_aktif: true,
+      };
+    }));
+  }
+
   function buildOperatorOptions(includeInactive) {
     return OptiflowSheets.getRows('USER_ROLES')
       .filter(function (row) {
@@ -154,6 +211,9 @@ var OptiflowReferenceData = (function () {
           label: username ? username + ' (' + maskEmail(email) + ')' : maskEmail(email),
           email: email,
           username: username,
+          employee_no: String(row.employee_no || row.user_id || '').trim(),
+          full_name: String(row.full_name || '').trim(),
+          bagian_id: String(row.bagian_id || '').trim().toUpperCase(),
           role: 'Operator',
           status_aktif: isTruthy(row.status_aktif),
         };

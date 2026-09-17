@@ -65,6 +65,8 @@ var OptiflowProductionLogs = (function () {
       line_id: payload.payload.line_id,
       shift_id: payload.payload.shift_id,
       machine_id: payload.payload.machine_id,
+      bagian_id: payload.payload.bagian_id || '',
+      work_category_id: payload.payload.work_category_id || '',
       target_harian: payload.payload.target_harian,
       tandon: payload.payload.tandon,
       perolehan_ok: payload.payload.perolehan_ok,

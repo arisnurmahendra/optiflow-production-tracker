@@ -172,6 +172,7 @@ var OptiflowValidation = (function () {
       'shift_id',
       'bagian_id',
       'machine_id',
+      'work_category_id',
       'target_harian',
       'tandon',
       'perolehan_ok',
@@ -184,6 +185,8 @@ var OptiflowValidation = (function () {
       line_id: normalizeIdentifier(report.line_id, 'line_id'),
       shift_id: normalizeIdentifier(report.shift_id, 'shift_id'),
       machine_id: normalizeIdentifier(report.machine_id, 'machine_id'),
+      bagian_id: normalizeOptionalIdentifier(report.bagian_id, 'bagian_id'),
+      work_category_id: normalizeOptionalIdentifier(report.work_category_id, 'work_category_id'),
       target_harian: normalizeInteger(report.target_harian, 'target_harian'),
       tandon: normalizeInteger(report.tandon, 'tandon'),
       perolehan_ok: normalizeInteger(report.perolehan_ok, 'perolehan_ok'),
@@ -489,7 +492,9 @@ var OptiflowValidation = (function () {
       'factory_date',
       'line_id',
       'shift_id',
+      'bagian_id',
       'machine_id',
+      'work_category_id',
       'operator_email',
     ], false);
 
@@ -560,7 +565,14 @@ var OptiflowValidation = (function () {
   function validateHrdAccessDashboardRequest(args, request) {
     var payload = validateRequestObject(args, request, 'getHrdAccessDashboard', ['session', 'filter', 'page', 'page_size'], true);
     var rawFilter = payload.filter || {};
-    var filter = validateRequestObject([rawFilter], rawFilter, 'getHrdAccessDashboard.filter', ['role', 'status'], true);
+    var filter = validateRequestObject([rawFilter], rawFilter, 'getHrdAccessDashboard.filter', [
+      'role',
+      'status',
+      'factory_date',
+      'period_month',
+      'bagian_id',
+      'attendance_status',
+    ], true);
     var normalizedFilter = {};
 
     if (filter.role) {
@@ -571,6 +583,24 @@ var OptiflowValidation = (function () {
       normalizedFilter.status = normalizeEnum(filter.status, 'status', ['ACTIVE', 'INACTIVE', 'DELETED', 'ALL']);
     }
 
+    if (filter.factory_date) {
+      normalizedFilter.factory_date = normalizeFactoryDate(filter.factory_date, 'factory_date');
+    }
+
+    if (filter.period_month) {
+      normalizedFilter.period_month = normalizePeriodMonth(filter.period_month, 'period_month');
+    }
+
+    if (filter.bagian_id && filter.bagian_id !== 'ALL') {
+      normalizedFilter.bagian_id = normalizeIdentifier(filter.bagian_id, 'bagian_id');
+    } else if (filter.bagian_id === 'ALL') {
+      normalizedFilter.bagian_id = 'ALL';
+    }
+
+    if (filter.attendance_status) {
+      normalizedFilter.attendance_status = normalizeEnum(filter.attendance_status, 'attendance_status', ['ALL', 'HADIR', 'IZIN', 'SAKIT', 'ALPHA', 'BELUM_KONFIRMASI', 'RESIGN']);
+    }
+
     return {
       session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
       filter: normalizedFilter,
@@ -578,6 +608,53 @@ var OptiflowValidation = (function () {
         page: normalizePage(payload.page),
         page_size: normalizePageSize(payload.page_size),
       },
+    };
+  }
+
+  function validateHrdEmployeeUpsertRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'upsertHrdEmployee', ['session', 'employee'], false);
+    var employee = validateRequestObject([payload.employee || {}], payload.employee || {}, 'upsertHrdEmployee.employee', [
+      'employee_no',
+      'full_name',
+      'bagian_id',
+      'status_karyawan',
+      'email',
+      'wa_number',
+      'address',
+      'mandor_email',
+      'role',
+      'roles',
+      'username',
+    ], false);
+    var roles = Array.isArray(employee.roles)
+      ? employee.roles.map(function (role) { return normalizeRole(role); })
+      : [normalizeRole(employee.role || 'Operator')];
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      mode: normalizeEnum(payload.mode || 'UPSERT', 'mode', ['CREATE', 'EDIT', 'UPDATE', 'UPSERT']),
+      employee: {
+        employee_no: normalizeEmployeeNo(employee.employee_no),
+        full_name: normalizePlainText(employee.full_name, 'full_name', 80),
+        bagian_id: normalizeIdentifier(employee.bagian_id, 'bagian_id'),
+        status_karyawan: normalizeEnum(employee.status_karyawan || 'AKTIF', 'status_karyawan', ['AKTIF', 'NONAKTIF', 'RESIGN', 'SUSPEND']),
+        email: normalizeEmail(employee.email, 'email'),
+        wa_number: normalizePhone(employee.wa_number || ''),
+        address: normalizePlainText(employee.address || '', 'address', 160),
+        mandor_email: employee.mandor_email ? normalizeEmail(employee.mandor_email, 'mandor_email') : '',
+        role: normalizeRole(employee.role || roles[0]),
+        roles: roles,
+        username: normalizePlainText(employee.username || '', 'username', 40),
+      },
+    };
+  }
+
+  function validateHrdEmployeeDeactivateRequest(args, request) {
+    var payload = validateRequestObject(args, request, 'deactivateHrdEmployee', ['session', 'employee_no'], false);
+
+    return {
+      session: validateSessionContextRequest([payload.session || {}], payload.session || {}),
+      employee_no: normalizeEmployeeNo(payload.employee_no),
     };
   }
 
@@ -607,6 +684,7 @@ var OptiflowValidation = (function () {
         shift_id: filter.shift_id ? normalizeIdentifier(filter.shift_id, 'shift_id') : '',
         bagian_id: filter.bagian_id ? normalizeIdentifier(filter.bagian_id, 'bagian_id') : '',
         machine_id: filter.machine_id ? normalizeIdentifier(filter.machine_id, 'machine_id') : '',
+        work_category_id: filter.work_category_id ? normalizeIdentifier(filter.work_category_id, 'work_category_id') : '',
         operator_email: filter.operator_email ? normalizeEmail(filter.operator_email, 'operator_email') : '',
         status: filter.status ? normalizeIdentifier(filter.status, 'status') : '',
       },
@@ -709,6 +787,19 @@ var OptiflowValidation = (function () {
     return normalized;
   }
 
+  function normalizePeriodMonth(value, fieldName) {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}$/.test(value.trim())) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' must use YYYY-MM format.');
+    }
+
+    var normalized = value.trim();
+    if (isNaN(new Date(normalized + '-01T00:00:00Z').getTime())) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' is not a valid month.');
+    }
+
+    return normalized;
+  }
+
   function normalizeEnum(value, fieldName, allowedValues) {
     if (typeof value !== 'string') {
       throw new Error('Input Validation & Sanitization: ' + fieldName + ' must be a string enum.');
@@ -732,6 +823,37 @@ var OptiflowValidation = (function () {
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) || normalized.length > 254) {
       throw new Error('Input Validation & Sanitization: ' + fieldName + ' must be a valid email.');
+    }
+
+    return normalized;
+  }
+
+  function normalizeEmployeeNo(value) {
+    if (typeof value !== 'string' && typeof value !== 'number') {
+      throw new Error('Input Validation & Sanitization: employee_no must be a 5 digit value.');
+    }
+
+    var normalized = String(value).trim();
+    if (!/^\d{5}$/.test(normalized)) {
+      throw new Error('Input Validation & Sanitization: employee_no must be 5 digits.');
+    }
+
+    return normalized;
+  }
+
+  function normalizePhone(value) {
+    var normalized = String(value || '').replace(/\D/g, '');
+    if (normalized && !/^\d{8,16}$/.test(normalized)) {
+      throw new Error('Input Validation & Sanitization: phone number format is invalid.');
+    }
+
+    return normalized;
+  }
+
+  function normalizePlainText(value, fieldName, maxLength) {
+    var normalized = String(value || '').trim().replace(/\s+/g, ' ');
+    if (normalized.length > maxLength) {
+      throw new Error('Input Validation & Sanitization: ' + fieldName + ' is too long.');
     }
 
     return normalized;
@@ -998,6 +1120,8 @@ var OptiflowValidation = (function () {
     validateDefectCategorySeedRequest: validateDefectCategorySeedRequest,
     validateDefectCategoryUpsertRequest: validateDefectCategoryUpsertRequest,
     validateHrdAccessDashboardRequest: validateHrdAccessDashboardRequest,
+    validateHrdEmployeeDeactivateRequest: validateHrdEmployeeDeactivateRequest,
+    validateHrdEmployeeUpsertRequest: validateHrdEmployeeUpsertRequest,
     validateListRequest: validateListRequest,
     validateOperatorDashboardRequest: validateOperatorDashboardRequest,
     validateOperatorReferenceDataRequest: validateOperatorReferenceDataRequest,

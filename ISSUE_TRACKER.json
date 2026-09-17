@@ -1142,7 +1142,7 @@
     {
       "id": "OPT-037",
       "title": "Rebaseline business process from line-machine reporting to Bagian daily reporting",
-      "status": "Ready",
+      "status": "Review",
       "priority": "P0",
       "labels": [
         "type:docs",
@@ -1163,12 +1163,17 @@
         "DATA_SCHEMA.md impact list is prepared before code migration.",
         "Open decisions are listed for owner approval."
       ],
-      "verification": []
+      "verification": [
+        "Updated BUSINESS_PROCESS.md to mark Bagian-based daily reporting as the active target process and list obsolete line/machine assumptions.",
+        "Updated DATA_SCHEMA.md with OPT-037 impact list, legacy compatibility notes, and planned Bagian/employee/verification fields.",
+        "Updated README.md and AGENT_STATE.md to route future work through Bagian-first contracts.",
+        "Pending GitHub issue creation/closure before local status can become Closed."
+      ]
     },
     {
       "id": "OPT-038",
       "title": "Design employee master and attendance recap model",
-      "status": "Ready",
+      "status": "Review",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -1191,7 +1196,13 @@
         "Role ownership for attendance entry and HRD maintenance is defined.",
         "Monthly attendance recap contract is documented before implementation."
       ],
-      "verification": []
+      "verification": [
+        "Documented EMPLOYEE_MASTER columns, validation, status rules, and Mandor relationship in DATA_SCHEMA.md.",
+        "Documented ATTENDANCE_EVENTS, ATTENDANCE_DAILY_RECAP, and ATTENDANCE_MONTHLY_RECAP schemas with event-based audit rules.",
+        "Defined attendance and employee ownership across HRD, Operator, Mandor, Supervisor, Management, and SuperAdmin in BUSINESS_PROCESS.md.",
+        "Updated UI_UX_CONTRACT.md for HRD/Mandor attendance display, status badges, and PII boundaries.",
+        "Pending GitHub issue creation/closure before local status can become Closed."
+      ]
     },
     {
       "id": "OPT-039",
@@ -1219,7 +1230,20 @@
         "Dashboard and recap consume verified values, not unverified raw input.",
         "Audit trail identifies recorder and verifier separately."
       ],
-      "verification": []
+      "verification": [
+        {
+          "command": "npm run test:frontend:operator-form",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:frontend:api",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:gas:spreadsheet-menu",
+          "result": "PASS"
+        }
+      ]
     },
     {
       "id": "OPT-040",
@@ -1252,7 +1276,7 @@
     {
       "id": "OPT-041",
       "title": "Define unit-rate wage and monthly target policy ownership",
-      "status": "Ready",
+      "status": "Review",
       "priority": "P0",
       "labels": [
         "type:docs",
@@ -1273,12 +1297,19 @@
         "DATA_SCHEMA.md defines wage policy and target policy contract without exposing payroll PII.",
         "UI scope for role-authorized policy maintenance is defined before code."
       ],
-      "verification": []
+      "verification": [
+        "Documented Management/SuperAdmin as final owner of unit-rate, target salary, monthly target, and wage policy in BUSINESS_PROCESS.md.",
+        "Documented HRD as payroll-ready reader/draft candidate only; Mandor/Supervisor read operational/verification context without final wage mutation.",
+        "Added formula rules: monthly_target_unit = ceil(target_salary / unit_rate) and daily_target_unit = ceil(monthly_target_unit / planned_attendance_days).",
+        "Added SOLDER/LEM seed policy and daily target table for 20-26 attendance days in BUSINESS_PROCESS.md and DATA_SCHEMA.md.",
+        "Updated UI_UX_CONTRACT.md for Management Bagian & Upah policy maintenance and role-specific visibility.",
+        "Pending GitHub issue creation/closure before local status can become Closed."
+      ]
     },
     {
       "id": "OPT-042",
       "title": "Replace Line/Machine terminology with Bagian and work category terminology",
-      "status": "Ready",
+      "status": "Review",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -1301,12 +1332,37 @@
         "Migration strategy avoids data loss from existing line/machine fields.",
         "Tests cover new labels and reference data shape."
       ],
-      "verification": []
+      "verification": [
+        {
+          "command": "npm run test:frontend:operator-form",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:frontend:api",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:gas:spreadsheet-menu",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run audit:gas:validation",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run build:verify",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run prepare:gas",
+          "result": "PASS"
+        }
+      ]
     },
     {
       "id": "OPT-043",
       "title": "Redefine role boundaries for Mandor, Supervisor verification, HRD, Management, and SuperAdmin",
-      "status": "Ready",
+      "status": "Review",
       "priority": "P0",
       "labels": [
         "type:security",
@@ -1328,7 +1384,13 @@
         "SuperAdmin full access remains explicit, not implicit bypass.",
         "PII/payroll-sensitive data is separated from operational production views."
       ],
-      "verification": []
+      "verification": [
+        "Added OPT-043 responsibility map to BUSINESS_PROCESS.md for employee data, access, attendance, target, production, defect, closing/correction, and wage policy.",
+        "Added target ROLE_PERMISSIONS resource/action matrix to DATA_SCHEMA.md.",
+        "Confirmed SuperAdmin full access remains explicit permission rows, not implicit bypass.",
+        "Updated GUARDRAILS_CONTRACT.md so Mandor can request defect changes but cannot mutate final defect master.",
+        "Pending GitHub issue creation/closure before local status can become Closed."
+      ]
     },
     {
       "id": "OPT-044",
@@ -1503,7 +1565,7 @@
     {
       "id": "OPT-050",
       "title": "Rebaseline HRD workspace into four production-ready menus",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:docs",
@@ -1524,12 +1586,20 @@
         "Old menu labels Dashboard PII, User Masked, Roles RBAC, Audit Logs, and Privacy Safe are deprecated or mapped.",
         "Each HRD menu has clear user goals, data boundaries, and privacy constraints."
       ],
-      "verification": []
+      "verification": [
+        "npm run test:frontend:api PASS",
+        "npm run test:gas:spreadsheet-menu PASS",
+        "npm run audit:gas:validation PASS",
+        "npm run build:verify PASS",
+        "npm run prepare:gas PASS",
+        "HRD Dashboard UI implemented and verified"
+      ],
+      "closed_at": "2026-09-18"
     },
     {
       "id": "OPT-051",
       "title": "Build HRD Dashboard for workforce and payroll readiness",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -1551,12 +1621,24 @@
         "Cards and states cover loading, empty, error, and demo/mock data.",
         "Payroll-ready summary is clearly separated from final payroll calculation."
       ],
-      "verification": []
+      "verification": [
+        "npm run test:frontend:api PASS",
+        "npm run test:gas:spreadsheet-menu PASS",
+        "npm run audit:gas:validation PASS",
+        "npm run build:verify PASS",
+        "npm run prepare:gas PASS",
+        "HRD Dashboard UI implemented and verified"
+      ],
+      "implementation_notes": [
+        "HRD dashboard now summarizes workforce, attendance readiness, incomplete employee data, payroll-ready state, and governance signals without raw PII.",
+        "Dashboard cards reuse the enriched HRD access payload from GAS/mock."
+      ],
+      "closed_at": "2026-09-18"
     },
     {
       "id": "OPT-052",
       "title": "Build HRD Karyawan directory with privacy-safe detail access",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -1580,12 +1662,20 @@
         "WhatsApp action uses wa.me and never logs phone numbers into audit metadata.",
         "Production PII access is gated by backend permission and documented before implementation."
       ],
-      "verification": []
+      "verification": [
+        "npm run test:frontend:api PASS",
+        "npm run test:gas:spreadsheet-menu PASS",
+        "npm run audit:gas:validation PASS",
+        "npm run build:verify PASS",
+        "npm run prepare:gas PASS",
+        "HRD Dashboard UI implemented and verified"
+      ],
+      "closed_at": "2026-09-18"
     },
     {
       "id": "OPT-053",
       "title": "Build HRD Absensi daily and monthly recap workspace",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P0",
       "labels": [
         "type:feature",
@@ -1608,12 +1698,24 @@
         "Pending Mandor confirmation is visible and not treated as final attendance.",
         "Payroll-ready export status is present without calculating final payroll beyond approved contract."
       ],
-      "verification": []
+      "verification": [
+        "npm run test:frontend:api PASS",
+        "npm run test:gas:spreadsheet-menu PASS",
+        "npm run audit:gas:validation PASS",
+        "npm run build:verify PASS",
+        "npm run prepare:gas PASS",
+        "HRD Dashboard UI implemented and verified"
+      ],
+      "implementation_notes": [
+        "HRD Absensi now includes daily and monthly recap filters by date, month, Bagian, and attendance status.",
+        "Daily/monthly tables expose Hadir/Izin/Sakit/Alpha/Resign, clock-in/out, Mandor confirmation, and payroll-ready review state."
+      ],
+      "closed_at": "2026-09-18"
     },
     {
       "id": "OPT-054",
       "title": "Merge HRD Role Access and Audit into one lightweight governance workspace",
-      "status": "Ready",
+      "status": "Closed",
       "priority": "P1",
       "labels": [
         "type:feature",
@@ -1636,7 +1738,19 @@
         "Multi-role assignment visibility is supported.",
         "Audit display focuses on HRD-relevant events only and preserves masking."
       ],
-      "verification": []
+      "verification": [
+        "npm run test:frontend:api PASS",
+        "npm run test:gas:spreadsheet-menu PASS",
+        "npm run audit:gas:validation PASS",
+        "npm run build:verify PASS",
+        "npm run prepare:gas PASS",
+        "HRD Dashboard UI implemented and verified"
+      ],
+      "implementation_notes": [
+        "Akses & Audit now combines role readiness, multi-role visibility, access anomalies, and safe audit events.",
+        "Raw audit metadata, secrets, encrypted fields, and backend-only PII remain excluded from HRD response."
+      ],
+      "closed_at": "2026-09-18"
     },
     {
       "id": "OPT-055",
